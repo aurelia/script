@@ -1,0 +1,15 @@
+{
+  "main": "plugin-babel.js",
+  "map": {
+    "systemjs-babel-build": {
+      "node": "./systemjs-babel-node.js",
+      "browser": "./systemjs-babel-browser.js",
+      "default": "./systemjs-babel-browser.js"
+    }
+  },
+  "meta": {
+    "./plugin-babel.js": {
+      "format": "cjs"
+    }
+  }
+}

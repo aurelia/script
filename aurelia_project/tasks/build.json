@@ -1,0 +1,4 @@
+{
+  "name": "build",
+  "description": "Builds the Aurelia libraries."
+}
