@@ -633,13 +633,17 @@ define('aurelia-route-recognizer',['exports', 'aurelia-path'], function (exports
     };
 
     RouteRecognizer.prototype.generate = function generate(name, params) {
-      var routeParams = Object.assign({}, params);
-
       var route = this.names[name];
       if (!route) {
         throw new Error('There is no route named ' + name);
       }
 
+      var handler = route.handlers[0].handler;
+      if (handler.generationUsesHref) {
+        return handler.href;
+      }
+
+      var routeParams = Object.assign({}, params);
       var segments = route.segments;
       var consumed = {};
       var output = '';
@@ -1150,6 +1154,7 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
         return this.fragment;
       }
 
+      path = encodeURI(path);
       return this.fragment.substr(0, this.fragment.lastIndexOf(path));
     };
 
@@ -1388,13 +1393,13 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
 
         var navModel = void 0;
         for (var _i = 0, _ii = routeConfigs.length; _i < _ii; ++_i) {
-          var routeConfig = routeConfigs[_i];
-          routeConfig.settings = routeConfig.settings || {};
+          var _routeConfig = routeConfigs[_i];
+          _routeConfig.settings = _routeConfig.settings || {};
           if (!navModel) {
-            navModel = router.createNavModel(routeConfig);
+            navModel = router.createNavModel(_routeConfig);
           }
 
-          router.addRoute(routeConfig, navModel);
+          router.addRoute(_routeConfig, navModel);
         }
       });
 
@@ -1715,7 +1720,7 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
     };
 
     Router.prototype.addRoute = function addRoute(config, navModel) {
-      validateRouteConfig(config);
+      validateRouteConfig(config, this.routes);
 
       if (!('viewPorts' in config) && !config.navigationStrategy) {
         config.viewPorts = {
@@ -1760,7 +1765,7 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
 
       if ((navModel.order || navModel.order === 0) && this.navigation.indexOf(navModel) === -1) {
         if (!navModel.href && navModel.href !== '' && (state.types.dynamics || state.types.stars)) {
-          throw new Error('Invalid route config: dynamic routes must specify an href to be included in the navigation model.');
+          throw new Error('Invalid route config for "' + config.route + '" : dynamic routes must specify an "href:" to be included in the navigation model.');
         }
 
         if (typeof navModel.order !== 'number') {
@@ -1813,6 +1818,8 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
         var current = nav[i];
         if (!current.config.href) {
           current.href = _createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
+        } else {
+          current.href = _normalizeAbsolutePath(current.config.href, this.history._hasPushState);
         }
       }
     };
@@ -1896,7 +1903,7 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
         return typeof c === 'string' ? { moduleId: c } : c;
       }).then(function (c) {
         c.route = instruction.params.path;
-        validateRouteConfig(c);
+        validateRouteConfig(c, _this5.routes);
 
         if (!c.navModel) {
           c.navModel = _this5.createNavModel(c);
@@ -1916,17 +1923,27 @@ define('aurelia-router',['exports', 'aurelia-logging', 'aurelia-route-recognizer
     return Router;
   }();
 
-  function validateRouteConfig(config) {
+  function validateRouteConfig(config, routes) {
     if ((typeof config === 'undefined' ? 'undefined' : _typeof(config)) !== 'object') {
       throw new Error('Invalid Route Config');
     }
 
     if (typeof config.route !== 'string') {
-      throw new Error('Invalid Route Config: You must specify a route pattern.');
+      var _name2 = config.name || '(no name)';
+      throw new Error('Invalid Route Config for "' + _name2 + '": You must specify a "route:" pattern.');
+    }
+
+    if (config.name) {
+      for (var i = 0, ii = routes.length; i < ii; ++i) {
+        var _route = routes[i];
+        if (_route.name === config.name) {
+          throw new Error('Routes must contain distinct names');
+        }
+      }
     }
 
     if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
-      throw new Error('Invalid Route Config: You must specify a moduleId, redirect, navigationStrategy, or viewPorts.');
+      throw new Error('Invalid Route Config for "' + config.route + '": You must specify a "moduleId:", "redirect:", "navigationStrategy:", or "viewPorts:".');
     }
   }
 
@@ -2914,7 +2931,7 @@ define('aurelia-templating-router/router-view',['exports', 'aurelia-dependency-i
       };
 
       var viewStrategy = this.viewLocator.getViewStrategy(component.view || viewModel);
-      if (viewStrategy) {
+      if (viewStrategy && component.view) {
         viewStrategy.makeRelativeTo(_aureliaMetadata.Origin.get(component.router.container.viewModel.constructor).moduleId);
       }
 
@@ -3070,11 +3087,12 @@ define('aurelia-templating-router/route-href',['exports', 'aurelia-templating', 
 
       return this.router.ensureConfigured().then(function () {
         if (!_this.isActive) {
-          return;
+          return null;
         }
 
         var href = _this.router.generate(_this.route, _this.params);
         _this.element.setAttribute(_this.attribute, href);
+        return null;
       }).catch(function (reason) {
         logger.error(reason);
       });
