@@ -36,6 +36,7 @@
     "aurelia-history": "git+https://github.com/aurelia/history.git",
     "aurelia-history-browser": "git+https://github.com/aurelia/history-browser.git",
     "aurelia-loader": "git+https://github.com/aurelia/loader.git",
+    "aurelia-loader-esm": "git+https://github.com/bigopon/aurelia-loader-esm.git",
     "aurelia-logging": "git+https://github.com/aurelia/logging.git",
     "aurelia-logging-console": "git+https://github.com/aurelia/logging-console.git",
     "aurelia-metadata": "git+https://github.com/aurelia/metadata.git",

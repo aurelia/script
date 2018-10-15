@@ -944,6 +944,7 @@
       let target = moduleExports;
       let key;
       let exportedValue;
+      Origin.set(target, new Origin(moduleId, ''));
       if (typeof target === 'object') {
           for (key in target) {
               exportedValue = target[key];
