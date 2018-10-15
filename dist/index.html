@@ -1,12 +1,7 @@
 <body>
   <script src='./aurelia_router.umd.min.js'></script>
   <script>
-    const aurelia = new au.Aurelia({
-      normalize(a) { return Promise.resolve(a); },
-      addPlugin() {
-
-      }
-    })
+    const aurelia = new au.Aurelia()
     aurelia
       .use
         .standardConfiguration()
@@ -15,11 +10,18 @@
       .setRoot(
         class App {
           static get $view() {
-            return '<template>${message}<div repeat.for="i of 3">Hello ${$index}!</div></template>'
+            return '<template>${message}<div repeat.for="i of 3">Hello ${$index}!</div><router-view></router-view></template>'
           }
 
           constructor() {
             this.message = 'Hello world';
+          }
+
+          configureRouter(config, router) {
+            config.map([
+              { route: '', moduleId: '/page.js' }
+            ])
+            this.router = router;
           }
         },
         document.body

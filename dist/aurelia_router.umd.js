@@ -342,241 +342,6 @@
     });
   }
 
-  function unwrapExports (x) {
-  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
-  }
-
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
-  }
-
-  var aureliaLogging = createCommonjsModule(function (module, exports) {
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.getLogger = getLogger;
-  exports.addAppender = addAppender;
-  exports.removeAppender = removeAppender;
-  exports.getAppenders = getAppenders;
-  exports.clearAppenders = clearAppenders;
-  exports.addCustomLevel = addCustomLevel;
-  exports.removeCustomLevel = removeCustomLevel;
-  exports.setLevel = setLevel;
-  exports.getLevel = getLevel;
-
-
-
-  var logLevel = exports.logLevel = {
-    none: 0,
-    error: 10,
-    warn: 20,
-    info: 30,
-    debug: 40
-  };
-
-  var loggers = {};
-  var appenders = [];
-  var globalDefaultLevel = logLevel.none;
-
-  var standardLevels = ['none', 'error', 'warn', 'info', 'debug'];
-  function isStandardLevel(level) {
-    return standardLevels.filter(function (l) {
-      return l === level;
-    }).length > 0;
-  }
-
-  function appendArgs() {
-    return [this].concat(Array.prototype.slice.call(arguments));
-  }
-
-  function logFactory(level) {
-    var threshold = logLevel[level];
-    return function () {
-      if (this.level < threshold) {
-        return;
-      }
-
-      var args = appendArgs.apply(this, arguments);
-      var i = appenders.length;
-      while (i--) {
-        var _appenders$i;
-
-        (_appenders$i = appenders[i])[level].apply(_appenders$i, args);
-      }
-    };
-  }
-
-  function logFactoryCustom(level) {
-    var threshold = logLevel[level];
-    return function () {
-      if (this.level < threshold) {
-        return;
-      }
-
-      var args = appendArgs.apply(this, arguments);
-      var i = appenders.length;
-      while (i--) {
-        var appender = appenders[i];
-        if (appender[level] !== undefined) {
-          appender[level].apply(appender, args);
-        }
-      }
-    };
-  }
-
-  function connectLoggers() {
-    var proto = Logger.prototype;
-    for (var _level in logLevel) {
-      if (isStandardLevel(_level)) {
-        if (_level !== 'none') {
-          proto[_level] = logFactory(_level);
-        }
-      } else {
-        proto[_level] = logFactoryCustom(_level);
-      }
-    }
-  }
-
-  function disconnectLoggers() {
-    var proto = Logger.prototype;
-    for (var _level2 in logLevel) {
-      if (_level2 !== 'none') {
-        proto[_level2] = function () {};
-      }
-    }
-  }
-
-  function getLogger(id) {
-    return loggers[id] || new Logger(id);
-  }
-
-  function addAppender(appender) {
-    if (appenders.push(appender) === 1) {
-      connectLoggers();
-    }
-  }
-
-  function removeAppender(appender) {
-    appenders = appenders.filter(function (a) {
-      return a !== appender;
-    });
-  }
-
-  function getAppenders() {
-    return [].concat(appenders);
-  }
-
-  function clearAppenders() {
-    appenders = [];
-    disconnectLoggers();
-  }
-
-  function addCustomLevel(name, value) {
-    if (logLevel[name] !== undefined) {
-      throw Error('Log level "' + name + '" already exists.');
-    }
-
-    if (isNaN(value)) {
-      throw Error('Value must be a number.');
-    }
-
-    logLevel[name] = value;
-
-    if (appenders.length > 0) {
-      connectLoggers();
-    } else {
-      Logger.prototype[name] = function () {};
-    }
-  }
-
-  function removeCustomLevel(name) {
-    if (logLevel[name] === undefined) {
-      return;
-    }
-
-    if (isStandardLevel(name)) {
-      throw Error('Built-in log level "' + name + '" cannot be removed.');
-    }
-
-    delete logLevel[name];
-    delete Logger.prototype[name];
-  }
-
-  function setLevel(level) {
-    globalDefaultLevel = level;
-    for (var key in loggers) {
-      loggers[key].setLevel(level);
-    }
-  }
-
-  function getLevel() {
-    return globalDefaultLevel;
-  }
-
-  var Logger = exports.Logger = function () {
-    function Logger(id) {
-      
-
-      var cached = loggers[id];
-      if (cached) {
-        return cached;
-      }
-
-      loggers[id] = this;
-      this.id = id;
-      this.level = globalDefaultLevel;
-    }
-
-    Logger.prototype.debug = function debug(message) {};
-
-    Logger.prototype.info = function info(message) {};
-
-    Logger.prototype.warn = function warn(message) {};
-
-    Logger.prototype.error = function error(message) {};
-
-    Logger.prototype.setLevel = function setLevel(level) {
-      this.level = level;
-    };
-
-    Logger.prototype.isDebugEnabled = function isDebugEnabled() {
-      return this.level === logLevel.debug;
-    };
-
-    return Logger;
-  }();
-  });
-
-  var aureliaLogging$1 = unwrapExports(aureliaLogging);
-  var aureliaLogging_1 = aureliaLogging.getLogger;
-  var aureliaLogging_2 = aureliaLogging.addAppender;
-  var aureliaLogging_3 = aureliaLogging.removeAppender;
-  var aureliaLogging_4 = aureliaLogging.getAppenders;
-  var aureliaLogging_5 = aureliaLogging.clearAppenders;
-  var aureliaLogging_6 = aureliaLogging.addCustomLevel;
-  var aureliaLogging_7 = aureliaLogging.removeCustomLevel;
-  var aureliaLogging_8 = aureliaLogging.setLevel;
-  var aureliaLogging_9 = aureliaLogging.getLevel;
-  var aureliaLogging_10 = aureliaLogging.logLevel;
-  var aureliaLogging_11 = aureliaLogging.Logger;
-
-  var TheLogManager = /*#__PURE__*/Object.freeze({
-    default: aureliaLogging$1,
-    __moduleExports: aureliaLogging,
-    getLogger: aureliaLogging_1,
-    addAppender: aureliaLogging_2,
-    removeAppender: aureliaLogging_3,
-    getAppenders: aureliaLogging_4,
-    clearAppenders: aureliaLogging_5,
-    addCustomLevel: aureliaLogging_6,
-    removeCustomLevel: aureliaLogging_7,
-    setLevel: aureliaLogging_8,
-    getLevel: aureliaLogging_9,
-    logLevel: aureliaLogging_10,
-    Logger: aureliaLogging_11
-  });
-
   var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
   function isObject(val) {
@@ -822,6 +587,764 @@
 
     return result;
   };
+
+  function trimDots(ary) {
+    for (let i = 0; i < ary.length; ++i) {
+      let part = ary[i];
+      if (part === '.') {
+        ary.splice(i, 1);
+        i -= 1;
+      } else if (part === '..') {
+        if (i === 0 || i === 1 && ary[2] === '..' || ary[i - 1] === '..') {
+          continue;
+        } else if (i > 0) {
+          ary.splice(i - 1, 2);
+          i -= 2;
+        }
+      }
+    }
+  }
+
+  function relativeToFile(name, file) {
+    let fileParts = file && file.split('/');
+    let nameParts = name.trim().split('/');
+
+    if (nameParts[0].charAt(0) === '.' && fileParts) {
+      let normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
+      nameParts.unshift(...normalizedBaseParts);
+    }
+
+    trimDots(nameParts);
+
+    return nameParts.join('/');
+  }
+
+  function join(path1, path2) {
+    if (!path1) {
+      return path2;
+    }
+
+    if (!path2) {
+      return path1;
+    }
+
+    let schemeMatch = path1.match(/^([^/]*?:)\//);
+    let scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
+    path1 = path1.substr(scheme.length);
+
+    let urlPrefix;
+    if (path1.indexOf('///') === 0 && scheme === 'file:') {
+      urlPrefix = '///';
+    } else if (path1.indexOf('//') === 0) {
+      urlPrefix = '//';
+    } else if (path1.indexOf('/') === 0) {
+      urlPrefix = '/';
+    } else {
+      urlPrefix = '';
+    }
+
+    let trailingSlash = path2.slice(-1) === '/' ? '/' : '';
+
+    let url1 = path1.split('/');
+    let url2 = path2.split('/');
+    let url3 = [];
+
+    for (let i = 0, ii = url1.length; i < ii; ++i) {
+      if (url1[i] === '..') {
+        url3.pop();
+      } else if (url1[i] === '.' || url1[i] === '') {
+        continue;
+      } else {
+        url3.push(url1[i]);
+      }
+    }
+
+    for (let i = 0, ii = url2.length; i < ii; ++i) {
+      if (url2[i] === '..') {
+        url3.pop();
+      } else if (url2[i] === '.' || url2[i] === '') {
+        continue;
+      } else {
+        url3.push(url2[i]);
+      }
+    }
+
+    return scheme + urlPrefix + url3.join('/') + trailingSlash;
+  }
+
+  let encode = encodeURIComponent;
+  let encodeKey = k => encode(k).replace('%24', '$');
+
+  function buildParam(key, value, traditional) {
+    let result = [];
+    if (value === null || value === undefined) {
+      return result;
+    }
+    if (Array.isArray(value)) {
+      for (let i = 0, l = value.length; i < l; i++) {
+        if (traditional) {
+          result.push(`${ encodeKey(key) }=${ encode(value[i]) }`);
+        } else {
+          let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
+          result = result.concat(buildParam(arrayKey, value[i]));
+        }
+      }
+    } else if (typeof value === 'object' && !traditional) {
+      for (let propertyName in value) {
+        result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
+      }
+    } else {
+      result.push(`${ encodeKey(key) }=${ encode(value) }`);
+    }
+    return result;
+  }
+
+  function buildQueryString(params, traditional) {
+    let pairs = [];
+    let keys = Object.keys(params || {}).sort();
+    for (let i = 0, len = keys.length; i < len; i++) {
+      let key = keys[i];
+      pairs = pairs.concat(buildParam(key, params[key], traditional));
+    }
+
+    if (pairs.length === 0) {
+      return '';
+    }
+
+    return pairs.join('&');
+  }
+
+  function processScalarParam(existedParam, value) {
+    if (Array.isArray(existedParam)) {
+      existedParam.push(value);
+      return existedParam;
+    }
+    if (existedParam !== undefined) {
+      return [existedParam, value];
+    }
+
+    return value;
+  }
+
+  function parseComplexParam(queryParams, keys, value) {
+    let currentParams = queryParams;
+    let keysLastIndex = keys.length - 1;
+    for (let j = 0; j <= keysLastIndex; j++) {
+      let key = keys[j] === '' ? currentParams.length : keys[j];
+      if (j < keysLastIndex) {
+        let prevValue = !currentParams[key] || typeof currentParams[key] === 'object' ? currentParams[key] : [currentParams[key]];
+        currentParams = currentParams[key] = prevValue || (isNaN(keys[j + 1]) ? {} : []);
+      } else {
+        currentParams = currentParams[key] = value;
+      }
+    }
+  }
+
+  function parseQueryString(queryString) {
+    let queryParams = {};
+    if (!queryString || typeof queryString !== 'string') {
+      return queryParams;
+    }
+
+    let query = queryString;
+    if (query.charAt(0) === '?') {
+      query = query.substr(1);
+    }
+
+    let pairs = query.replace(/\+/g, ' ').split('&');
+    for (let i = 0; i < pairs.length; i++) {
+      let pair = pairs[i].split('=');
+      let key = decodeURIComponent(pair[0]);
+      if (!key) {
+        continue;
+      }
+
+      let keys = key.split('][');
+      let keysLastIndex = keys.length - 1;
+
+      if (/\[/.test(keys[0]) && /\]$/.test(keys[keysLastIndex])) {
+        keys[keysLastIndex] = keys[keysLastIndex].replace(/\]$/, '');
+        keys = keys.shift().split('[').concat(keys);
+        keysLastIndex = keys.length - 1;
+      } else {
+        keysLastIndex = 0;
+      }
+
+      if (pair.length >= 2) {
+        let value = pair[1] ? decodeURIComponent(pair[1]) : '';
+        if (keysLastIndex) {
+          parseComplexParam(queryParams, keys, value);
+        } else {
+          queryParams[key] = processScalarParam(queryParams[key], value);
+        }
+      } else {
+        queryParams[key] = true;
+      }
+    }
+    return queryParams;
+  }
+
+  let TemplateDependency = class TemplateDependency {
+    constructor(src, name) {
+      this.src = src;
+      this.name = name;
+    }
+  };
+
+  let TemplateRegistryEntry = class TemplateRegistryEntry {
+    constructor(address) {
+      this.templateIsLoaded = false;
+      this.factoryIsReady = false;
+      this.resources = null;
+      this.dependencies = null;
+
+      this.address = address;
+      this.onReady = null;
+      this._template = null;
+      this._factory = null;
+    }
+
+    get template() {
+      return this._template;
+    }
+
+    set template(value) {
+      let address = this.address;
+      let requires;
+      let current;
+      let src;
+      let dependencies;
+
+      this._template = value;
+      this.templateIsLoaded = true;
+
+      requires = value.content.querySelectorAll('require');
+      dependencies = this.dependencies = new Array(requires.length);
+
+      for (let i = 0, ii = requires.length; i < ii; ++i) {
+        current = requires[i];
+        src = current.getAttribute('from');
+
+        if (!src) {
+          throw new Error(`<require> element in ${ address } has no "from" attribute.`);
+        }
+
+        dependencies[i] = new TemplateDependency(relativeToFile(src, address), current.getAttribute('as'));
+
+        if (current.parentNode) {
+          current.parentNode.removeChild(current);
+        }
+      }
+    }
+
+    get factory() {
+      return this._factory;
+    }
+
+    set factory(value) {
+      this._factory = value;
+      this.factoryIsReady = true;
+    }
+
+    addDependency(src, name) {
+      let finalSrc = typeof src === 'string' ? relativeToFile(src, this.address) : Origin.get(src).moduleId;
+
+      this.dependencies.push(new TemplateDependency(finalSrc, name));
+    }
+  };
+
+  let Loader = class Loader {
+    constructor() {
+      this.templateRegistry = {};
+    }
+
+    map(id, source) {
+      throw new Error('Loaders must implement map(id, source).');
+    }
+
+    normalizeSync(moduleId, relativeTo) {
+      throw new Error('Loaders must implement normalizeSync(moduleId, relativeTo).');
+    }
+
+    normalize(moduleId, relativeTo) {
+      throw new Error('Loaders must implement normalize(moduleId: string, relativeTo: string): Promise<string>.');
+    }
+
+    loadModule(id) {
+      throw new Error('Loaders must implement loadModule(id).');
+    }
+
+    loadAllModules(ids) {
+      throw new Error('Loader must implement loadAllModules(ids).');
+    }
+
+    loadTemplate(url) {
+      throw new Error('Loader must implement loadTemplate(url).');
+    }
+
+    loadText(url) {
+      throw new Error('Loader must implement loadText(url).');
+    }
+
+    applyPluginToUrl(url, pluginName) {
+      throw new Error('Loader must implement applyPluginToUrl(url, pluginName).');
+    }
+
+    addPlugin(pluginName, implementation) {
+      throw new Error('Loader must implement addPlugin(pluginName, implementation).');
+    }
+
+    getOrCreateTemplateRegistryEntry(address) {
+      return this.templateRegistry[address] || (this.templateRegistry[address] = new TemplateRegistryEntry(address));
+    }
+  };
+
+  /*! *****************************************************************************
+  Copyright (c) Microsoft Corporation. All rights reserved.
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+  this file except in compliance with the License. You may obtain a copy of the
+  License at http://www.apache.org/licenses/LICENSE-2.0
+
+  THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+  WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+  MERCHANTABLITY OR NON-INFRINGEMENT.
+
+  See the Apache Version 2.0 License for specific language governing permissions
+  and limitations under the License.
+  ***************************************************************************** */
+
+  function __awaiter(thisArg, _arguments, P, generator) {
+      return new (P || (P = Promise))(function (resolve, reject) {
+          function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+          function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+          function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+          step((generator = generator.apply(thisArg, _arguments || [])).next());
+      });
+  }
+
+  /**
+  * An implementation of the TemplateLoader interface implemented with text-based loading.
+  */
+  class TextTemplateLoader {
+      /**
+      * Loads a template.
+      * @param loader The loader that is requesting the template load.
+      * @param entry The TemplateRegistryEntry to load and populate with a template.
+      * @return A promise which resolves when the TemplateRegistryEntry is loaded with a template.
+      */
+      loadTemplate(loader, entry) {
+          return __awaiter(this, void 0, void 0, function* () {
+              const text = yield loader.loadText(entry.address);
+              entry.template = DOM.createTemplateFromMarkup(text);
+          });
+      }
+  }
+  function ensureOriginOnExports(moduleExports, moduleId) {
+      let target = moduleExports;
+      let key;
+      let exportedValue;
+      if (typeof target === 'object') {
+          for (key in target) {
+              exportedValue = target[key];
+              if (typeof exportedValue === 'function') {
+                  Origin.set(exportedValue, new Origin(moduleId, key));
+              }
+          }
+      }
+      return moduleExports;
+  }
+  /**
+  * A default implementation of the Loader abstraction which works with webpack (extended common-js style).
+  */
+  class EsmLoader extends Loader {
+      constructor() {
+          super();
+          this.moduleRegistry = Object.create(null);
+          this.loaderPlugins = Object.create(null);
+          this.modulesBeingLoaded = new Map();
+          this.useTemplateLoader(new TextTemplateLoader());
+          this.addPlugin('template-registry-entry', {
+              fetch: (moduleId) => __awaiter(this, void 0, void 0, function* () {
+                  const entry = this.getOrCreateTemplateRegistryEntry(moduleId);
+                  if (!entry.templateIsLoaded) {
+                      yield this.templateLoader.loadTemplate(this, entry);
+                  }
+                  return entry;
+              })
+          });
+          PLATFORM.eachModule = callback => {
+              const registry = this.moduleRegistry;
+              const cachedModuleIds = Object.getOwnPropertyNames(registry);
+              cachedModuleIds
+                  // Note: we use .some here like a .forEach that can be "break"ed out of.
+                  // It will stop iterating only when a truthy value is returned.
+                  // Even though the docs say "true" explicitly, loader-default also goes by truthy
+                  // and this is to keep it consistent with that.
+                  .some(moduleId => {
+                  const moduleExports = registry[moduleId].exports;
+                  if (typeof moduleExports === 'object') {
+                      return callback(moduleId, moduleExports);
+                  }
+                  return false;
+              });
+          };
+      }
+      /**
+       * @internal
+       */
+      _import(address) {
+          return __awaiter(this, void 0, void 0, function* () {
+              const addressParts = address.split('!');
+              const moduleId = addressParts.splice(addressParts.length - 1, 1)[0];
+              const loaderPlugin = addressParts.length === 1 ? addressParts[0] : null;
+              if (loaderPlugin) {
+                  const plugin = this.loaderPlugins[loaderPlugin];
+                  if (!plugin) {
+                      throw new Error(`Plugin ${loaderPlugin} is not registered in the loader.`);
+                  }
+                  return yield plugin.fetch(moduleId);
+              }
+              return import(moduleId).then(m => {
+                  this.moduleRegistry[moduleId] = m;
+                  return m;
+              });
+          });
+      }
+      /**
+      * Maps a module id to a source.
+      * @param id The module id.
+      * @param source The source to map the module to.
+      */
+      map(id, source) { }
+      /**
+      * Normalizes a module id.
+      * @param moduleId The module id to normalize.
+      * @param relativeTo What the module id should be normalized relative to.
+      * @return The normalized module id.
+      */
+      normalizeSync(moduleId, relativeTo) {
+          return moduleId;
+      }
+      /**
+      * Normalizes a module id.
+      * @param moduleId The module id to normalize.
+      * @param relativeTo What the module id should be normalized relative to.
+      * @return The normalized module id.
+      */
+      normalize(moduleId, relativeTo) {
+          return Promise.resolve(moduleId);
+      }
+      /**
+      * Instructs the loader to use a specific TemplateLoader instance for loading templates
+      * @param templateLoader The instance of TemplateLoader to use for loading templates.
+      */
+      useTemplateLoader(templateLoader) {
+          this.templateLoader = templateLoader;
+      }
+      /**
+      * Loads a collection of modules.
+      * @param ids The set of module ids to load.
+      * @return A Promise for an array of loaded modules.
+      */
+      loadAllModules(ids) {
+          return Promise.all(ids.map(id => this.loadModule(id)));
+      }
+      /**
+      * Loads a module.
+      * @param moduleId The module ID to load.
+      * @return A Promise for the loaded module.
+      */
+      loadModule(moduleId) {
+          return __awaiter(this, void 0, void 0, function* () {
+              let existing = this.moduleRegistry[moduleId];
+              if (existing) {
+                  return existing;
+              }
+              let beingLoaded = this.modulesBeingLoaded.get(moduleId);
+              if (beingLoaded) {
+                  return beingLoaded;
+              }
+              beingLoaded = this._import(moduleId);
+              this.modulesBeingLoaded.set(moduleId, beingLoaded);
+              const moduleExports = yield beingLoaded;
+              this.moduleRegistry[moduleId] = ensureOriginOnExports(moduleExports, moduleId);
+              this.modulesBeingLoaded.delete(moduleId);
+              return moduleExports;
+          });
+      }
+      /**
+      * Loads a template.
+      * @param url The url of the template to load.
+      * @return A Promise for a TemplateRegistryEntry containing the template.
+      */
+      loadTemplate(url) {
+          return this.loadModule(this.applyPluginToUrl(url, 'template-registry-entry'));
+      }
+      /**
+      * Loads a text-based resource.
+      * @param url The url of the text file to load.
+      * @return A Promise for text content.
+      */
+      loadText(url) {
+          return __awaiter(this, void 0, void 0, function* () {
+              return fetch(url).then(res => res.text());
+          });
+      }
+      /**
+      * Alters a module id so that it includes a plugin loader.
+      * @param url The url of the module to load.
+      * @param pluginName The plugin to apply to the module id.
+      * @return The plugin-based module id.
+      */
+      applyPluginToUrl(url, pluginName) {
+          return `${pluginName}!${url}`;
+      }
+      /**
+      * Registers a plugin with the loader.
+      * @param pluginName The name of the plugin.
+      * @param implementation The plugin implementation.
+      */
+      addPlugin(pluginName, implementation) {
+          this.loaderPlugins[pluginName] = implementation;
+      }
+  }
+  PLATFORM.Loader = EsmLoader;
+
+  function unwrapExports (x) {
+  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
+  }
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  var aureliaLogging = createCommonjsModule(function (module, exports) {
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.getLogger = getLogger;
+  exports.addAppender = addAppender;
+  exports.removeAppender = removeAppender;
+  exports.getAppenders = getAppenders;
+  exports.clearAppenders = clearAppenders;
+  exports.addCustomLevel = addCustomLevel;
+  exports.removeCustomLevel = removeCustomLevel;
+  exports.setLevel = setLevel;
+  exports.getLevel = getLevel;
+
+
+
+  var logLevel = exports.logLevel = {
+    none: 0,
+    error: 10,
+    warn: 20,
+    info: 30,
+    debug: 40
+  };
+
+  var loggers = {};
+  var appenders = [];
+  var globalDefaultLevel = logLevel.none;
+
+  var standardLevels = ['none', 'error', 'warn', 'info', 'debug'];
+  function isStandardLevel(level) {
+    return standardLevels.filter(function (l) {
+      return l === level;
+    }).length > 0;
+  }
+
+  function appendArgs() {
+    return [this].concat(Array.prototype.slice.call(arguments));
+  }
+
+  function logFactory(level) {
+    var threshold = logLevel[level];
+    return function () {
+      if (this.level < threshold) {
+        return;
+      }
+
+      var args = appendArgs.apply(this, arguments);
+      var i = appenders.length;
+      while (i--) {
+        var _appenders$i;
+
+        (_appenders$i = appenders[i])[level].apply(_appenders$i, args);
+      }
+    };
+  }
+
+  function logFactoryCustom(level) {
+    var threshold = logLevel[level];
+    return function () {
+      if (this.level < threshold) {
+        return;
+      }
+
+      var args = appendArgs.apply(this, arguments);
+      var i = appenders.length;
+      while (i--) {
+        var appender = appenders[i];
+        if (appender[level] !== undefined) {
+          appender[level].apply(appender, args);
+        }
+      }
+    };
+  }
+
+  function connectLoggers() {
+    var proto = Logger.prototype;
+    for (var _level in logLevel) {
+      if (isStandardLevel(_level)) {
+        if (_level !== 'none') {
+          proto[_level] = logFactory(_level);
+        }
+      } else {
+        proto[_level] = logFactoryCustom(_level);
+      }
+    }
+  }
+
+  function disconnectLoggers() {
+    var proto = Logger.prototype;
+    for (var _level2 in logLevel) {
+      if (_level2 !== 'none') {
+        proto[_level2] = function () {};
+      }
+    }
+  }
+
+  function getLogger(id) {
+    return loggers[id] || new Logger(id);
+  }
+
+  function addAppender(appender) {
+    if (appenders.push(appender) === 1) {
+      connectLoggers();
+    }
+  }
+
+  function removeAppender(appender) {
+    appenders = appenders.filter(function (a) {
+      return a !== appender;
+    });
+  }
+
+  function getAppenders() {
+    return [].concat(appenders);
+  }
+
+  function clearAppenders() {
+    appenders = [];
+    disconnectLoggers();
+  }
+
+  function addCustomLevel(name, value) {
+    if (logLevel[name] !== undefined) {
+      throw Error('Log level "' + name + '" already exists.');
+    }
+
+    if (isNaN(value)) {
+      throw Error('Value must be a number.');
+    }
+
+    logLevel[name] = value;
+
+    if (appenders.length > 0) {
+      connectLoggers();
+    } else {
+      Logger.prototype[name] = function () {};
+    }
+  }
+
+  function removeCustomLevel(name) {
+    if (logLevel[name] === undefined) {
+      return;
+    }
+
+    if (isStandardLevel(name)) {
+      throw Error('Built-in log level "' + name + '" cannot be removed.');
+    }
+
+    delete logLevel[name];
+    delete Logger.prototype[name];
+  }
+
+  function setLevel(level) {
+    globalDefaultLevel = level;
+    for (var key in loggers) {
+      loggers[key].setLevel(level);
+    }
+  }
+
+  function getLevel() {
+    return globalDefaultLevel;
+  }
+
+  var Logger = exports.Logger = function () {
+    function Logger(id) {
+      
+
+      var cached = loggers[id];
+      if (cached) {
+        return cached;
+      }
+
+      loggers[id] = this;
+      this.id = id;
+      this.level = globalDefaultLevel;
+    }
+
+    Logger.prototype.debug = function debug(message) {};
+
+    Logger.prototype.info = function info(message) {};
+
+    Logger.prototype.warn = function warn(message) {};
+
+    Logger.prototype.error = function error(message) {};
+
+    Logger.prototype.setLevel = function setLevel(level) {
+      this.level = level;
+    };
+
+    Logger.prototype.isDebugEnabled = function isDebugEnabled() {
+      return this.level === logLevel.debug;
+    };
+
+    return Logger;
+  }();
+  });
+
+  var aureliaLogging$1 = unwrapExports(aureliaLogging);
+  var aureliaLogging_1 = aureliaLogging.getLogger;
+  var aureliaLogging_2 = aureliaLogging.addAppender;
+  var aureliaLogging_3 = aureliaLogging.removeAppender;
+  var aureliaLogging_4 = aureliaLogging.getAppenders;
+  var aureliaLogging_5 = aureliaLogging.clearAppenders;
+  var aureliaLogging_6 = aureliaLogging.addCustomLevel;
+  var aureliaLogging_7 = aureliaLogging.removeCustomLevel;
+  var aureliaLogging_8 = aureliaLogging.setLevel;
+  var aureliaLogging_9 = aureliaLogging.getLevel;
+  var aureliaLogging_10 = aureliaLogging.logLevel;
+  var aureliaLogging_11 = aureliaLogging.Logger;
+
+  var TheLogManager = /*#__PURE__*/Object.freeze({
+    default: aureliaLogging$1,
+    __moduleExports: aureliaLogging,
+    getLogger: aureliaLogging_1,
+    addAppender: aureliaLogging_2,
+    removeAppender: aureliaLogging_3,
+    getAppenders: aureliaLogging_4,
+    clearAppenders: aureliaLogging_5,
+    addCustomLevel: aureliaLogging_6,
+    removeCustomLevel: aureliaLogging_7,
+    setLevel: aureliaLogging_8,
+    getLevel: aureliaLogging_9,
+    logLevel: aureliaLogging_10,
+    Logger: aureliaLogging_11
+  });
 
   var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _class4, _dec5, _class5, _dec6, _class6, _dec7, _class7;
 
@@ -1463,317 +1986,6 @@
       }
     };
   }
-
-  function trimDots(ary) {
-    for (let i = 0; i < ary.length; ++i) {
-      let part = ary[i];
-      if (part === '.') {
-        ary.splice(i, 1);
-        i -= 1;
-      } else if (part === '..') {
-        if (i === 0 || i === 1 && ary[2] === '..' || ary[i - 1] === '..') {
-          continue;
-        } else if (i > 0) {
-          ary.splice(i - 1, 2);
-          i -= 2;
-        }
-      }
-    }
-  }
-
-  function relativeToFile(name, file) {
-    let fileParts = file && file.split('/');
-    let nameParts = name.trim().split('/');
-
-    if (nameParts[0].charAt(0) === '.' && fileParts) {
-      let normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
-      nameParts.unshift(...normalizedBaseParts);
-    }
-
-    trimDots(nameParts);
-
-    return nameParts.join('/');
-  }
-
-  function join(path1, path2) {
-    if (!path1) {
-      return path2;
-    }
-
-    if (!path2) {
-      return path1;
-    }
-
-    let schemeMatch = path1.match(/^([^/]*?:)\//);
-    let scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
-    path1 = path1.substr(scheme.length);
-
-    let urlPrefix;
-    if (path1.indexOf('///') === 0 && scheme === 'file:') {
-      urlPrefix = '///';
-    } else if (path1.indexOf('//') === 0) {
-      urlPrefix = '//';
-    } else if (path1.indexOf('/') === 0) {
-      urlPrefix = '/';
-    } else {
-      urlPrefix = '';
-    }
-
-    let trailingSlash = path2.slice(-1) === '/' ? '/' : '';
-
-    let url1 = path1.split('/');
-    let url2 = path2.split('/');
-    let url3 = [];
-
-    for (let i = 0, ii = url1.length; i < ii; ++i) {
-      if (url1[i] === '..') {
-        url3.pop();
-      } else if (url1[i] === '.' || url1[i] === '') {
-        continue;
-      } else {
-        url3.push(url1[i]);
-      }
-    }
-
-    for (let i = 0, ii = url2.length; i < ii; ++i) {
-      if (url2[i] === '..') {
-        url3.pop();
-      } else if (url2[i] === '.' || url2[i] === '') {
-        continue;
-      } else {
-        url3.push(url2[i]);
-      }
-    }
-
-    return scheme + urlPrefix + url3.join('/') + trailingSlash;
-  }
-
-  let encode = encodeURIComponent;
-  let encodeKey = k => encode(k).replace('%24', '$');
-
-  function buildParam(key, value, traditional) {
-    let result = [];
-    if (value === null || value === undefined) {
-      return result;
-    }
-    if (Array.isArray(value)) {
-      for (let i = 0, l = value.length; i < l; i++) {
-        if (traditional) {
-          result.push(`${ encodeKey(key) }=${ encode(value[i]) }`);
-        } else {
-          let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
-          result = result.concat(buildParam(arrayKey, value[i]));
-        }
-      }
-    } else if (typeof value === 'object' && !traditional) {
-      for (let propertyName in value) {
-        result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
-      }
-    } else {
-      result.push(`${ encodeKey(key) }=${ encode(value) }`);
-    }
-    return result;
-  }
-
-  function buildQueryString(params, traditional) {
-    let pairs = [];
-    let keys = Object.keys(params || {}).sort();
-    for (let i = 0, len = keys.length; i < len; i++) {
-      let key = keys[i];
-      pairs = pairs.concat(buildParam(key, params[key], traditional));
-    }
-
-    if (pairs.length === 0) {
-      return '';
-    }
-
-    return pairs.join('&');
-  }
-
-  function processScalarParam(existedParam, value) {
-    if (Array.isArray(existedParam)) {
-      existedParam.push(value);
-      return existedParam;
-    }
-    if (existedParam !== undefined) {
-      return [existedParam, value];
-    }
-
-    return value;
-  }
-
-  function parseComplexParam(queryParams, keys, value) {
-    let currentParams = queryParams;
-    let keysLastIndex = keys.length - 1;
-    for (let j = 0; j <= keysLastIndex; j++) {
-      let key = keys[j] === '' ? currentParams.length : keys[j];
-      if (j < keysLastIndex) {
-        let prevValue = !currentParams[key] || typeof currentParams[key] === 'object' ? currentParams[key] : [currentParams[key]];
-        currentParams = currentParams[key] = prevValue || (isNaN(keys[j + 1]) ? {} : []);
-      } else {
-        currentParams = currentParams[key] = value;
-      }
-    }
-  }
-
-  function parseQueryString(queryString) {
-    let queryParams = {};
-    if (!queryString || typeof queryString !== 'string') {
-      return queryParams;
-    }
-
-    let query = queryString;
-    if (query.charAt(0) === '?') {
-      query = query.substr(1);
-    }
-
-    let pairs = query.replace(/\+/g, ' ').split('&');
-    for (let i = 0; i < pairs.length; i++) {
-      let pair = pairs[i].split('=');
-      let key = decodeURIComponent(pair[0]);
-      if (!key) {
-        continue;
-      }
-
-      let keys = key.split('][');
-      let keysLastIndex = keys.length - 1;
-
-      if (/\[/.test(keys[0]) && /\]$/.test(keys[keysLastIndex])) {
-        keys[keysLastIndex] = keys[keysLastIndex].replace(/\]$/, '');
-        keys = keys.shift().split('[').concat(keys);
-        keysLastIndex = keys.length - 1;
-      } else {
-        keysLastIndex = 0;
-      }
-
-      if (pair.length >= 2) {
-        let value = pair[1] ? decodeURIComponent(pair[1]) : '';
-        if (keysLastIndex) {
-          parseComplexParam(queryParams, keys, value);
-        } else {
-          queryParams[key] = processScalarParam(queryParams[key], value);
-        }
-      } else {
-        queryParams[key] = true;
-      }
-    }
-    return queryParams;
-  }
-
-  let TemplateDependency = class TemplateDependency {
-    constructor(src, name) {
-      this.src = src;
-      this.name = name;
-    }
-  };
-
-  let TemplateRegistryEntry = class TemplateRegistryEntry {
-    constructor(address) {
-      this.templateIsLoaded = false;
-      this.factoryIsReady = false;
-      this.resources = null;
-      this.dependencies = null;
-
-      this.address = address;
-      this.onReady = null;
-      this._template = null;
-      this._factory = null;
-    }
-
-    get template() {
-      return this._template;
-    }
-
-    set template(value) {
-      let address = this.address;
-      let requires;
-      let current;
-      let src;
-      let dependencies;
-
-      this._template = value;
-      this.templateIsLoaded = true;
-
-      requires = value.content.querySelectorAll('require');
-      dependencies = this.dependencies = new Array(requires.length);
-
-      for (let i = 0, ii = requires.length; i < ii; ++i) {
-        current = requires[i];
-        src = current.getAttribute('from');
-
-        if (!src) {
-          throw new Error(`<require> element in ${ address } has no "from" attribute.`);
-        }
-
-        dependencies[i] = new TemplateDependency(relativeToFile(src, address), current.getAttribute('as'));
-
-        if (current.parentNode) {
-          current.parentNode.removeChild(current);
-        }
-      }
-    }
-
-    get factory() {
-      return this._factory;
-    }
-
-    set factory(value) {
-      this._factory = value;
-      this.factoryIsReady = true;
-    }
-
-    addDependency(src, name) {
-      let finalSrc = typeof src === 'string' ? relativeToFile(src, this.address) : Origin.get(src).moduleId;
-
-      this.dependencies.push(new TemplateDependency(finalSrc, name));
-    }
-  };
-
-  let Loader = class Loader {
-    constructor() {
-      this.templateRegistry = {};
-    }
-
-    map(id, source) {
-      throw new Error('Loaders must implement map(id, source).');
-    }
-
-    normalizeSync(moduleId, relativeTo) {
-      throw new Error('Loaders must implement normalizeSync(moduleId, relativeTo).');
-    }
-
-    normalize(moduleId, relativeTo) {
-      throw new Error('Loaders must implement normalize(moduleId: string, relativeTo: string): Promise<string>.');
-    }
-
-    loadModule(id) {
-      throw new Error('Loaders must implement loadModule(id).');
-    }
-
-    loadAllModules(ids) {
-      throw new Error('Loader must implement loadAllModules(ids).');
-    }
-
-    loadTemplate(url) {
-      throw new Error('Loader must implement loadTemplate(url).');
-    }
-
-    loadText(url) {
-      throw new Error('Loader must implement loadText(url).');
-    }
-
-    applyPluginToUrl(url, pluginName) {
-      throw new Error('Loader must implement applyPluginToUrl(url, pluginName).');
-    }
-
-    addPlugin(pluginName, implementation) {
-      throw new Error('Loader must implement addPlugin(pluginName, implementation).');
-    }
-
-    getOrCreateTemplateRegistryEntry(address) {
-      return this.templateRegistry[address] || (this.templateRegistry[address] = new TemplateRegistryEntry(address));
-    }
-  };
 
   const stackSeparator = '\nEnqueued in TaskQueue by:\n';
   const microStackSeparator = '\nEnqueued in MicroTaskQueue by:\n';
