@@ -1,5 +1,5 @@
 export class Page {
-  static get $view() {
+  static get $view1() {
     return '<template>${message}</template>'
   }
 
