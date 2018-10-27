@@ -47,7 +47,16 @@ export default [
         format: 'es'
       },
       {
+        file: 'example/aurelia_router.esm.js',
+        format: 'es'
+      },
+      {
         file: 'dist/aurelia_router.umd.js',
+        format: 'umd',
+        name: 'au'
+      },
+      {
+        file: 'example/aurelia_router.umd.js',
         format: 'umd',
         name: 'au'
       }

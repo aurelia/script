@@ -15274,6 +15274,2782 @@ function configure$3(config) {
   config.instance(EventAggregator, includeEventsIn(config.aurelia));
 }
 
+function mi$1(name) {
+  throw new Error(`History must implement ${ name }().`);
+}
+
+let History = class History {
+  activate(options) {
+    mi$1('activate');
+  }
+
+  deactivate() {
+    mi$1('deactivate');
+  }
+
+  getAbsoluteRoot() {
+    mi$1('getAbsoluteRoot');
+  }
+
+  navigate(fragment, options) {
+    mi$1('navigate');
+  }
+
+  navigateBack() {
+    mi$1('navigateBack');
+  }
+
+  setTitle(title) {
+    mi$1('setTitle');
+  }
+
+  setState(key, value) {
+    mi$1('setState');
+  }
+
+  getState(key) {
+    mi$1('getState');
+  }
+};
+
+var _class$l, _temp$3;
+
+let LinkHandler = class LinkHandler {
+  activate(history) {}
+
+  deactivate() {}
+};
+
+let DefaultLinkHandler = class DefaultLinkHandler extends LinkHandler {
+  constructor() {
+    super();
+
+    this.handler = e => {
+      let { shouldHandleEvent, href } = DefaultLinkHandler.getEventInfo(e);
+
+      if (shouldHandleEvent) {
+        e.preventDefault();
+        this.history.navigate(href);
+      }
+    };
+  }
+
+  activate(history) {
+    if (history._hasPushState) {
+      this.history = history;
+      DOM.addEventListener('click', this.handler, true);
+    }
+  }
+
+  deactivate() {
+    DOM.removeEventListener('click', this.handler);
+  }
+
+  static getEventInfo(event) {
+    let info = {
+      shouldHandleEvent: false,
+      href: null,
+      anchor: null
+    };
+
+    let target = DefaultLinkHandler.findClosestAnchor(event.target);
+    if (!target || !DefaultLinkHandler.targetIsThisWindow(target)) {
+      return info;
+    }
+
+    if (target.hasAttribute('download') || target.hasAttribute('router-ignore')) {
+      return info;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return info;
+    }
+
+    let href = target.getAttribute('href');
+    info.anchor = target;
+    info.href = href;
+
+    let leftButtonClicked = event.which === 1;
+    let isRelative = href && !(href.charAt(0) === '#' || /^[a-z]+:/i.test(href));
+
+    info.shouldHandleEvent = leftButtonClicked && isRelative;
+    return info;
+  }
+
+  static findClosestAnchor(el) {
+    while (el) {
+      if (el.tagName === 'A') {
+        return el;
+      }
+
+      el = el.parentNode;
+    }
+  }
+
+  static targetIsThisWindow(target) {
+    let targetWindow = target.getAttribute('target');
+    let win = PLATFORM.global;
+
+    return !targetWindow || targetWindow === win.name || targetWindow === '_self';
+  }
+};
+
+function configure$4(config) {
+  config.singleton(History, BrowserHistory);
+  config.transient(LinkHandler, DefaultLinkHandler);
+}
+
+let BrowserHistory = (_temp$3 = _class$l = class BrowserHistory extends History {
+  constructor(linkHandler) {
+    super();
+
+    this._isActive = false;
+    this._checkUrlCallback = this._checkUrl.bind(this);
+
+    this.location = PLATFORM.location;
+    this.history = PLATFORM.history;
+    this.linkHandler = linkHandler;
+  }
+
+  activate(options) {
+    if (this._isActive) {
+      throw new Error('History has already been activated.');
+    }
+
+    let wantsPushState = !!options.pushState;
+
+    this._isActive = true;
+    this.options = Object.assign({}, { root: '/' }, this.options, options);
+
+    this.root = ('/' + this.options.root + '/').replace(rootStripper, '/');
+
+    this._wantsHashChange = this.options.hashChange !== false;
+    this._hasPushState = !!(this.options.pushState && this.history && this.history.pushState);
+
+    let eventName;
+    if (this._hasPushState) {
+      eventName = 'popstate';
+    } else if (this._wantsHashChange) {
+      eventName = 'hashchange';
+    }
+
+    PLATFORM.addEventListener(eventName, this._checkUrlCallback);
+
+    if (this._wantsHashChange && wantsPushState) {
+      let loc = this.location;
+      let atRoot = loc.pathname.replace(/[^\/]$/, '$&/') === this.root;
+
+      if (!this._hasPushState && !atRoot) {
+        this.fragment = this._getFragment(null, true);
+        this.location.replace(this.root + this.location.search + '#' + this.fragment);
+
+        return true;
+      } else if (this._hasPushState && atRoot && loc.hash) {
+        this.fragment = this._getHash().replace(routeStripper, '');
+        this.history.replaceState({}, DOM.title, this.root + this.fragment + loc.search);
+      }
+    }
+
+    if (!this.fragment) {
+      this.fragment = this._getFragment();
+    }
+
+    this.linkHandler.activate(this);
+
+    if (!this.options.silent) {
+      return this._loadUrl();
+    }
+  }
+
+  deactivate() {
+    PLATFORM.removeEventListener('popstate', this._checkUrlCallback);
+    PLATFORM.removeEventListener('hashchange', this._checkUrlCallback);
+    this._isActive = false;
+    this.linkHandler.deactivate();
+  }
+
+  getAbsoluteRoot() {
+    let origin = createOrigin(this.location.protocol, this.location.hostname, this.location.port);
+    return `${origin}${this.root}`;
+  }
+
+  navigate(fragment, { trigger = true, replace = false } = {}) {
+    if (fragment && absoluteUrl.test(fragment)) {
+      this.location.href = fragment;
+      return true;
+    }
+
+    if (!this._isActive) {
+      return false;
+    }
+
+    fragment = this._getFragment(fragment || '');
+
+    if (this.fragment === fragment && !replace) {
+      return false;
+    }
+
+    this.fragment = fragment;
+
+    let url = this.root + fragment;
+
+    if (fragment === '' && url !== '/') {
+      url = url.slice(0, -1);
+    }
+
+    if (this._hasPushState) {
+      url = url.replace('//', '/');
+      this.history[replace ? 'replaceState' : 'pushState']({}, DOM.title, url);
+    } else if (this._wantsHashChange) {
+      updateHash(this.location, fragment, replace);
+    } else {
+      this.location.assign(url);
+    }
+
+    if (trigger) {
+      return this._loadUrl(fragment);
+    }
+
+    return true;
+  }
+
+  navigateBack() {
+    this.history.back();
+  }
+
+  setTitle(title) {
+    DOM.title = title;
+  }
+
+  setState(key, value) {
+    let state = Object.assign({}, this.history.state);
+    let { pathname, search, hash } = this.location;
+    state[key] = value;
+    this.history.replaceState(state, null, `${pathname}${search}${hash}`);
+  }
+
+  getState(key) {
+    let state = Object.assign({}, this.history.state);
+    return state[key];
+  }
+
+  _getHash() {
+    return this.location.hash.substr(1);
+  }
+
+  _getFragment(fragment, forcePushState) {
+    let root;
+
+    if (!fragment) {
+      if (this._hasPushState || !this._wantsHashChange || forcePushState) {
+        fragment = this.location.pathname + this.location.search;
+        root = this.root.replace(trailingSlash, '');
+        if (!fragment.indexOf(root)) {
+          fragment = fragment.substr(root.length);
+        }
+      } else {
+        fragment = this._getHash();
+      }
+    }
+
+    return '/' + fragment.replace(routeStripper, '');
+  }
+
+  _checkUrl() {
+    let current = this._getFragment();
+    if (current !== this.fragment) {
+      this._loadUrl();
+    }
+  }
+
+  _loadUrl(fragmentOverride) {
+    let fragment = this.fragment = this._getFragment(fragmentOverride);
+
+    return this.options.routeHandler ? this.options.routeHandler(fragment) : false;
+  }
+}, _class$l.inject = [LinkHandler], _temp$3);
+
+const routeStripper = /^#?\/*|\s+$/g;
+
+const rootStripper = /^\/+|\/+$/g;
+
+const trailingSlash = /\/$/;
+
+const absoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
+
+function updateHash(location, fragment, replace) {
+  if (replace) {
+    let href = location.href.replace(/(javascript:|#).*$/, '');
+    location.replace(href + '#' + fragment);
+  } else {
+    location.hash = '#' + fragment;
+  }
+}
+
+function createOrigin(protocol, hostname, port) {
+  return `${protocol}//${hostname}${port ? ':' + port : ''}`;
+}
+
+let State = class State {
+  constructor(charSpec) {
+    this.charSpec = charSpec;
+    this.nextStates = [];
+  }
+
+  get(charSpec) {
+    for (let child of this.nextStates) {
+      let isEqual = child.charSpec.validChars === charSpec.validChars && child.charSpec.invalidChars === charSpec.invalidChars;
+
+      if (isEqual) {
+        return child;
+      }
+    }
+
+    return undefined;
+  }
+
+  put(charSpec) {
+    let state = this.get(charSpec);
+
+    if (state) {
+      return state;
+    }
+
+    state = new State(charSpec);
+
+    this.nextStates.push(state);
+
+    if (charSpec.repeat) {
+      state.nextStates.push(state);
+    }
+
+    return state;
+  }
+
+  match(ch) {
+    let nextStates = this.nextStates;
+    let results = [];
+
+    for (let i = 0, l = nextStates.length; i < l; i++) {
+      let child = nextStates[i];
+      let charSpec = child.charSpec;
+
+      if (charSpec.validChars !== undefined) {
+        if (charSpec.validChars.indexOf(ch) !== -1) {
+          results.push(child);
+        }
+      } else if (charSpec.invalidChars !== undefined) {
+        if (charSpec.invalidChars.indexOf(ch) === -1) {
+          results.push(child);
+        }
+      }
+    }
+
+    return results;
+  }
+};
+
+const specials = ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\'];
+
+const escapeRegex = new RegExp('(\\' + specials.join('|\\') + ')', 'g');
+
+let StaticSegment = class StaticSegment {
+  constructor(string, caseSensitive) {
+    this.string = string;
+    this.caseSensitive = caseSensitive;
+  }
+
+  eachChar(callback) {
+    let s = this.string;
+    for (let i = 0, ii = s.length; i < ii; ++i) {
+      let ch = s[i];
+      callback({ validChars: this.caseSensitive ? ch : ch.toUpperCase() + ch.toLowerCase() });
+    }
+  }
+
+  regex() {
+    return this.string.replace(escapeRegex, '\\$1');
+  }
+
+  generate() {
+    return this.string;
+  }
+};
+
+let DynamicSegment = class DynamicSegment {
+  constructor(name, optional) {
+    this.name = name;
+    this.optional = optional;
+  }
+
+  eachChar(callback) {
+    callback({ invalidChars: '/', repeat: true });
+  }
+
+  regex() {
+    return '([^/]+)';
+  }
+
+  generate(params, consumed) {
+    consumed[this.name] = true;
+    return params[this.name];
+  }
+};
+
+let StarSegment = class StarSegment {
+  constructor(name) {
+    this.name = name;
+  }
+
+  eachChar(callback) {
+    callback({ invalidChars: '', repeat: true });
+  }
+
+  regex() {
+    return '(.+)';
+  }
+
+  generate(params, consumed) {
+    consumed[this.name] = true;
+    return params[this.name];
+  }
+};
+
+let EpsilonSegment = class EpsilonSegment {
+  eachChar() {}
+
+  regex() {
+    return '';
+  }
+
+  generate() {
+    return '';
+  }
+};
+
+let RouteRecognizer = class RouteRecognizer {
+  constructor() {
+    this.rootState = new State();
+    this.names = {};
+  }
+
+  add(route) {
+    if (Array.isArray(route)) {
+      route.forEach(r => this.add(r));
+      return undefined;
+    }
+
+    let currentState = this.rootState;
+    let skippableStates = [];
+    let regex = '^';
+    let types = { statics: 0, dynamics: 0, stars: 0 };
+    let names = [];
+    let routeName = route.handler.name;
+    let isEmpty = true;
+    let segments = parse(route.path, names, types, route.caseSensitive);
+
+    for (let i = 0, ii = segments.length; i < ii; i++) {
+      let segment = segments[i];
+      if (segment instanceof EpsilonSegment) {
+        continue;
+      }
+
+      let [firstState, nextState] = addSegment(currentState, segment);
+
+      for (let j = 0, jj = skippableStates.length; j < jj; j++) {
+        skippableStates[j].nextStates.push(firstState);
+      }
+
+      if (segment.optional) {
+        skippableStates.push(nextState);
+        regex += `(?:/${segment.regex()})?`;
+      } else {
+        currentState = nextState;
+        regex += `/${segment.regex()}`;
+        skippableStates.length = 0;
+        isEmpty = false;
+      }
+    }
+
+    if (isEmpty) {
+      currentState = currentState.put({ validChars: '/' });
+      regex += '/?';
+    }
+
+    let handlers = [{ handler: route.handler, names: names }];
+
+    if (routeName) {
+      let routeNames = Array.isArray(routeName) ? routeName : [routeName];
+      for (let i = 0; i < routeNames.length; i++) {
+        this.names[routeNames[i]] = {
+          segments: segments,
+          handlers: handlers
+        };
+      }
+    }
+
+    for (let i = 0; i < skippableStates.length; i++) {
+      let state = skippableStates[i];
+      state.handlers = handlers;
+      state.regex = new RegExp(regex + '$', route.caseSensitive ? '' : 'i');
+      state.types = types;
+    }
+
+    currentState.handlers = handlers;
+    currentState.regex = new RegExp(regex + '$', route.caseSensitive ? '' : 'i');
+    currentState.types = types;
+
+    return currentState;
+  }
+
+  handlersFor(name) {
+    let route = this.names[name];
+    if (!route) {
+      throw new Error(`There is no route named ${name}`);
+    }
+
+    return [...route.handlers];
+  }
+
+  hasRoute(name) {
+    return !!this.names[name];
+  }
+
+  generate(name, params) {
+    let route = this.names[name];
+    if (!route) {
+      throw new Error(`There is no route named ${name}`);
+    }
+
+    let handler = route.handlers[0].handler;
+    if (handler.generationUsesHref) {
+      return handler.href;
+    }
+
+    let routeParams = Object.assign({}, params);
+    let segments = route.segments;
+    let consumed = {};
+    let output = '';
+
+    for (let i = 0, l = segments.length; i < l; i++) {
+      let segment = segments[i];
+
+      if (segment instanceof EpsilonSegment) {
+        continue;
+      }
+
+      let segmentValue = segment.generate(routeParams, consumed);
+      if (segmentValue === null || segmentValue === undefined) {
+        if (!segment.optional) {
+          throw new Error(`A value is required for route parameter '${segment.name}' in route '${name}'.`);
+        }
+      } else {
+        output += '/';
+        output += segmentValue;
+      }
+    }
+
+    if (output.charAt(0) !== '/') {
+      output = '/' + output;
+    }
+
+    for (let param in consumed) {
+      delete routeParams[param];
+    }
+
+    let queryString = buildQueryString(routeParams);
+    output += queryString ? `?${queryString}` : '';
+
+    return output;
+  }
+
+  recognize(path) {
+    let states = [this.rootState];
+    let queryParams = {};
+    let isSlashDropped = false;
+    let normalizedPath = path;
+
+    let queryStart = normalizedPath.indexOf('?');
+    if (queryStart !== -1) {
+      let queryString = normalizedPath.substr(queryStart + 1, normalizedPath.length);
+      normalizedPath = normalizedPath.substr(0, queryStart);
+      queryParams = parseQueryString(queryString);
+    }
+
+    normalizedPath = decodeURI(normalizedPath);
+
+    if (normalizedPath.charAt(0) !== '/') {
+      normalizedPath = '/' + normalizedPath;
+    }
+
+    let pathLen = normalizedPath.length;
+    if (pathLen > 1 && normalizedPath.charAt(pathLen - 1) === '/') {
+      normalizedPath = normalizedPath.substr(0, pathLen - 1);
+      isSlashDropped = true;
+    }
+
+    for (let i = 0, l = normalizedPath.length; i < l; i++) {
+      states = recognizeChar(states, normalizedPath.charAt(i));
+      if (!states.length) {
+        break;
+      }
+    }
+
+    let solutions = [];
+    for (let i = 0, l = states.length; i < l; i++) {
+      if (states[i].handlers) {
+        solutions.push(states[i]);
+      }
+    }
+
+    states = sortSolutions(solutions);
+
+    let state = solutions[0];
+    if (state && state.handlers) {
+      if (isSlashDropped && state.regex.source.slice(-5) === '(.+)$') {
+        normalizedPath = normalizedPath + '/';
+      }
+
+      return findHandler(state, normalizedPath, queryParams);
+    }
+  }
+};
+
+let RecognizeResults = class RecognizeResults {
+  constructor(queryParams) {
+    this.splice = Array.prototype.splice;
+    this.slice = Array.prototype.slice;
+    this.push = Array.prototype.push;
+    this.length = 0;
+    this.queryParams = queryParams || {};
+  }
+};
+
+
+function parse(route, names, types, caseSensitive) {
+  let normalizedRoute = route;
+  if (route.charAt(0) === '/') {
+    normalizedRoute = route.substr(1);
+  }
+
+  let results = [];
+
+  let splitRoute = normalizedRoute.split('/');
+  for (let i = 0, ii = splitRoute.length; i < ii; ++i) {
+    let segment = splitRoute[i];
+
+    let match = segment.match(/^:([^?]+)(\?)?$/);
+    if (match) {
+      let [, name, optional] = match;
+      if (name.indexOf('=') !== -1) {
+        throw new Error(`Parameter ${name} in route ${route} has a default value, which is not supported.`);
+      }
+      results.push(new DynamicSegment(name, !!optional));
+      names.push(name);
+      types.dynamics++;
+      continue;
+    }
+
+    match = segment.match(/^\*(.+)$/);
+    if (match) {
+      results.push(new StarSegment(match[1]));
+      names.push(match[1]);
+      types.stars++;
+    } else if (segment === '') {
+      results.push(new EpsilonSegment());
+    } else {
+      results.push(new StaticSegment(segment, caseSensitive));
+      types.statics++;
+    }
+  }
+
+  return results;
+}
+
+function sortSolutions(states) {
+  return states.sort((a, b) => {
+    if (a.types.stars !== b.types.stars) {
+      return a.types.stars - b.types.stars;
+    }
+
+    if (a.types.stars) {
+      if (a.types.statics !== b.types.statics) {
+        return b.types.statics - a.types.statics;
+      }
+      if (a.types.dynamics !== b.types.dynamics) {
+        return b.types.dynamics - a.types.dynamics;
+      }
+    }
+
+    if (a.types.dynamics !== b.types.dynamics) {
+      return a.types.dynamics - b.types.dynamics;
+    }
+
+    if (a.types.statics !== b.types.statics) {
+      return b.types.statics - a.types.statics;
+    }
+
+    return 0;
+  });
+}
+
+function recognizeChar(states, ch) {
+  let nextStates = [];
+
+  for (let i = 0, l = states.length; i < l; i++) {
+    let state = states[i];
+    nextStates.push(...state.match(ch));
+  }
+
+  return nextStates;
+}
+
+function findHandler(state, path, queryParams) {
+  let handlers = state.handlers;
+  let regex = state.regex;
+  let captures = path.match(regex);
+  let currentCapture = 1;
+  let result = new RecognizeResults(queryParams);
+
+  for (let i = 0, l = handlers.length; i < l; i++) {
+    let handler = handlers[i];
+    let names = handler.names;
+    let params = {};
+
+    for (let j = 0, m = names.length; j < m; j++) {
+      params[names[j]] = captures[currentCapture++];
+    }
+
+    result.push({ handler: handler.handler, params: params, isDynamic: !!names.length });
+  }
+
+  return result;
+}
+
+function addSegment(currentState, segment) {
+  let firstState = currentState.put({ validChars: '/' });
+  let nextState = firstState;
+  segment.eachChar(ch => {
+    nextState = nextState.put(ch);
+  });
+
+  return [firstState, nextState];
+}
+
+function _normalizeAbsolutePath(path, hasPushState, absolute = false) {
+  if (!hasPushState && path[0] !== '#') {
+    path = '#' + path;
+  }
+
+  if (hasPushState && absolute) {
+    path = path.substring(1, path.length);
+  }
+
+  return path;
+}
+
+function _createRootedPath(fragment, baseUrl, hasPushState, absolute) {
+  if (isAbsoluteUrl.test(fragment)) {
+    return fragment;
+  }
+
+  let path = '';
+
+  if (baseUrl.length && baseUrl[0] !== '/') {
+    path += '/';
+  }
+
+  path += baseUrl;
+
+  if ((!path.length || path[path.length - 1] !== '/') && fragment[0] !== '/') {
+    path += '/';
+  }
+
+  if (path.length && path[path.length - 1] === '/' && fragment[0] === '/') {
+    path = path.substring(0, path.length - 1);
+  }
+
+  return _normalizeAbsolutePath(path + fragment, hasPushState, absolute);
+}
+
+function _resolveUrl(fragment, baseUrl, hasPushState) {
+  if (isRootedPath.test(fragment)) {
+    return _normalizeAbsolutePath(fragment, hasPushState);
+  }
+
+  return _createRootedPath(fragment, baseUrl, hasPushState);
+}
+
+function _ensureArrayWithSingleRoutePerConfig(config) {
+  let routeConfigs = [];
+
+  if (Array.isArray(config.route)) {
+    for (let i = 0, ii = config.route.length; i < ii; ++i) {
+      let current = Object.assign({}, config);
+      current.route = config.route[i];
+      routeConfigs.push(current);
+    }
+  } else {
+    routeConfigs.push(Object.assign({}, config));
+  }
+
+  return routeConfigs;
+}
+
+const isRootedPath = /^#?\//;
+const isAbsoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
+
+let CommitChangesStep = class CommitChangesStep {
+  run(navigationInstruction, next) {
+    return navigationInstruction._commitChanges(true).then(() => {
+      navigationInstruction._updateTitle();
+      return next();
+    });
+  }
+};
+
+let NavigationInstruction = class NavigationInstruction {
+
+  constructor(init) {
+    this.plan = null;
+    this.options = {};
+
+    Object.assign(this, init);
+
+    this.params = this.params || {};
+    this.viewPortInstructions = {};
+
+    let ancestorParams = [];
+    let current = this;
+    do {
+      let currentParams = Object.assign({}, current.params);
+      if (current.config && current.config.hasChildRouter) {
+        delete currentParams[current.getWildCardName()];
+      }
+
+      ancestorParams.unshift(currentParams);
+      current = current.parentInstruction;
+    } while (current);
+
+    let allParams = Object.assign({}, this.queryParams, ...ancestorParams);
+    this.lifecycleArgs = [allParams, this.config, this];
+  }
+
+  getAllInstructions() {
+    let instructions = [this];
+    for (let key in this.viewPortInstructions) {
+      let childInstruction = this.viewPortInstructions[key].childNavigationInstruction;
+      if (childInstruction) {
+        instructions.push(...childInstruction.getAllInstructions());
+      }
+    }
+
+    return instructions;
+  }
+
+  getAllPreviousInstructions() {
+    return this.getAllInstructions().map(c => c.previousInstruction).filter(c => c);
+  }
+
+  addViewPortInstruction(viewPortName, strategy, moduleId, component) {
+    const config = Object.assign({}, this.lifecycleArgs[1], { currentViewPort: viewPortName });
+    let viewportInstruction = this.viewPortInstructions[viewPortName] = {
+      name: viewPortName,
+      strategy: strategy,
+      moduleId: moduleId,
+      component: component,
+      childRouter: component.childRouter,
+      lifecycleArgs: [].concat(this.lifecycleArgs[0], config, this.lifecycleArgs[2])
+    };
+
+    return viewportInstruction;
+  }
+
+  getWildCardName() {
+    let wildcardIndex = this.config.route.lastIndexOf('*');
+    return this.config.route.substr(wildcardIndex + 1);
+  }
+
+  getWildcardPath() {
+    let wildcardName = this.getWildCardName();
+    let path = this.params[wildcardName] || '';
+
+    if (this.queryString) {
+      path += '?' + this.queryString;
+    }
+
+    return path;
+  }
+
+  getBaseUrl() {
+    let fragment = decodeURI(this.fragment);
+
+    if (fragment === '') {
+      let nonEmptyRoute = this.router.routes.find(route => {
+        return route.name === this.config.name && route.route !== '';
+      });
+      if (nonEmptyRoute) {
+        fragment = nonEmptyRoute.route;
+      }
+    }
+
+    if (!this.params) {
+      return encodeURI(fragment);
+    }
+
+    let wildcardName = this.getWildCardName();
+    let path = this.params[wildcardName] || '';
+
+    if (!path) {
+      return encodeURI(fragment);
+    }
+
+    return encodeURI(fragment.substr(0, fragment.lastIndexOf(path)));
+  }
+
+  _commitChanges(waitToSwap) {
+    let router = this.router;
+    router.currentInstruction = this;
+
+    if (this.previousInstruction) {
+      this.previousInstruction.config.navModel.isActive = false;
+    }
+
+    this.config.navModel.isActive = true;
+
+    router.refreshNavigation();
+
+    let loads = [];
+    let delaySwaps = [];
+
+    for (let viewPortName in this.viewPortInstructions) {
+      let viewPortInstruction = this.viewPortInstructions[viewPortName];
+      let viewPort = router.viewPorts[viewPortName];
+
+      if (!viewPort) {
+        throw new Error(`There was no router-view found in the view for ${viewPortInstruction.moduleId}.`);
+      }
+
+      if (viewPortInstruction.strategy === activationStrategy.replace) {
+        if (viewPortInstruction.childNavigationInstruction && viewPortInstruction.childNavigationInstruction.parentCatchHandler) {
+          loads.push(viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap));
+        } else {
+          if (waitToSwap) {
+            delaySwaps.push({ viewPort, viewPortInstruction });
+          }
+          loads.push(viewPort.process(viewPortInstruction, waitToSwap).then(x => {
+            if (viewPortInstruction.childNavigationInstruction) {
+              return viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap);
+            }
+          }));
+        }
+      } else {
+        if (viewPortInstruction.childNavigationInstruction) {
+          loads.push(viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap));
+        }
+      }
+    }
+
+    return Promise.all(loads).then(() => {
+      delaySwaps.forEach(x => x.viewPort.swap(x.viewPortInstruction));
+      return null;
+    }).then(() => prune(this));
+  }
+
+  _updateTitle() {
+    let title = this._buildTitle(this.router.titleSeparator);
+    if (title) {
+      this.router.history.setTitle(title);
+    }
+  }
+
+  _buildTitle(separator = ' | ') {
+    let title = '';
+    let childTitles = [];
+
+    if (this.config.navModel.title) {
+      title = this.router.transformTitle(this.config.navModel.title);
+    }
+
+    for (let viewPortName in this.viewPortInstructions) {
+      let viewPortInstruction = this.viewPortInstructions[viewPortName];
+
+      if (viewPortInstruction.childNavigationInstruction) {
+        let childTitle = viewPortInstruction.childNavigationInstruction._buildTitle(separator);
+        if (childTitle) {
+          childTitles.push(childTitle);
+        }
+      }
+    }
+
+    if (childTitles.length) {
+      title = childTitles.join(separator) + (title ? separator : '') + title;
+    }
+
+    if (this.router.title) {
+      title += (title ? separator : '') + this.router.transformTitle(this.router.title);
+    }
+
+    return title;
+  }
+};
+
+function prune(instruction) {
+  instruction.previousInstruction = null;
+  instruction.plan = null;
+}
+
+let NavModel = class NavModel {
+
+  constructor(router, relativeHref) {
+    this.isActive = false;
+    this.title = null;
+    this.href = null;
+    this.relativeHref = null;
+    this.settings = {};
+    this.config = null;
+
+    this.router = router;
+    this.relativeHref = relativeHref;
+  }
+
+  setTitle(title) {
+    this.title = title;
+
+    if (this.isActive) {
+      this.router.updateTitle();
+    }
+  }
+};
+
+function isNavigationCommand(obj) {
+  return obj && typeof obj.navigate === 'function';
+}
+
+let Redirect = class Redirect {
+  constructor(url, options = {}) {
+    this.url = url;
+    this.options = Object.assign({ trigger: true, replace: true }, options);
+    this.shouldContinueProcessing = false;
+  }
+
+  setRouter(router) {
+    this.router = router;
+  }
+
+  navigate(appRouter) {
+    let navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
+    navigatingRouter.navigate(this.url, this.options);
+  }
+};
+
+const pipelineStatus = {
+  completed: 'completed',
+  canceled: 'canceled',
+  rejected: 'rejected',
+  running: 'running'
+};
+
+let Pipeline = class Pipeline {
+  constructor() {
+    this.steps = [];
+  }
+
+  addStep(step) {
+    let run;
+
+    if (typeof step === 'function') {
+      run = step;
+    } else if (typeof step.getSteps === 'function') {
+      let steps = step.getSteps();
+      for (let i = 0, l = steps.length; i < l; i++) {
+        this.addStep(steps[i]);
+      }
+
+      return this;
+    } else {
+      run = step.run.bind(step);
+    }
+
+    this.steps.push(run);
+
+    return this;
+  }
+
+  run(instruction) {
+    let index = -1;
+    let steps = this.steps;
+
+    function next() {
+      index++;
+
+      if (index < steps.length) {
+        let currentStep = steps[index];
+
+        try {
+          return currentStep(instruction, next);
+        } catch (e) {
+          return next.reject(e);
+        }
+      } else {
+        return next.complete();
+      }
+    }
+
+    next.complete = createCompletionHandler(next, pipelineStatus.completed);
+    next.cancel = createCompletionHandler(next, pipelineStatus.canceled);
+    next.reject = createCompletionHandler(next, pipelineStatus.rejected);
+
+    return next();
+  }
+};
+
+function createCompletionHandler(next, status) {
+  return output => {
+    return Promise.resolve({ status, output, completed: status === pipelineStatus.completed });
+  };
+}
+
+let RouterConfiguration = class RouterConfiguration {
+  constructor() {
+    this.instructions = [];
+    this.options = {};
+    this.pipelineSteps = [];
+  }
+
+  addPipelineStep(name, step) {
+    if (step === null || step === undefined) {
+      throw new Error('Pipeline step cannot be null or undefined.');
+    }
+    this.pipelineSteps.push({ name, step });
+    return this;
+  }
+
+  addAuthorizeStep(step) {
+    return this.addPipelineStep('authorize', step);
+  }
+
+  addPreActivateStep(step) {
+    return this.addPipelineStep('preActivate', step);
+  }
+
+  addPreRenderStep(step) {
+    return this.addPipelineStep('preRender', step);
+  }
+
+  addPostRenderStep(step) {
+    return this.addPipelineStep('postRender', step);
+  }
+
+  fallbackRoute(fragment) {
+    this._fallbackRoute = fragment;
+    return this;
+  }
+
+  map(route) {
+    if (Array.isArray(route)) {
+      route.forEach(this.map.bind(this));
+      return this;
+    }
+
+    return this.mapRoute(route);
+  }
+
+  useViewPortDefaults(viewPortConfig) {
+    this.viewPortDefaults = viewPortConfig;
+    return this;
+  }
+
+  mapRoute(config) {
+    this.instructions.push(router => {
+      let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
+
+      let navModel;
+      for (let i = 0, ii = routeConfigs.length; i < ii; ++i) {
+        let routeConfig = routeConfigs[i];
+        routeConfig.settings = routeConfig.settings || {};
+        if (!navModel) {
+          navModel = router.createNavModel(routeConfig);
+        }
+
+        router.addRoute(routeConfig, navModel);
+      }
+    });
+
+    return this;
+  }
+
+  mapUnknownRoutes(config) {
+    this.unknownRouteConfig = config;
+    return this;
+  }
+
+  exportToRouter(router) {
+    let instructions = this.instructions;
+    for (let i = 0, ii = instructions.length; i < ii; ++i) {
+      instructions[i](router);
+    }
+
+    if (this.title) {
+      router.title = this.title;
+    }
+
+    if (this.titleSeparator) {
+      router.titleSeparator = this.titleSeparator;
+    }
+
+    if (this.unknownRouteConfig) {
+      router.handleUnknownRoutes(this.unknownRouteConfig);
+    }
+
+    if (this._fallbackRoute) {
+      router.fallbackRoute = this._fallbackRoute;
+    }
+
+    if (this.viewPortDefaults) {
+      router.useViewPortDefaults(this.viewPortDefaults);
+    }
+
+    Object.assign(router.options, this.options);
+
+    let pipelineSteps = this.pipelineSteps;
+    if (pipelineSteps.length) {
+      if (!router.isRoot) {
+        throw new Error('Pipeline steps can only be added to the root router');
+      }
+
+      let pipelineProvider = router.pipelineProvider;
+      for (let i = 0, ii = pipelineSteps.length; i < ii; ++i) {
+        let { name, step } = pipelineSteps[i];
+        pipelineProvider.addStep(name, step);
+      }
+    }
+  }
+};
+
+const activationStrategy = {
+  noChange: 'no-change',
+  invokeLifecycle: 'invoke-lifecycle',
+  replace: 'replace'
+};
+
+let BuildNavigationPlanStep = class BuildNavigationPlanStep {
+  run(navigationInstruction, next) {
+    return _buildNavigationPlan(navigationInstruction).then(plan => {
+      if (plan instanceof Redirect) {
+        return next.cancel(plan);
+      }
+      navigationInstruction.plan = plan;
+      return next();
+    }).catch(next.cancel);
+  }
+};
+
+function _buildNavigationPlan(instruction, forceLifecycleMinimum) {
+  let config = instruction.config;
+
+  if ('redirect' in config) {
+    let router = instruction.router;
+    return router._createNavigationInstruction(config.redirect).then(newInstruction => {
+      let params = {};
+      for (let key in newInstruction.params) {
+        let val = newInstruction.params[key];
+        if (typeof val === 'string' && val[0] === ':') {
+          val = val.slice(1);
+
+          if (val in instruction.params) {
+            params[key] = instruction.params[val];
+          }
+        } else {
+          params[key] = newInstruction.params[key];
+        }
+      }
+      let redirectLocation = router.generate(newInstruction.config.name, params, instruction.options);
+
+      if (instruction.queryString) {
+        redirectLocation += '?' + instruction.queryString;
+      }
+
+      return Promise.resolve(new Redirect(redirectLocation));
+    });
+  }
+
+  let prev = instruction.previousInstruction;
+  let plan = {};
+  let defaults = instruction.router.viewPortDefaults;
+
+  if (prev) {
+    let newParams = hasDifferentParameterValues(prev, instruction);
+    let pending = [];
+
+    for (let viewPortName in prev.viewPortInstructions) {
+      let prevViewPortInstruction = prev.viewPortInstructions[viewPortName];
+      let nextViewPortConfig = viewPortName in config.viewPorts ? config.viewPorts[viewPortName] : prevViewPortInstruction;
+      if (nextViewPortConfig.moduleId === null && viewPortName in instruction.router.viewPortDefaults) {
+        nextViewPortConfig = defaults[viewPortName];
+      }
+
+      let viewPortPlan = plan[viewPortName] = {
+        name: viewPortName,
+        config: nextViewPortConfig,
+        prevComponent: prevViewPortInstruction.component,
+        prevModuleId: prevViewPortInstruction.moduleId
+      };
+
+      if (prevViewPortInstruction.moduleId !== nextViewPortConfig.moduleId) {
+        viewPortPlan.strategy = activationStrategy.replace;
+      } else if ('determineActivationStrategy' in prevViewPortInstruction.component.viewModel) {
+        viewPortPlan.strategy = prevViewPortInstruction.component.viewModel.determineActivationStrategy(...instruction.lifecycleArgs);
+      } else if (config.activationStrategy) {
+        viewPortPlan.strategy = config.activationStrategy;
+      } else if (newParams || forceLifecycleMinimum) {
+        viewPortPlan.strategy = activationStrategy.invokeLifecycle;
+      } else {
+        viewPortPlan.strategy = activationStrategy.noChange;
+      }
+
+      if (viewPortPlan.strategy !== activationStrategy.replace && prevViewPortInstruction.childRouter) {
+        let path = instruction.getWildcardPath();
+        let task = prevViewPortInstruction.childRouter._createNavigationInstruction(path, instruction).then(childInstruction => {
+          viewPortPlan.childNavigationInstruction = childInstruction;
+
+          return _buildNavigationPlan(childInstruction, viewPortPlan.strategy === activationStrategy.invokeLifecycle).then(childPlan => {
+            if (childPlan instanceof Redirect) {
+              return Promise.reject(childPlan);
+            }
+            childInstruction.plan = childPlan;
+          });
+        });
+
+        pending.push(task);
+      }
+    }
+
+    return Promise.all(pending).then(() => plan);
+  }
+
+  for (let viewPortName in config.viewPorts) {
+    let viewPortConfig = config.viewPorts[viewPortName];
+    if (viewPortConfig.moduleId === null && viewPortName in instruction.router.viewPortDefaults) {
+      viewPortConfig = defaults[viewPortName];
+    }
+    plan[viewPortName] = {
+      name: viewPortName,
+      strategy: activationStrategy.replace,
+      config: viewPortConfig
+    };
+  }
+
+  return Promise.resolve(plan);
+}
+
+function hasDifferentParameterValues(prev, next) {
+  let prevParams = prev.params;
+  let nextParams = next.params;
+  let nextWildCardName = next.config.hasChildRouter ? next.getWildCardName() : null;
+
+  for (let key in nextParams) {
+    if (key === nextWildCardName) {
+      continue;
+    }
+
+    if (prevParams[key] !== nextParams[key]) {
+      return true;
+    }
+  }
+
+  for (let key in prevParams) {
+    if (key === nextWildCardName) {
+      continue;
+    }
+
+    if (prevParams[key] !== nextParams[key]) {
+      return true;
+    }
+  }
+
+  if (!next.options.compareQueryParams) {
+    return false;
+  }
+
+  let prevQueryParams = prev.queryParams;
+  let nextQueryParams = next.queryParams;
+  for (let key in nextQueryParams) {
+    if (prevQueryParams[key] !== nextQueryParams[key]) {
+      return true;
+    }
+  }
+
+  for (let key in prevQueryParams) {
+    if (prevQueryParams[key] !== nextQueryParams[key]) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+let Router = class Router {
+  constructor(container, history) {
+    this.parent = null;
+    this.options = {};
+    this.viewPortDefaults = {};
+
+    this.transformTitle = title => {
+      if (this.parent) {
+        return this.parent.transformTitle(title);
+      }
+      return title;
+    };
+
+    this.container = container;
+    this.history = history;
+    this.reset();
+  }
+
+  reset() {
+    this.viewPorts = {};
+    this.routes = [];
+    this.baseUrl = '';
+    this.isConfigured = false;
+    this.isNavigating = false;
+    this.isExplicitNavigation = false;
+    this.isExplicitNavigationBack = false;
+    this.isNavigatingFirst = false;
+    this.isNavigatingNew = false;
+    this.isNavigatingRefresh = false;
+    this.isNavigatingForward = false;
+    this.isNavigatingBack = false;
+    this.couldDeactivate = false;
+    this.navigation = [];
+    this.currentInstruction = null;
+    this.viewPortDefaults = {};
+    this._fallbackOrder = 100;
+    this._recognizer = new RouteRecognizer();
+    this._childRecognizer = new RouteRecognizer();
+    this._configuredPromise = new Promise(resolve => {
+      this._resolveConfiguredPromise = resolve;
+    });
+  }
+
+  get isRoot() {
+    return !this.parent;
+  }
+
+  registerViewPort(viewPort, name) {
+    name = name || 'default';
+    this.viewPorts[name] = viewPort;
+  }
+
+  ensureConfigured() {
+    return this._configuredPromise;
+  }
+
+  configure(callbackOrConfig) {
+    this.isConfigured = true;
+
+    let result = callbackOrConfig;
+    let config;
+    if (typeof callbackOrConfig === 'function') {
+      config = new RouterConfiguration();
+      result = callbackOrConfig(config);
+    }
+
+    return Promise.resolve(result).then(c => {
+      if (c && c.exportToRouter) {
+        config = c;
+      }
+
+      config.exportToRouter(this);
+      this.isConfigured = true;
+      this._resolveConfiguredPromise();
+    });
+  }
+
+  navigate(fragment, options) {
+    if (!this.isConfigured && this.parent) {
+      return this.parent.navigate(fragment, options);
+    }
+
+    this.isExplicitNavigation = true;
+    return this.history.navigate(_resolveUrl(fragment, this.baseUrl, this.history._hasPushState), options);
+  }
+
+  navigateToRoute(route, params, options) {
+    let path = this.generate(route, params);
+    return this.navigate(path, options);
+  }
+
+  navigateBack() {
+    this.isExplicitNavigationBack = true;
+    this.history.navigateBack();
+  }
+
+  createChild(container) {
+    let childRouter = new Router(container || this.container.createChild(), this.history);
+    childRouter.parent = this;
+    return childRouter;
+  }
+
+  generate(name, params, options = {}) {
+    let hasRoute = this._recognizer.hasRoute(name);
+    if ((!this.isConfigured || !hasRoute) && this.parent) {
+      return this.parent.generate(name, params, options);
+    }
+
+    if (!hasRoute) {
+      throw new Error(`A route with name '${name}' could not be found. Check that \`name: '${name}'\` was specified in the route's config.`);
+    }
+
+    let path = this._recognizer.generate(name, params);
+    let rootedPath = _createRootedPath(path, this.baseUrl, this.history._hasPushState, options.absolute);
+    return options.absolute ? `${this.history.getAbsoluteRoot()}${rootedPath}` : rootedPath;
+  }
+
+  createNavModel(config) {
+    let navModel = new NavModel(this, 'href' in config ? config.href : config.route);
+    navModel.title = config.title;
+    navModel.order = config.nav;
+    navModel.href = config.href;
+    navModel.settings = config.settings;
+    navModel.config = config;
+
+    return navModel;
+  }
+
+  addRoute(config, navModel) {
+    if (Array.isArray(config.route)) {
+      let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
+      routeConfigs.forEach(this.addRoute.bind(this));
+      return;
+    }
+
+    validateRouteConfig(config, this.routes);
+
+    if (!('viewPorts' in config) && !config.navigationStrategy) {
+      config.viewPorts = {
+        'default': {
+          moduleId: config.moduleId,
+          view: config.view
+        }
+      };
+    }
+
+    if (!navModel) {
+      navModel = this.createNavModel(config);
+    }
+
+    this.routes.push(config);
+
+    let path = config.route;
+    if (path.charAt(0) === '/') {
+      path = path.substr(1);
+    }
+    let caseSensitive = config.caseSensitive === true;
+    let state = this._recognizer.add({ path: path, handler: config, caseSensitive: caseSensitive });
+
+    if (path) {
+      let settings = config.settings;
+      delete config.settings;
+      let withChild = JSON.parse(JSON.stringify(config));
+      config.settings = settings;
+      withChild.route = `${path}/*childRoute`;
+      withChild.hasChildRouter = true;
+      this._childRecognizer.add({
+        path: withChild.route,
+        handler: withChild,
+        caseSensitive: caseSensitive
+      });
+
+      withChild.navModel = navModel;
+      withChild.settings = config.settings;
+      withChild.navigationStrategy = config.navigationStrategy;
+    }
+
+    config.navModel = navModel;
+
+    if ((navModel.order || navModel.order === 0) && this.navigation.indexOf(navModel) === -1) {
+      if (!navModel.href && navModel.href !== '' && (state.types.dynamics || state.types.stars)) {
+        throw new Error('Invalid route config for "' + config.route + '" : dynamic routes must specify an "href:" to be included in the navigation model.');
+      }
+
+      if (typeof navModel.order !== 'number') {
+        navModel.order = ++this._fallbackOrder;
+      }
+
+      this.navigation.push(navModel);
+      this.navigation = this.navigation.sort((a, b) => a.order - b.order);
+    }
+  }
+
+  hasRoute(name) {
+    return !!(this._recognizer.hasRoute(name) || this.parent && this.parent.hasRoute(name));
+  }
+
+  hasOwnRoute(name) {
+    return this._recognizer.hasRoute(name);
+  }
+
+  handleUnknownRoutes(config) {
+    if (!config) {
+      throw new Error('Invalid unknown route handler');
+    }
+
+    this.catchAllHandler = instruction => {
+      return this._createRouteConfig(config, instruction).then(c => {
+        instruction.config = c;
+        return instruction;
+      });
+    };
+  }
+
+  updateTitle() {
+    if (this.parent) {
+      return this.parent.updateTitle();
+    }
+
+    if (this.currentInstruction) {
+      this.currentInstruction._updateTitle();
+    }
+    return undefined;
+  }
+
+  refreshNavigation() {
+    let nav = this.navigation;
+
+    for (let i = 0, length = nav.length; i < length; i++) {
+      let current = nav[i];
+      if (!current.config.href) {
+        current.href = _createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
+      } else {
+        current.href = _normalizeAbsolutePath(current.config.href, this.history._hasPushState);
+      }
+    }
+  }
+
+  useViewPortDefaults(viewPortDefaults) {
+    for (let viewPortName in viewPortDefaults) {
+      let viewPortConfig = viewPortDefaults[viewPortName];
+      this.viewPortDefaults[viewPortName] = {
+        moduleId: viewPortConfig.moduleId
+      };
+    }
+  }
+
+  _refreshBaseUrl() {
+    if (this.parent) {
+      this.baseUrl = generateBaseUrl(this.parent, this.parent.currentInstruction);
+    }
+  }
+
+  _createNavigationInstruction(url = '', parentInstruction = null) {
+    let fragment = url;
+    let queryString = '';
+
+    let queryIndex = url.indexOf('?');
+    if (queryIndex !== -1) {
+      fragment = url.substr(0, queryIndex);
+      queryString = url.substr(queryIndex + 1);
+    }
+
+    let results = this._recognizer.recognize(url);
+    if (!results || !results.length) {
+      results = this._childRecognizer.recognize(url);
+    }
+
+    let instructionInit = {
+      fragment,
+      queryString,
+      config: null,
+      parentInstruction,
+      previousInstruction: this.currentInstruction,
+      router: this,
+      options: {
+        compareQueryParams: this.options.compareQueryParams
+      }
+    };
+
+    let result;
+
+    if (results && results.length) {
+      let first = results[0];
+      let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+        params: first.params,
+        queryParams: first.queryParams || results.queryParams,
+        config: first.config || first.handler
+      }));
+
+      if (typeof first.handler === 'function') {
+        result = evaluateNavigationStrategy(instruction, first.handler, first);
+      } else if (first.handler && typeof first.handler.navigationStrategy === 'function') {
+        result = evaluateNavigationStrategy(instruction, first.handler.navigationStrategy, first.handler);
+      } else {
+        result = Promise.resolve(instruction);
+      }
+    } else if (this.catchAllHandler) {
+      let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+        params: { path: fragment },
+        queryParams: results ? results.queryParams : {},
+        config: null }));
+
+      result = evaluateNavigationStrategy(instruction, this.catchAllHandler);
+    } else if (this.parent) {
+      let router = this._parentCatchAllHandler(this.parent);
+
+      if (router) {
+        let newParentInstruction = this._findParentInstructionFromRouter(router, parentInstruction);
+
+        let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+          params: { path: fragment },
+          queryParams: results ? results.queryParams : {},
+          router: router,
+          parentInstruction: newParentInstruction,
+          parentCatchHandler: true,
+          config: null }));
+
+        result = evaluateNavigationStrategy(instruction, router.catchAllHandler);
+      }
+    }
+
+    if (result && parentInstruction) {
+      this.baseUrl = generateBaseUrl(this.parent, parentInstruction);
+    }
+
+    return result || Promise.reject(new Error(`Route not found: ${url}`));
+  }
+
+  _findParentInstructionFromRouter(router, instruction) {
+    if (instruction.router === router) {
+      instruction.fragment = router.baseUrl;
+      return instruction;
+    } else if (instruction.parentInstruction) {
+      return this._findParentInstructionFromRouter(router, instruction.parentInstruction);
+    }
+    return undefined;
+  }
+
+  _parentCatchAllHandler(router) {
+    if (router.catchAllHandler) {
+      return router;
+    } else if (router.parent) {
+      return this._parentCatchAllHandler(router.parent);
+    }
+    return false;
+  }
+
+  _createRouteConfig(config, instruction) {
+    return Promise.resolve(config).then(c => {
+      if (typeof c === 'string') {
+        return { moduleId: c };
+      } else if (typeof c === 'function') {
+        return c(instruction);
+      }
+
+      return c;
+    }).then(c => typeof c === 'string' ? { moduleId: c } : c).then(c => {
+      c.route = instruction.params.path;
+      validateRouteConfig(c, this.routes);
+
+      if (!c.navModel) {
+        c.navModel = this.createNavModel(c);
+      }
+
+      return c;
+    });
+  }
+};
+
+function generateBaseUrl(router, instruction) {
+  return `${router.baseUrl || ''}${instruction.getBaseUrl() || ''}`;
+}
+
+function validateRouteConfig(config, routes) {
+  if (typeof config !== 'object') {
+    throw new Error('Invalid Route Config');
+  }
+
+  if (typeof config.route !== 'string') {
+    let name = config.name || '(no name)';
+    throw new Error('Invalid Route Config for "' + name + '": You must specify a "route:" pattern.');
+  }
+
+  if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
+    throw new Error('Invalid Route Config for "' + config.route + '": You must specify a "moduleId:", "redirect:", "navigationStrategy:", or "viewPorts:".');
+  }
+}
+
+function evaluateNavigationStrategy(instruction, evaluator, context) {
+  return Promise.resolve(evaluator.call(context, instruction)).then(() => {
+    if (!('viewPorts' in instruction.config)) {
+      instruction.config.viewPorts = {
+        'default': {
+          moduleId: instruction.config.moduleId
+        }
+      };
+    }
+
+    return instruction;
+  });
+}
+
+let CanDeactivatePreviousStep = class CanDeactivatePreviousStep {
+  run(navigationInstruction, next) {
+    return processDeactivatable(navigationInstruction, 'canDeactivate', next);
+  }
+};
+
+let CanActivateNextStep = class CanActivateNextStep {
+  run(navigationInstruction, next) {
+    return processActivatable(navigationInstruction, 'canActivate', next);
+  }
+};
+
+let DeactivatePreviousStep = class DeactivatePreviousStep {
+  run(navigationInstruction, next) {
+    return processDeactivatable(navigationInstruction, 'deactivate', next, true);
+  }
+};
+
+let ActivateNextStep = class ActivateNextStep {
+  run(navigationInstruction, next) {
+    return processActivatable(navigationInstruction, 'activate', next, true);
+  }
+};
+
+function processDeactivatable(navigationInstruction, callbackName, next, ignoreResult) {
+  const plan = navigationInstruction.plan;
+  let infos = findDeactivatable(plan, callbackName);
+  let i = infos.length;
+
+  function inspect(val) {
+    if (ignoreResult || shouldContinue(val)) {
+      return iterate();
+    }
+
+    return next.cancel(val);
+  }
+
+  function iterate() {
+    if (i--) {
+      try {
+        let viewModel = infos[i];
+        let result = viewModel[callbackName](navigationInstruction);
+        return processPotential(result, inspect, next.cancel);
+      } catch (error) {
+        return next.cancel(error);
+      }
+    }
+
+    navigationInstruction.router.couldDeactivate = true;
+
+    return next();
+  }
+
+  return iterate();
+}
+
+function findDeactivatable(plan, callbackName, list = []) {
+  for (let viewPortName in plan) {
+    let viewPortPlan = plan[viewPortName];
+    let prevComponent = viewPortPlan.prevComponent;
+
+    if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && prevComponent) {
+      let viewModel = prevComponent.viewModel;
+
+      if (callbackName in viewModel) {
+        list.push(viewModel);
+      }
+    }
+
+    if (viewPortPlan.strategy === activationStrategy.replace && prevComponent) {
+      addPreviousDeactivatable(prevComponent, callbackName, list);
+    } else if (viewPortPlan.childNavigationInstruction) {
+      findDeactivatable(viewPortPlan.childNavigationInstruction.plan, callbackName, list);
+    }
+  }
+
+  return list;
+}
+
+function addPreviousDeactivatable(component, callbackName, list) {
+  let childRouter = component.childRouter;
+
+  if (childRouter && childRouter.currentInstruction) {
+    let viewPortInstructions = childRouter.currentInstruction.viewPortInstructions;
+
+    for (let viewPortName in viewPortInstructions) {
+      let viewPortInstruction = viewPortInstructions[viewPortName];
+      let prevComponent = viewPortInstruction.component;
+      let prevViewModel = prevComponent.viewModel;
+
+      if (callbackName in prevViewModel) {
+        list.push(prevViewModel);
+      }
+
+      addPreviousDeactivatable(prevComponent, callbackName, list);
+    }
+  }
+}
+
+function processActivatable(navigationInstruction, callbackName, next, ignoreResult) {
+  let infos = findActivatable(navigationInstruction, callbackName);
+  let length = infos.length;
+  let i = -1;
+
+  function inspect(val, router) {
+    if (ignoreResult || shouldContinue(val, router)) {
+      return iterate();
+    }
+
+    return next.cancel(val);
+  }
+
+  function iterate() {
+    i++;
+
+    if (i < length) {
+      try {
+        let current = infos[i];
+        let result = current.viewModel[callbackName](...current.lifecycleArgs);
+        return processPotential(result, val => inspect(val, current.router), next.cancel);
+      } catch (error) {
+        return next.cancel(error);
+      }
+    }
+
+    return next();
+  }
+
+  return iterate();
+}
+
+function findActivatable(navigationInstruction, callbackName, list = [], router) {
+  let plan = navigationInstruction.plan;
+
+  Object.keys(plan).filter(viewPortName => {
+    let viewPortPlan = plan[viewPortName];
+    let viewPortInstruction = navigationInstruction.viewPortInstructions[viewPortName];
+    let viewModel = viewPortInstruction.component.viewModel;
+
+    if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && callbackName in viewModel) {
+      list.push({
+        viewModel,
+        lifecycleArgs: viewPortInstruction.lifecycleArgs,
+        router
+      });
+    }
+
+    if (viewPortPlan.childNavigationInstruction) {
+      findActivatable(viewPortPlan.childNavigationInstruction, callbackName, list, viewPortInstruction.component.childRouter || router);
+    }
+  });
+
+  return list;
+}
+
+function shouldContinue(output, router) {
+  if (output instanceof Error) {
+    return false;
+  }
+
+  if (isNavigationCommand(output)) {
+    if (typeof output.setRouter === 'function') {
+      output.setRouter(router);
+    }
+
+    return !!output.shouldContinueProcessing;
+  }
+
+  if (output === undefined) {
+    return true;
+  }
+
+  return output;
+}
+
+let SafeSubscription = class SafeSubscription {
+  constructor(subscriptionFunc) {
+    this._subscribed = true;
+    this._subscription = subscriptionFunc(this);
+
+    if (!this._subscribed) this.unsubscribe();
+  }
+
+  get subscribed() {
+    return this._subscribed;
+  }
+
+  unsubscribe() {
+    if (this._subscribed && this._subscription) this._subscription.unsubscribe();
+
+    this._subscribed = false;
+  }
+};
+
+
+function processPotential(obj, resolve, reject) {
+  if (obj && typeof obj.then === 'function') {
+    return Promise.resolve(obj).then(resolve).catch(reject);
+  }
+
+  if (obj && typeof obj.subscribe === 'function') {
+    let obs = obj;
+    return new SafeSubscription(sub => obs.subscribe({
+      next() {
+        if (sub.subscribed) {
+          sub.unsubscribe();
+          resolve(obj);
+        }
+      },
+      error(error) {
+        if (sub.subscribed) {
+          sub.unsubscribe();
+          reject(error);
+        }
+      },
+      complete() {
+        if (sub.subscribed) {
+          sub.unsubscribe();
+          resolve(obj);
+        }
+      }
+    }));
+  }
+
+  try {
+    return resolve(obj);
+  } catch (error) {
+    return reject(error);
+  }
+}
+
+let RouteLoader = class RouteLoader {
+  loadRoute(router, config, navigationInstruction) {
+    throw Error('Route loaders must implement "loadRoute(router, config, navigationInstruction)".');
+  }
+};
+
+let LoadRouteStep = class LoadRouteStep {
+  static inject() {
+    return [RouteLoader];
+  }
+
+  constructor(routeLoader) {
+    this.routeLoader = routeLoader;
+  }
+
+  run(navigationInstruction, next) {
+    return loadNewRoute(this.routeLoader, navigationInstruction).then(next).catch(next.cancel);
+  }
+};
+
+function loadNewRoute(routeLoader, navigationInstruction) {
+  let toLoad = determineWhatToLoad(navigationInstruction);
+  let loadPromises = toLoad.map(current => loadRoute(routeLoader, current.navigationInstruction, current.viewPortPlan));
+
+  return Promise.all(loadPromises);
+}
+
+function determineWhatToLoad(navigationInstruction, toLoad = []) {
+  let plan = navigationInstruction.plan;
+
+  for (let viewPortName in plan) {
+    let viewPortPlan = plan[viewPortName];
+
+    if (viewPortPlan.strategy === activationStrategy.replace) {
+      toLoad.push({ viewPortPlan, navigationInstruction });
+
+      if (viewPortPlan.childNavigationInstruction) {
+        determineWhatToLoad(viewPortPlan.childNavigationInstruction, toLoad);
+      }
+    } else {
+      let viewPortInstruction = navigationInstruction.addViewPortInstruction(viewPortName, viewPortPlan.strategy, viewPortPlan.prevModuleId, viewPortPlan.prevComponent);
+
+      if (viewPortPlan.childNavigationInstruction) {
+        viewPortInstruction.childNavigationInstruction = viewPortPlan.childNavigationInstruction;
+        determineWhatToLoad(viewPortPlan.childNavigationInstruction, toLoad);
+      }
+    }
+  }
+
+  return toLoad;
+}
+
+function loadRoute(routeLoader, navigationInstruction, viewPortPlan) {
+  let moduleId = viewPortPlan.config ? viewPortPlan.config.moduleId : null;
+
+  return loadComponent(routeLoader, navigationInstruction, viewPortPlan.config).then(component => {
+    let viewPortInstruction = navigationInstruction.addViewPortInstruction(viewPortPlan.name, viewPortPlan.strategy, moduleId, component);
+
+    let childRouter = component.childRouter;
+    if (childRouter) {
+      let path = navigationInstruction.getWildcardPath();
+
+      return childRouter._createNavigationInstruction(path, navigationInstruction).then(childInstruction => {
+        viewPortPlan.childNavigationInstruction = childInstruction;
+
+        return _buildNavigationPlan(childInstruction).then(childPlan => {
+          if (childPlan instanceof Redirect) {
+            return Promise.reject(childPlan);
+          }
+          childInstruction.plan = childPlan;
+          viewPortInstruction.childNavigationInstruction = childInstruction;
+
+          return loadNewRoute(routeLoader, childInstruction);
+        });
+      });
+    }
+
+    return undefined;
+  });
+}
+
+function loadComponent(routeLoader, navigationInstruction, config) {
+  let router = navigationInstruction.router;
+  let lifecycleArgs = navigationInstruction.lifecycleArgs;
+
+  return routeLoader.loadRoute(router, config, navigationInstruction).then(component => {
+    let { viewModel, childContainer } = component;
+    component.router = router;
+    component.config = config;
+
+    if ('configureRouter' in viewModel) {
+      let childRouter = childContainer.getChildRouter();
+      component.childRouter = childRouter;
+
+      return childRouter.configure(c => viewModel.configureRouter(c, childRouter, ...lifecycleArgs)).then(() => component);
+    }
+
+    return component;
+  });
+}
+
+let PipelineSlot = class PipelineSlot {
+
+  constructor(container, name, alias) {
+    this.steps = [];
+
+    this.container = container;
+    this.slotName = name;
+    this.slotAlias = alias;
+  }
+
+  getSteps() {
+    return this.steps.map(x => this.container.get(x));
+  }
+};
+
+let PipelineProvider = class PipelineProvider {
+  static inject() {
+    return [Container];
+  }
+
+  constructor(container) {
+    this.container = container;
+    this.steps = [BuildNavigationPlanStep, CanDeactivatePreviousStep, LoadRouteStep, this._createPipelineSlot('authorize'), CanActivateNextStep, this._createPipelineSlot('preActivate', 'modelbind'), DeactivatePreviousStep, ActivateNextStep, this._createPipelineSlot('preRender', 'precommit'), CommitChangesStep, this._createPipelineSlot('postRender', 'postcomplete')];
+  }
+
+  createPipeline(useCanDeactivateStep = true) {
+    let pipeline = new Pipeline();
+    this.steps.forEach(step => {
+      if (useCanDeactivateStep || step !== CanDeactivatePreviousStep) {
+        pipeline.addStep(this.container.get(step));
+      }
+    });
+    return pipeline;
+  }
+
+  _findStep(name) {
+    return this.steps.find(x => x.slotName === name || x.slotAlias === name);
+  }
+
+  addStep(name, step) {
+    let found = this._findStep(name);
+    if (found) {
+      if (!found.steps.includes(step)) {
+        found.steps.push(step);
+      }
+    } else {
+      throw new Error(`Invalid pipeline slot name: ${name}.`);
+    }
+  }
+
+  removeStep(name, step) {
+    let slot = this._findStep(name);
+    if (slot) {
+      slot.steps.splice(slot.steps.indexOf(step), 1);
+    }
+  }
+
+  _clearSteps(name = '') {
+    let slot = this._findStep(name);
+    if (slot) {
+      slot.steps = [];
+    }
+  }
+
+  reset() {
+    this._clearSteps('authorize');
+    this._clearSteps('preActivate');
+    this._clearSteps('preRender');
+    this._clearSteps('postRender');
+  }
+
+  _createPipelineSlot(name, alias) {
+    return new PipelineSlot(this.container, name, alias);
+  }
+};
+
+const logger$4 = aureliaLogging_1('app-router');
+
+let AppRouter = class AppRouter extends Router {
+  static inject() {
+    return [Container, History, PipelineProvider, EventAggregator];
+  }
+
+  constructor(container, history, pipelineProvider, events) {
+    super(container, history);
+    this.pipelineProvider = pipelineProvider;
+    this.events = events;
+  }
+
+  reset() {
+    super.reset();
+    this.maxInstructionCount = 10;
+    if (!this._queue) {
+      this._queue = [];
+    } else {
+      this._queue.length = 0;
+    }
+  }
+
+  loadUrl(url) {
+    return this._createNavigationInstruction(url).then(instruction => this._queueInstruction(instruction)).catch(error => {
+      logger$4.error(error);
+      restorePreviousLocation(this);
+    });
+  }
+
+  registerViewPort(viewPort, name) {
+    super.registerViewPort(viewPort, name);
+
+    if (!this.isActive) {
+      let viewModel = this._findViewModel(viewPort);
+      if ('configureRouter' in viewModel) {
+        if (!this.isConfigured) {
+          let resolveConfiguredPromise = this._resolveConfiguredPromise;
+          this._resolveConfiguredPromise = () => {};
+          return this.configure(config => viewModel.configureRouter(config, this)).then(() => {
+            this.activate();
+            resolveConfiguredPromise();
+          });
+        }
+      } else {
+        this.activate();
+      }
+    } else {
+      this._dequeueInstruction();
+    }
+
+    return Promise.resolve();
+  }
+
+  activate(options) {
+    if (this.isActive) {
+      return;
+    }
+
+    this.isActive = true;
+    this.options = Object.assign({ routeHandler: this.loadUrl.bind(this) }, this.options, options);
+    this.history.activate(this.options);
+    this._dequeueInstruction();
+  }
+
+  deactivate() {
+    this.isActive = false;
+    this.history.deactivate();
+  }
+
+  _queueInstruction(instruction) {
+    return new Promise(resolve => {
+      instruction.resolve = resolve;
+      this._queue.unshift(instruction);
+      this._dequeueInstruction();
+    });
+  }
+
+  _dequeueInstruction(instructionCount = 0) {
+    return Promise.resolve().then(() => {
+      if (this.isNavigating && !instructionCount) {
+        return undefined;
+      }
+
+      let instruction = this._queue.shift();
+      this._queue.length = 0;
+
+      if (!instruction) {
+        return undefined;
+      }
+
+      this.isNavigating = true;
+
+      let navtracker = this.history.getState('NavigationTracker');
+      if (!navtracker && !this.currentNavigationTracker) {
+        this.isNavigatingFirst = true;
+        this.isNavigatingNew = true;
+      } else if (!navtracker) {
+        this.isNavigatingNew = true;
+      } else if (!this.currentNavigationTracker) {
+        this.isNavigatingRefresh = true;
+      } else if (this.currentNavigationTracker < navtracker) {
+        this.isNavigatingForward = true;
+      } else if (this.currentNavigationTracker > navtracker) {
+        this.isNavigatingBack = true;
+      }if (!navtracker) {
+        navtracker = Date.now();
+        this.history.setState('NavigationTracker', navtracker);
+      }
+      this.currentNavigationTracker = navtracker;
+
+      instruction.previousInstruction = this.currentInstruction;
+
+      if (!instructionCount) {
+        this.events.publish('router:navigation:processing', { instruction });
+      } else if (instructionCount === this.maxInstructionCount - 1) {
+        logger$4.error(`${instructionCount + 1} navigation instructions have been attempted without success. Restoring last known good location.`);
+        restorePreviousLocation(this);
+        return this._dequeueInstruction(instructionCount + 1);
+      } else if (instructionCount > this.maxInstructionCount) {
+        throw new Error('Maximum navigation attempts exceeded. Giving up.');
+      }
+
+      let pipeline = this.pipelineProvider.createPipeline(!this.couldDeactivate);
+
+      return pipeline.run(instruction).then(result => processResult(instruction, result, instructionCount, this)).catch(error => {
+        return { output: error instanceof Error ? error : new Error(error) };
+      }).then(result => resolveInstruction(instruction, result, !!instructionCount, this));
+    });
+  }
+
+  _findViewModel(viewPort) {
+    if (this.container.viewModel) {
+      return this.container.viewModel;
+    }
+
+    if (viewPort.container) {
+      let container = viewPort.container;
+
+      while (container) {
+        if (container.viewModel) {
+          this.container.viewModel = container.viewModel;
+          return container.viewModel;
+        }
+
+        container = container.parent;
+      }
+    }
+
+    return undefined;
+  }
+};
+
+function processResult(instruction, result, instructionCount, router) {
+  if (!(result && 'completed' in result && 'output' in result)) {
+    result = result || {};
+    result.output = new Error(`Expected router pipeline to return a navigation result, but got [${JSON.stringify(result)}] instead.`);
+  }
+
+  let finalResult = null;
+  let navigationCommandResult = null;
+  if (isNavigationCommand(result.output)) {
+    navigationCommandResult = result.output.navigate(router);
+  } else {
+    finalResult = result;
+
+    if (!result.completed) {
+      if (result.output instanceof Error) {
+        logger$4.error(result.output);
+      }
+
+      restorePreviousLocation(router);
+    }
+  }
+
+  return Promise.resolve(navigationCommandResult).then(_ => router._dequeueInstruction(instructionCount + 1)).then(innerResult => finalResult || innerResult || result);
+}
+
+function resolveInstruction(instruction, result, isInnerInstruction, router) {
+  instruction.resolve(result);
+
+  let eventArgs = { instruction, result };
+  if (!isInnerInstruction) {
+    router.isNavigating = false;
+    router.isExplicitNavigation = false;
+    router.isExplicitNavigationBack = false;
+    router.isNavigatingFirst = false;
+    router.isNavigatingNew = false;
+    router.isNavigatingRefresh = false;
+    router.isNavigatingForward = false;
+    router.isNavigatingBack = false;
+    router.couldDeactivate = false;
+
+    let eventName;
+
+    if (result.output instanceof Error) {
+      eventName = 'error';
+    } else if (!result.completed) {
+      eventName = 'canceled';
+    } else {
+      let queryString = instruction.queryString ? '?' + instruction.queryString : '';
+      router.history.previousLocation = instruction.fragment + queryString;
+      eventName = 'success';
+    }
+
+    router.events.publish(`router:navigation:${eventName}`, eventArgs);
+    router.events.publish('router:navigation:complete', eventArgs);
+  } else {
+    router.events.publish('router:navigation:child:complete', eventArgs);
+  }
+
+  return result;
+}
+
+function restorePreviousLocation(router) {
+  let previousLocation = router.history.previousLocation;
+  if (previousLocation) {
+    router.navigate(router.history.previousLocation, { trigger: false, replace: true });
+  } else if (router.fallbackRoute) {
+    router.navigate(router.fallbackRoute, { trigger: true, replace: true });
+  } else {
+    logger$4.error('Router navigation failed, and no previous location or fallbackRoute could be restored.');
+  }
+}
+
+var _dec$l, _class$m, _class2$8, _descriptor$3, _descriptor2$3, _descriptor3$2, _descriptor4$2;
+
+function _initDefineProp$3(target, property, descriptor, context) {
+  if (!descriptor) return;
+  Object.defineProperty(target, property, {
+    enumerable: descriptor.enumerable,
+    configurable: descriptor.configurable,
+    writable: descriptor.writable,
+    value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
+  });
+}
+
+function _applyDecoratedDescriptor$3(target, property, decorators$$1, descriptor, context) {
+  var desc = {};
+  Object['ke' + 'ys'](descriptor).forEach(function (key) {
+    desc[key] = descriptor[key];
+  });
+  desc.enumerable = !!desc.enumerable;
+  desc.configurable = !!desc.configurable;
+
+  if ('value' in desc || desc.initializer) {
+    desc.writable = true;
+  }
+
+  desc = decorators$$1.slice().reverse().reduce(function (desc, decorator) {
+    return decorator(target, property, desc) || desc;
+  }, desc);
+
+  if (context && desc.initializer !== void 0) {
+    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+    desc.initializer = undefined;
+  }
+
+  if (desc.initializer === void 0) {
+    Object['define' + 'Property'](target, property, desc);
+    desc = null;
+  }
+
+  return desc;
+}
+
+let RouterView = (_dec$l = customElement('router-view'), _dec$l(_class$m = noView(_class$m = (_class2$8 = class RouterView {
+
+  static inject() {
+    return [DOM.Element, Container, ViewSlot, Router, ViewLocator, CompositionTransaction, CompositionEngine];
+  }
+
+  constructor(element, container, viewSlot, router, viewLocator, compositionTransaction, compositionEngine) {
+    _initDefineProp$3(this, 'swapOrder', _descriptor$3, this);
+
+    _initDefineProp$3(this, 'layoutView', _descriptor2$3, this);
+
+    _initDefineProp$3(this, 'layoutViewModel', _descriptor3$2, this);
+
+    _initDefineProp$3(this, 'layoutModel', _descriptor4$2, this);
+
+    this.element = element;
+    this.container = container;
+    this.viewSlot = viewSlot;
+    this.router = router;
+    this.viewLocator = viewLocator;
+    this.compositionTransaction = compositionTransaction;
+    this.compositionEngine = compositionEngine;
+    this.router.registerViewPort(this, this.element.getAttribute('name'));
+
+    if (!('initialComposition' in compositionTransaction)) {
+      compositionTransaction.initialComposition = true;
+      this.compositionTransactionNotifier = compositionTransaction.enlist();
+    }
+  }
+
+  created(owningView) {
+    this.owningView = owningView;
+  }
+
+  bind(bindingContext, overrideContext) {
+    this.container.viewModel = bindingContext;
+    this.overrideContext = overrideContext;
+  }
+
+  process(viewPortInstruction, waitToSwap) {
+    let component = viewPortInstruction.component;
+    let childContainer = component.childContainer;
+    let viewModel = component.viewModel;
+    let viewModelResource = component.viewModelResource;
+    let metadata$$1 = viewModelResource.metadata;
+    let config = component.router.currentInstruction.config;
+    let viewPort = config.viewPorts ? config.viewPorts[viewPortInstruction.name] || {} : {};
+
+    childContainer.get(RouterViewLocator)._notify(this);
+
+    let layoutInstruction = {
+      viewModel: viewPort.layoutViewModel || config.layoutViewModel || this.layoutViewModel,
+      view: viewPort.layoutView || config.layoutView || this.layoutView,
+      model: viewPort.layoutModel || config.layoutModel || this.layoutModel,
+      router: viewPortInstruction.component.router,
+      childContainer: childContainer,
+      viewSlot: this.viewSlot
+    };
+
+    let viewStrategy$$1 = this.viewLocator.getViewStrategy(component.view || viewModel);
+    if (viewStrategy$$1 && component.view) {
+      viewStrategy$$1.makeRelativeTo(Origin.get(component.router.container.viewModel.constructor).moduleId);
+    }
+
+    return metadata$$1.load(childContainer, viewModelResource.value, null, viewStrategy$$1, true).then(viewFactory => {
+      if (!this.compositionTransactionNotifier) {
+        this.compositionTransactionOwnershipToken = this.compositionTransaction.tryCapture();
+      }
+
+      if (layoutInstruction.viewModel || layoutInstruction.view) {
+        viewPortInstruction.layoutInstruction = layoutInstruction;
+      }
+
+      viewPortInstruction.controller = metadata$$1.create(childContainer, BehaviorInstruction.dynamic(this.element, viewModel, viewFactory));
+
+      if (waitToSwap) {
+        return null;
+      }
+
+      this.swap(viewPortInstruction);
+    });
+  }
+
+  swap(viewPortInstruction) {
+    let layoutInstruction = viewPortInstruction.layoutInstruction;
+    let previousView = this.view;
+
+    let work = () => {
+      let swapStrategy = SwapStrategies[this.swapOrder] || SwapStrategies.after;
+      let viewSlot = this.viewSlot;
+
+      swapStrategy(viewSlot, previousView, () => {
+        return Promise.resolve(viewSlot.add(this.view));
+      }).then(() => {
+        this._notify();
+      });
+    };
+
+    let ready = owningView => {
+      viewPortInstruction.controller.automate(this.overrideContext, owningView);
+      if (this.compositionTransactionOwnershipToken) {
+        return this.compositionTransactionOwnershipToken.waitForCompositionComplete().then(() => {
+          this.compositionTransactionOwnershipToken = null;
+          return work();
+        });
+      }
+
+      return work();
+    };
+
+    if (layoutInstruction) {
+      if (!layoutInstruction.viewModel) {
+        layoutInstruction.viewModel = {};
+      }
+
+      return this.compositionEngine.createController(layoutInstruction).then(controller => {
+        ShadowDOM.distributeView(viewPortInstruction.controller.view, controller.slots || controller.view.slots);
+        controller.automate(createOverrideContext(layoutInstruction.viewModel), this.owningView);
+        controller.view.children.push(viewPortInstruction.controller.view);
+        return controller.view || controller;
+      }).then(newView => {
+        this.view = newView;
+        return ready(newView);
+      });
+    }
+
+    this.view = viewPortInstruction.controller.view;
+
+    return ready(this.owningView);
+  }
+
+  _notify() {
+    if (this.compositionTransactionNotifier) {
+      this.compositionTransactionNotifier.done();
+      this.compositionTransactionNotifier = null;
+    }
+  }
+}, (_descriptor$3 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'swapOrder', [bindable], {
+  enumerable: true,
+  initializer: null
+}), _descriptor2$3 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutView', [bindable], {
+  enumerable: true,
+  initializer: null
+}), _descriptor3$2 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutViewModel', [bindable], {
+  enumerable: true,
+  initializer: null
+}), _descriptor4$2 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutModel', [bindable], {
+  enumerable: true,
+  initializer: null
+})), _class2$8)) || _class$m) || _class$m);
+
+let RouterViewLocator = class RouterViewLocator {
+  constructor() {
+    this.promise = new Promise(resolve => this.resolve = resolve);
+  }
+
+  findNearest() {
+    return this.promise;
+  }
+
+  _notify(routerView) {
+    this.resolve(routerView);
+  }
+};
+
+var _dec$m, _class$n, _dec2$b, _class2$9;
+
+let EmptyClass = (_dec$m = inlineView('<template></template>'), _dec$m(_class$n = class EmptyClass {}) || _class$n);
+
+let TemplatingRouteLoader = (_dec2$b = inject(CompositionEngine), _dec2$b(_class2$9 = class TemplatingRouteLoader extends RouteLoader {
+  constructor(compositionEngine) {
+    super();
+    this.compositionEngine = compositionEngine;
+  }
+
+  loadRoute(router, config) {
+    let childContainer = router.container.createChild();
+
+    let viewModel;
+    if (config.moduleId === null) {
+      viewModel = EmptyClass;
+    } else if (/\.html/i.test(config.moduleId)) {
+      viewModel = createDynamicClass(config.moduleId);
+    } else {
+      viewModel = relativeToFile(config.moduleId, Origin.get(router.container.viewModel.constructor).moduleId);
+    }
+
+    let instruction = {
+      viewModel: viewModel,
+      childContainer: childContainer,
+      view: config.view || config.viewStrategy,
+      router: router
+    };
+
+    childContainer.registerSingleton(RouterViewLocator);
+
+    childContainer.getChildRouter = function () {
+      let childRouter;
+
+      childContainer.registerHandler(Router, c => {
+        return childRouter || (childRouter = router.createChild(childContainer));
+      });
+
+      return childContainer.get(Router);
+    };
+
+    return this.compositionEngine.ensureViewModel(instruction);
+  }
+}) || _class2$9);
+
+function createDynamicClass(moduleId) {
+  var _dec3, _dec4, _class3;
+
+  let name = /([^\/^\?]+)\.html/i.exec(moduleId)[1];
+
+  let DynamicClass = (_dec3 = customElement(name), _dec4 = useView(moduleId), _dec3(_class3 = _dec4(_class3 = class DynamicClass {
+    bind(bindingContext) {
+      this.$parent = bindingContext;
+    }
+  }) || _class3) || _class3);
+
+
+  return DynamicClass;
+}
+
+var _dec$n, _dec2$c, _dec3$5, _dec4$4, _class$o;
+
+const logger$5 = aureliaLogging_1('route-href');
+
+let RouteHref = (_dec$n = customAttribute('route-href'), _dec2$c = bindable({ name: 'route', changeHandler: 'processChange', primaryProperty: true }), _dec3$5 = bindable({ name: 'params', changeHandler: 'processChange' }), _dec4$4 = bindable({ name: 'attribute', defaultValue: 'href' }), _dec$n(_class$o = _dec2$c(_class$o = _dec3$5(_class$o = _dec4$4(_class$o = class RouteHref {
+
+  static inject() {
+    return [Router, DOM.Element];
+  }
+
+  constructor(router, element) {
+    this.router = router;
+    this.element = element;
+  }
+
+  bind() {
+    this.isActive = true;
+    this.processChange();
+  }
+
+  unbind() {
+    this.isActive = false;
+  }
+
+  attributeChanged(value, previous) {
+    if (previous) {
+      this.element.removeAttribute(previous);
+    }
+
+    this.processChange();
+  }
+
+  processChange() {
+    return this.router.ensureConfigured().then(() => {
+      if (!this.isActive) {
+        return null;
+      }
+
+      let href = this.router.generate(this.route, this.params);
+
+      if (this.element.au.controller) {
+        this.element.au.controller.viewModel[this.attribute] = href;
+      } else {
+        this.element.setAttribute(this.attribute, href);
+      }
+
+      return null;
+    }).catch(reason => {
+      logger$5.error(reason);
+    });
+  }
+}) || _class$o) || _class$o) || _class$o) || _class$o);
+
+function configure$5(config) {
+  config.singleton(RouteLoader, TemplatingRouteLoader).singleton(Router, AppRouter).globalResources(RouterView, RouteHref);
+
+  config.container.registerAlias(Router, AppRouter);
+}
+
 var aureliaLoggingConsole = createCommonjsModule(function (module, exports) {
 
 Object.defineProperty(exports, "__esModule", {
@@ -15359,15 +18135,12 @@ initialize();
     return this.plugin(configure$3);
   };
 
-  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
   frameworkCfgProto.history = function() {
-    aureliaLogging_1('aurelia').error(errorMsg);
-    return this;
+    return this.plugin(configure$4);
   };
 
   frameworkCfgProto.router = function() {
-    aureliaLogging_1('aurelia').error(errorMsg);
-    return this;
+    return this.plugin(configure$5);
   };
 })(FrameworkConfiguration.prototype);
 

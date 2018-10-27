@@ -1,6 +1,9 @@
 <template>
   <require from='../components/foo.js'></require>
-  <input type="text" value.bind='message'>
+  <fieldset>
+    <legend>Message</legend>
+    <input type="text" value.bind='message'>
+  </fieldset>
   <br>
   <foo foo.bind=message></foo>
 </template>
