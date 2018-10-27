@@ -1,6 +1,7 @@
 <body>
   <script src='./aurelia_router.umd.js'></script>
   <script type='module'>
+    // import { Aurelia } from './aurelia_router.esm.js';
     const aurelia = new au.Aurelia()
     aurelia
       .use
@@ -8,6 +9,6 @@
         .developmentLogging();
     aurelia
       .start()
-      .then(() => aurelia.setRoot('./app.js',document.body));
+      .then(() => aurelia.setRoot('./app.js', document.body));
   </script>
 </body>

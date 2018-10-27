@@ -1,3 +1,13 @@
 jspm_packages
 bower_components
+build
+src
 .idea
+.editorconfig
+CONTRIBUTING.md
+favicon.ico
+index.html
+ISSUE_TEMPLATE.md
+jsconfig.json
+package-lock.json
+tsconfig.json

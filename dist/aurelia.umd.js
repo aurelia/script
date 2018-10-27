@@ -15365,15 +15365,16 @@
       return this.plugin(configure$3);
     };
 
-    // if (typeof true !== 'undefined') {
-    //   frameworkCfgProto.history = function() {
-    //     return this.plugin(configureHistory);
-    //   };
+    const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
+    frameworkCfgProto.history = function() {
+      aureliaLogging_1('aurelia').error(errorMsg);
+      return this;
+    };
 
-    //   frameworkCfgProto.router = function() {
-    //     return this.plugin(configureRouter);
-    //   };
-    // }
+    frameworkCfgProto.router = function() {
+      aureliaLogging_1('aurelia').error(errorMsg);
+      return this;
+    };
   })(FrameworkConfiguration.prototype);
 
   exports.Aurelia = Aurelia;

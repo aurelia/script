@@ -8,6 +8,7 @@ import { configure as configureEventAggregator } from 'aurelia-event-aggregator'
 // import { configure as configureHistory } from 'aurelia-history-browser';
 // import { configure as configureRouter } from 'aurelia-templating-router';
 import { ConsoleAppender } from 'aurelia-logging-console';
+import { getLogger } from 'aurelia-logging';
 
 initialize();
 
@@ -31,15 +32,16 @@ initialize();
     return this.plugin(configureEventAggregator);
   };
 
-  // if (typeof FEATURE_ROUTER !== 'undefined') {
-  //   frameworkCfgProto.history = function() {
-  //     return this.plugin(configureHistory);
-  //   };
+  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
+  frameworkCfgProto.history = function() {
+    getLogger('aurelia').error(errorMsg);
+    return this;
+  };
 
-  //   frameworkCfgProto.router = function() {
-  //     return this.plugin(configureRouter);
-  //   };
-  // }
+  frameworkCfgProto.router = function() {
+    getLogger('aurelia').error(errorMsg);
+    return this;
+  };
 })(FrameworkConfiguration.prototype);
 
 

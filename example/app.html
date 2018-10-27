@@ -1,8 +1,14 @@
 <template>
+  <require from='./app.css'></require>
   <div repeat.for="i of 3">Countdown: ${3 - $index - 1}!</div>
   ${message}
   <fieldset>
-    <legend>Routing</legend>
+    <legend>
+      <a
+        repeat.for='nav of router.navigation'
+        class='nav'
+        route-href.bind='nav.config.name'>| ${nav.config.title} |</a>
+    </legend>
     <router-view></router-view>
   </fieldset>
 </template>
