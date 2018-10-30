@@ -9,10 +9,13 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
 ## Build
 
   1. Install the dependencies
-    ```
+
+    ```bash
     npm install
     ```
+
   2. Run either the build / bundle script
+
     ```bash
     # Build only core
     npm run build
