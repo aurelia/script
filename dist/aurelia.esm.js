@@ -82,16 +82,6 @@ function reset() {
   isInitialized = false;
 }
 
-var aureliaPal = /*#__PURE__*/Object.freeze({
-  AggregateError: AggregateError,
-  FEATURE: FEATURE,
-  PLATFORM: PLATFORM,
-  DOM: DOM,
-  get isInitialized () { return isInitialized; },
-  initializePAL: initializePAL,
-  reset: reset
-});
-
 if (!String.prototype.endsWith || function () {
   try {
     return !"ab".endsWith("a", 1);
@@ -592,15 +582,6 @@ protocol.create = function (name, options) {
   return result;
 };
 
-var aureliaMetadata = /*#__PURE__*/Object.freeze({
-  metadata: metadata,
-  Origin: Origin,
-  decorators: decorators,
-  deprecated: deprecated,
-  mixin: mixin,
-  protocol: protocol
-});
-
 function trimDots(ary) {
   for (let i = 0; i < ary.length; ++i) {
     let part = ary[i];
@@ -912,30 +893,6 @@ let Loader = class Loader {
   }
 };
 
-/*! *****************************************************************************
-Copyright (c) Microsoft Corporation. All rights reserved.
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-this file except in compliance with the License. You may obtain a copy of the
-License at http://www.apache.org/licenses/LICENSE-2.0
-
-THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-MERCHANTABLITY OR NON-INFRINGEMENT.
-
-See the Apache Version 2.0 License for specific language governing permissions
-and limitations under the License.
-***************************************************************************** */
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
-
 /**
 * An implementation of the TemplateLoader interface implemented with text-based loading.
 */
@@ -946,17 +903,17 @@ class TextTemplateLoader {
     * @param entry The TemplateRegistryEntry to load and populate with a template.
     * @return A promise which resolves when the TemplateRegistryEntry is loaded with a template.
     */
-    loadTemplate(loader, entry) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const text = yield loader.loadText(entry.address);
-            entry.template = DOM.createTemplateFromMarkup(text);
-        });
+    async loadTemplate(loader, entry) {
+        const text = await loader.loadText(entry.address);
+        entry.template = DOM.createTemplateFromMarkup(text);
     }
 }
 function ensureOriginOnExports(moduleExports, moduleId) {
     let target = moduleExports;
     let key;
     let exportedValue;
+    // Mark the module with Origin
+    // for view mapping from loader
     Origin.set(target, new Origin(moduleId, ''));
     if (typeof target === 'object') {
         for (key in target) {
@@ -977,15 +934,16 @@ class EsmLoader extends Loader {
         this.moduleRegistry = Object.create(null);
         this.loaderPlugins = Object.create(null);
         this.modulesBeingLoaded = new Map();
+        this.baseUrl = location.origin || `${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ''}`;
         this.useTemplateLoader(new TextTemplateLoader());
         this.addPlugin('template-registry-entry', {
-            fetch: (moduleId) => __awaiter(this, void 0, void 0, function* () {
+            fetch: async (moduleId) => {
                 const entry = this.getOrCreateTemplateRegistryEntry(moduleId);
                 if (!entry.templateIsLoaded) {
-                    yield this.templateLoader.loadTemplate(this, entry);
+                    await this.templateLoader.loadTemplate(this, entry);
                 }
                 return entry;
-            })
+            }
         });
         PLATFORM.eachModule = callback => {
             const registry = this.moduleRegistry;
@@ -1007,22 +965,20 @@ class EsmLoader extends Loader {
     /**
      * @internal
      */
-    _import(address) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const addressParts = address.split('!');
-            const moduleId = addressParts.splice(addressParts.length - 1, 1)[0];
-            const loaderPlugin = addressParts.length === 1 ? addressParts[0] : null;
-            if (loaderPlugin) {
-                const plugin = this.loaderPlugins[loaderPlugin];
-                if (!plugin) {
-                    throw new Error(`Plugin ${loaderPlugin} is not registered in the loader.`);
-                }
-                return yield plugin.fetch(moduleId);
+    async _import(address) {
+        const addressParts = address.split('!');
+        const moduleId = addressParts.splice(addressParts.length - 1, 1)[0];
+        const loaderPlugin = addressParts.length === 1 ? addressParts[0] : null;
+        if (loaderPlugin) {
+            const plugin = this.loaderPlugins[loaderPlugin];
+            if (!plugin) {
+                throw new Error(`Plugin ${loaderPlugin} is not registered in the loader.`);
             }
-            return import(moduleId).then(m => {
-                this.moduleRegistry[moduleId] = m;
-                return m;
-            });
+            return await plugin.fetch(moduleId);
+        }
+        return import(join(this.baseUrl, moduleId)).then(m => {
+            this.moduleRegistry[moduleId] = m;
+            return m;
         });
     }
     /**
@@ -1069,23 +1025,21 @@ class EsmLoader extends Loader {
     * @param moduleId The module ID to load.
     * @return A Promise for the loaded module.
     */
-    loadModule(moduleId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let existing = this.moduleRegistry[moduleId];
-            if (existing) {
-                return existing;
-            }
-            let beingLoaded = this.modulesBeingLoaded.get(moduleId);
-            if (beingLoaded) {
-                return beingLoaded;
-            }
-            beingLoaded = this._import(moduleId);
-            this.modulesBeingLoaded.set(moduleId, beingLoaded);
-            const moduleExports = yield beingLoaded;
-            this.moduleRegistry[moduleId] = ensureOriginOnExports(moduleExports, moduleId);
-            this.modulesBeingLoaded.delete(moduleId);
-            return moduleExports;
-        });
+    async loadModule(moduleId) {
+        let existing = this.moduleRegistry[moduleId];
+        if (existing) {
+            return existing;
+        }
+        let beingLoaded = this.modulesBeingLoaded.get(moduleId);
+        if (beingLoaded) {
+            return beingLoaded;
+        }
+        beingLoaded = this._import(moduleId);
+        this.modulesBeingLoaded.set(moduleId, beingLoaded);
+        const moduleExports = await beingLoaded;
+        this.moduleRegistry[moduleId] = ensureOriginOnExports(moduleExports, moduleId);
+        this.modulesBeingLoaded.delete(moduleId);
+        return moduleExports;
     }
     /**
     * Loads a template.
@@ -1100,10 +1054,8 @@ class EsmLoader extends Loader {
     * @param url The url of the text file to load.
     * @return A Promise for text content.
     */
-    loadText(url) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return fetch(url).then(res => res.text());
-        });
+    async loadText(url) {
+        return fetch(url).then(res => res.text());
     }
     /**
     * Alters a module id so that it includes a plugin loader.
@@ -1360,37 +1312,9 @@ var TheLogManager = /*#__PURE__*/Object.freeze({
   Logger: aureliaLogging_11
 });
 
-var aureliaDependencyInjection = createCommonjsModule(function (module, exports) {
+var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _class4, _dec5, _class5, _dec6, _class6, _dec7, _class7;
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Container = exports.InvocationHandler = exports._emptyParameters = exports.SingletonRegistration = exports.TransientRegistration = exports.FactoryInvoker = exports.NewInstance = exports.Factory = exports.Parent = exports.Optional = exports.All = exports.Lazy = exports.StrategyResolver = exports.resolver = undefined;
-
-var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _class4, _dec5, _class5, _dec6, _class6, _dec7, _class7, _classInvokers;
-
-exports.getDecoratorDependencies = getDecoratorDependencies;
-exports.lazy = lazy;
-exports.all = all;
-exports.optional = optional;
-exports.parent = parent;
-exports.factory = factory;
-exports.newInstance = newInstance;
-exports.invoker = invoker;
-exports.invokeAsFactory = invokeAsFactory;
-exports.registration = registration;
-exports.transient = transient;
-exports.singleton = singleton;
-exports.autoinject = autoinject;
-exports.inject = inject;
-
-
-
-
-
-
-
-var resolver = exports.resolver = aureliaMetadata.protocol.create('aurelia:resolver', function (target) {
+const resolver = protocol.create('aurelia:resolver', function (target) {
   if (!(typeof target.get === 'function')) {
     return 'Resolvers must implement: get(container: Container, key: any): any';
   }
@@ -1398,23 +1322,21 @@ var resolver = exports.resolver = aureliaMetadata.protocol.create('aurelia:resol
   return true;
 });
 
-var StrategyResolver = exports.StrategyResolver = (_dec = resolver(), _dec(_class = function () {
-  function StrategyResolver(strategy, state) {
-    
-
+let StrategyResolver = (_dec = resolver(), _dec(_class = class StrategyResolver {
+  constructor(strategy, state) {
     this.strategy = strategy;
     this.state = state;
   }
 
-  StrategyResolver.prototype.get = function get(container, key) {
+  get(container, key) {
     switch (this.strategy) {
       case 0:
         return this.state;
       case 1:
-        var _singleton = container.invoke(this.state);
-        this.state = _singleton;
+        let singleton = container.invoke(this.state);
+        this.state = singleton;
         this.strategy = 0;
-        return _singleton;
+        return singleton;
       case 2:
         return container.invoke(this.state);
       case 3:
@@ -1426,165 +1348,121 @@ var StrategyResolver = exports.StrategyResolver = (_dec = resolver(), _dec(_clas
       default:
         throw new Error('Invalid strategy: ' + this.strategy);
     }
-  };
+  }
+}) || _class);
 
-  return StrategyResolver;
-}()) || _class);
-var Lazy = exports.Lazy = (_dec2 = resolver(), _dec2(_class2 = function () {
-  function Lazy(key) {
-    
-
+let Lazy = (_dec2 = resolver(), _dec2(_class2 = class Lazy {
+  constructor(key) {
     this._key = key;
   }
 
-  Lazy.prototype.get = function get(container) {
-    var _this = this;
+  get(container) {
+    return () => container.get(this._key);
+  }
 
-    return function () {
-      return container.get(_this._key);
-    };
-  };
-
-  Lazy.of = function of(key) {
+  static of(key) {
     return new Lazy(key);
-  };
+  }
+}) || _class2);
 
-  return Lazy;
-}()) || _class2);
-var All = exports.All = (_dec3 = resolver(), _dec3(_class3 = function () {
-  function All(key) {
-    
-
+let All = (_dec3 = resolver(), _dec3(_class3 = class All {
+  constructor(key) {
     this._key = key;
   }
 
-  All.prototype.get = function get(container) {
+  get(container) {
     return container.getAll(this._key);
-  };
+  }
 
-  All.of = function of(key) {
+  static of(key) {
     return new All(key);
-  };
+  }
+}) || _class3);
 
-  return All;
-}()) || _class3);
-var Optional = exports.Optional = (_dec4 = resolver(), _dec4(_class4 = function () {
-  function Optional(key) {
-    var checkParent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-    
-
+let Optional = (_dec4 = resolver(), _dec4(_class4 = class Optional {
+  constructor(key, checkParent = true) {
     this._key = key;
     this._checkParent = checkParent;
   }
 
-  Optional.prototype.get = function get(container) {
+  get(container) {
     if (container.hasResolver(this._key, this._checkParent)) {
       return container.get(this._key);
     }
 
     return null;
-  };
+  }
 
-  Optional.of = function of(key) {
-    var checkParent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
+  static of(key, checkParent = true) {
     return new Optional(key, checkParent);
-  };
+  }
+}) || _class4);
 
-  return Optional;
-}()) || _class4);
-var Parent = exports.Parent = (_dec5 = resolver(), _dec5(_class5 = function () {
-  function Parent(key) {
-    
-
+let Parent = (_dec5 = resolver(), _dec5(_class5 = class Parent {
+  constructor(key) {
     this._key = key;
   }
 
-  Parent.prototype.get = function get(container) {
+  get(container) {
     return container.parent ? container.parent.get(this._key) : null;
-  };
+  }
 
-  Parent.of = function of(key) {
+  static of(key) {
     return new Parent(key);
-  };
+  }
+}) || _class5);
 
-  return Parent;
-}()) || _class5);
-var Factory = exports.Factory = (_dec6 = resolver(), _dec6(_class6 = function () {
-  function Factory(key) {
-    
-
+let Factory = (_dec6 = resolver(), _dec6(_class6 = class Factory {
+  constructor(key) {
     this._key = key;
   }
 
-  Factory.prototype.get = function get(container) {
-    var fn = this._key;
-    var resolver = container.getResolver(fn);
+  get(container) {
+    let fn = this._key;
+    let resolver = container.getResolver(fn);
     if (resolver && resolver.strategy === 3) {
       fn = resolver.state;
     }
 
-    return function () {
-      for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
-        rest[_key] = arguments[_key];
-      }
+    return (...rest) => container.invoke(fn, rest);
+  }
 
-      return container.invoke(fn, rest);
-    };
-  };
-
-  Factory.of = function of(key) {
+  static of(key) {
     return new Factory(key);
-  };
+  }
+}) || _class6);
 
-  return Factory;
-}()) || _class6);
-var NewInstance = exports.NewInstance = (_dec7 = resolver(), _dec7(_class7 = function () {
-  function NewInstance(key) {
-    
-
+let NewInstance = (_dec7 = resolver(), _dec7(_class7 = class NewInstance {
+  constructor(key, ...dynamicDependencies) {
     this.key = key;
     this.asKey = key;
-
-    for (var _len2 = arguments.length, dynamicDependencies = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      dynamicDependencies[_key2 - 1] = arguments[_key2];
-    }
-
     this.dynamicDependencies = dynamicDependencies;
   }
 
-  NewInstance.prototype.get = function get(container) {
-    var dynamicDependencies = this.dynamicDependencies.length > 0 ? this.dynamicDependencies.map(function (dependency) {
-      return dependency['protocol:aurelia:resolver'] ? dependency.get(container) : container.get(dependency);
-    }) : undefined;
+  get(container) {
+    let dynamicDependencies = this.dynamicDependencies.length > 0 ? this.dynamicDependencies.map(dependency => dependency['protocol:aurelia:resolver'] ? dependency.get(container) : container.get(dependency)) : undefined;
 
-    var fn = this.key;
-    var resolver = container.getResolver(fn);
+    let fn = this.key;
+    let resolver = container.getResolver(fn);
     if (resolver && resolver.strategy === 3) {
       fn = resolver.state;
     }
 
-    var instance = container.invoke(fn, dynamicDependencies);
+    const instance = container.invoke(fn, dynamicDependencies);
     container.registerInstance(this.asKey, instance);
     return instance;
-  };
+  }
 
-  NewInstance.prototype.as = function as(key) {
+  as(key) {
     this.asKey = key;
     return this;
-  };
+  }
 
-  NewInstance.of = function of(key) {
-    for (var _len3 = arguments.length, dynamicDependencies = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-      dynamicDependencies[_key3 - 1] = arguments[_key3];
-    }
+  static of(key, ...dynamicDependencies) {
+    return new NewInstance(key, ...dynamicDependencies);
+  }
+}) || _class7);
 
-    return new (Function.prototype.bind.apply(NewInstance, [null].concat([key], dynamicDependencies)))();
-  };
-
-  return NewInstance;
-}()) || _class7);
 function getDecoratorDependencies(target) {
   autoinject(target);
 
@@ -1593,24 +1471,22 @@ function getDecoratorDependencies(target) {
 
 function lazy(keyValue) {
   return function (target, key, index) {
-    var inject = getDecoratorDependencies(target);
+    let inject = getDecoratorDependencies(target);
     inject[index] = Lazy.of(keyValue);
   };
 }
 
 function all(keyValue) {
   return function (target, key, index) {
-    var inject = getDecoratorDependencies(target);
+    let inject = getDecoratorDependencies(target);
     inject[index] = All.of(keyValue);
   };
 }
 
-function optional() {
-  var checkParentOrTarget = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-
-  var deco = function deco(checkParent) {
+function optional(checkParentOrTarget = true) {
+  let deco = function (checkParent) {
     return function (target, key, index) {
-      var inject = getDecoratorDependencies(target);
+      let inject = getDecoratorDependencies(target);
       inject[index] = Optional.of(inject[index], checkParent);
     };
   };
@@ -1621,26 +1497,22 @@ function optional() {
 }
 
 function parent(target, key, index) {
-  var inject = getDecoratorDependencies(target);
+  let inject = getDecoratorDependencies(target);
   inject[index] = Parent.of(inject[index]);
 }
 
 function factory(keyValue) {
   return function (target, key, index) {
-    var inject = getDecoratorDependencies(target);
+    let inject = getDecoratorDependencies(target);
     inject[index] = Factory.of(keyValue);
   };
 }
 
-function newInstance(asKeyOrTarget) {
-  for (var _len4 = arguments.length, dynamicDependencies = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-    dynamicDependencies[_key4 - 1] = arguments[_key4];
-  }
-
-  var deco = function deco(asKey) {
+function newInstance(asKeyOrTarget, ...dynamicDependencies) {
+  let deco = function (asKey) {
     return function (target, key, index) {
-      var inject = getDecoratorDependencies(target);
-      inject[index] = NewInstance.of.apply(NewInstance, [inject[index]].concat(dynamicDependencies));
+      let inject = getDecoratorDependencies(target);
+      inject[index] = NewInstance.of(inject[index], ...dynamicDependencies);
       if (!!asKey) {
         inject[index].as(asKey);
       }
@@ -1654,37 +1526,33 @@ function newInstance(asKeyOrTarget) {
 
 function invoker(value) {
   return function (target) {
-    aureliaMetadata.metadata.define(aureliaMetadata.metadata.invoker, value, target);
+    metadata.define(metadata.invoker, value, target);
   };
 }
 
 function invokeAsFactory(potentialTarget) {
-  var deco = function deco(target) {
-    aureliaMetadata.metadata.define(aureliaMetadata.metadata.invoker, FactoryInvoker.instance, target);
+  let deco = function (target) {
+    metadata.define(metadata.invoker, FactoryInvoker.instance, target);
   };
 
   return potentialTarget ? deco(potentialTarget) : deco;
 }
 
-var FactoryInvoker = exports.FactoryInvoker = function () {
-  function FactoryInvoker() {
-    
-  }
-
-  FactoryInvoker.prototype.invoke = function invoke(container, fn, dependencies) {
-    var i = dependencies.length;
-    var args = new Array(i);
+let FactoryInvoker = class FactoryInvoker {
+  invoke(container, fn, dependencies) {
+    let i = dependencies.length;
+    let args = new Array(i);
 
     while (i--) {
       args[i] = container.get(dependencies[i]);
     }
 
     return fn.apply(undefined, args);
-  };
+  }
 
-  FactoryInvoker.prototype.invokeWithDynamicDependencies = function invokeWithDynamicDependencies(container, fn, staticDependencies, dynamicDependencies) {
-    var i = staticDependencies.length;
-    var args = new Array(i);
+  invokeWithDynamicDependencies(container, fn, staticDependencies, dynamicDependencies) {
+    let i = staticDependencies.length;
+    let args = new Array(i);
 
     while (i--) {
       args[i] = container.get(staticDependencies[i]);
@@ -1695,16 +1563,14 @@ var FactoryInvoker = exports.FactoryInvoker = function () {
     }
 
     return fn.apply(undefined, args);
-  };
-
-  return FactoryInvoker;
-}();
+  }
+};
 
 FactoryInvoker.instance = new FactoryInvoker();
 
 function registration(value) {
   return function (target) {
-    aureliaMetadata.metadata.define(aureliaMetadata.metadata.registration, value, target);
+    metadata.define(metadata.registration, value, target);
   };
 }
 
@@ -1712,33 +1578,23 @@ function transient(key) {
   return registration(new TransientRegistration(key));
 }
 
-function singleton(keyOrRegisterInChild) {
-  var registerInChild = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
+function singleton(keyOrRegisterInChild, registerInChild = false) {
   return registration(new SingletonRegistration(keyOrRegisterInChild, registerInChild));
 }
 
-var TransientRegistration = exports.TransientRegistration = function () {
-  function TransientRegistration(key) {
-    
-
+let TransientRegistration = class TransientRegistration {
+  constructor(key) {
     this._key = key;
   }
 
-  TransientRegistration.prototype.registerResolver = function registerResolver(container, key, fn) {
-    var existingResolver = container.getResolver(this._key || key);
+  registerResolver(container, key, fn) {
+    let existingResolver = container.getResolver(this._key || key);
     return existingResolver === undefined ? container.registerTransient(this._key || key, fn) : existingResolver;
-  };
+  }
+};
 
-  return TransientRegistration;
-}();
-
-var SingletonRegistration = exports.SingletonRegistration = function () {
-  function SingletonRegistration(keyOrRegisterInChild) {
-    var registerInChild = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-    
-
+let SingletonRegistration = class SingletonRegistration {
+  constructor(keyOrRegisterInChild, registerInChild = false) {
     if (typeof keyOrRegisterInChild === 'boolean') {
       this._registerInChild = keyOrRegisterInChild;
     } else {
@@ -1747,47 +1603,41 @@ var SingletonRegistration = exports.SingletonRegistration = function () {
     }
   }
 
-  SingletonRegistration.prototype.registerResolver = function registerResolver(container, key, fn) {
-    var targetContainer = this._registerInChild ? container : container.root;
-    var existingResolver = targetContainer.getResolver(this._key || key);
+  registerResolver(container, key, fn) {
+    let targetContainer = this._registerInChild ? container : container.root;
+    let existingResolver = targetContainer.getResolver(this._key || key);
     return existingResolver === undefined ? targetContainer.registerSingleton(this._key || key, fn) : existingResolver;
-  };
-
-  return SingletonRegistration;
-}();
+  }
+};
 
 function validateKey(key) {
   if (key === null || key === undefined) {
     throw new Error('key/value cannot be null or undefined. Are you trying to inject/register something that doesn\'t exist with DI?');
   }
 }
-var _emptyParameters = exports._emptyParameters = Object.freeze([]);
+const _emptyParameters = Object.freeze([]);
 
-aureliaMetadata.metadata.registration = 'aurelia:registration';
-aureliaMetadata.metadata.invoker = 'aurelia:invoker';
+metadata.registration = 'aurelia:registration';
+metadata.invoker = 'aurelia:invoker';
 
-var resolverDecorates = resolver.decorates;
+let resolverDecorates = resolver.decorates;
 
-var InvocationHandler = exports.InvocationHandler = function () {
-  function InvocationHandler(fn, invoker, dependencies) {
-    
-
+let InvocationHandler = class InvocationHandler {
+  constructor(fn, invoker, dependencies) {
     this.fn = fn;
     this.invoker = invoker;
     this.dependencies = dependencies;
   }
 
-  InvocationHandler.prototype.invoke = function invoke(container, dynamicDependencies) {
+  invoke(container, dynamicDependencies) {
     return dynamicDependencies !== undefined ? this.invoker.invokeWithDynamicDependencies(container, this.fn, this.dependencies, dynamicDependencies) : this.invoker.invoke(container, this.fn, this.dependencies);
-  };
-
-  return InvocationHandler;
-}();
+  }
+};
 
 function invokeWithDynamicDependencies(container, fn, staticDependencies, dynamicDependencies) {
-  var i = staticDependencies.length;
-  var args = new Array(i);
-  var lookup = void 0;
+  let i = staticDependencies.length;
+  let args = new Array(i);
+  let lookup;
 
   while (i--) {
     lookup = staticDependencies[i];
@@ -1806,46 +1656,48 @@ function invokeWithDynamicDependencies(container, fn, staticDependencies, dynami
   return Reflect.construct(fn, args);
 }
 
-var classInvokers = (_classInvokers = {}, _classInvokers[0] = {
-  invoke: function invoke(container, Type) {
-    return new Type();
+let classInvokers = {
+  [0]: {
+    invoke(container, Type) {
+      return new Type();
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers[1] = {
-  invoke: function invoke(container, Type, deps) {
-    return new Type(container.get(deps[0]));
+  [1]: {
+    invoke(container, Type, deps) {
+      return new Type(container.get(deps[0]));
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers[2] = {
-  invoke: function invoke(container, Type, deps) {
-    return new Type(container.get(deps[0]), container.get(deps[1]));
+  [2]: {
+    invoke(container, Type, deps) {
+      return new Type(container.get(deps[0]), container.get(deps[1]));
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers[3] = {
-  invoke: function invoke(container, Type, deps) {
-    return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]));
+  [3]: {
+    invoke(container, Type, deps) {
+      return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]));
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers[4] = {
-  invoke: function invoke(container, Type, deps) {
-    return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]), container.get(deps[3]));
+  [4]: {
+    invoke(container, Type, deps) {
+      return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]), container.get(deps[3]));
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers[5] = {
-  invoke: function invoke(container, Type, deps) {
-    return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]), container.get(deps[3]), container.get(deps[4]));
+  [5]: {
+    invoke(container, Type, deps) {
+      return new Type(container.get(deps[0]), container.get(deps[1]), container.get(deps[2]), container.get(deps[3]), container.get(deps[4]));
+    },
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
   },
-
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers.fallback = {
-  invoke: invokeWithDynamicDependencies,
-  invokeWithDynamicDependencies: invokeWithDynamicDependencies
-}, _classInvokers);
+  fallback: {
+    invoke: invokeWithDynamicDependencies,
+    invokeWithDynamicDependencies: invokeWithDynamicDependencies
+  }
+};
 
 function getDependencies(f) {
   if (!f.hasOwnProperty('inject')) {
@@ -1859,10 +1711,8 @@ function getDependencies(f) {
   return f.inject;
 }
 
-var Container = exports.Container = function () {
-  function Container(configuration) {
-    
-
+let Container = class Container {
+  constructor(configuration) {
     if (configuration === undefined) {
       configuration = {};
     }
@@ -1875,41 +1725,41 @@ var Container = exports.Container = function () {
     this.parent = null;
   }
 
-  Container.prototype.makeGlobal = function makeGlobal() {
+  makeGlobal() {
     Container.instance = this;
     return this;
-  };
+  }
 
-  Container.prototype.setHandlerCreatedCallback = function setHandlerCreatedCallback(onHandlerCreated) {
+  setHandlerCreatedCallback(onHandlerCreated) {
     this._onHandlerCreated = onHandlerCreated;
     this._configuration.onHandlerCreated = onHandlerCreated;
-  };
+  }
 
-  Container.prototype.registerInstance = function registerInstance(key, instance) {
+  registerInstance(key, instance) {
     return this.registerResolver(key, new StrategyResolver(0, instance === undefined ? key : instance));
-  };
+  }
 
-  Container.prototype.registerSingleton = function registerSingleton(key, fn) {
+  registerSingleton(key, fn) {
     return this.registerResolver(key, new StrategyResolver(1, fn === undefined ? key : fn));
-  };
+  }
 
-  Container.prototype.registerTransient = function registerTransient(key, fn) {
+  registerTransient(key, fn) {
     return this.registerResolver(key, new StrategyResolver(2, fn === undefined ? key : fn));
-  };
+  }
 
-  Container.prototype.registerHandler = function registerHandler(key, handler) {
+  registerHandler(key, handler) {
     return this.registerResolver(key, new StrategyResolver(3, handler));
-  };
+  }
 
-  Container.prototype.registerAlias = function registerAlias(originalKey, aliasKey) {
+  registerAlias(originalKey, aliasKey) {
     return this.registerResolver(aliasKey, new StrategyResolver(5, originalKey));
-  };
+  }
 
-  Container.prototype.registerResolver = function registerResolver(key, resolver) {
+  registerResolver(key, resolver) {
     validateKey(key);
 
-    var allResolvers = this._resolvers;
-    var result = allResolvers.get(key);
+    let allResolvers = this._resolvers;
+    let result = allResolvers.get(key);
 
     if (result === undefined) {
       allResolvers.set(key, resolver);
@@ -1920,48 +1770,46 @@ var Container = exports.Container = function () {
     }
 
     return resolver;
-  };
+  }
 
-  Container.prototype.autoRegister = function autoRegister(key, fn) {
+  autoRegister(key, fn) {
     fn = fn === undefined ? key : fn;
 
     if (typeof fn === 'function') {
-      var _registration = aureliaMetadata.metadata.get(aureliaMetadata.metadata.registration, fn);
+      let registration = metadata.get(metadata.registration, fn);
 
-      if (_registration === undefined) {
+      if (registration === undefined) {
         return this.registerResolver(key, new StrategyResolver(1, fn));
       }
 
-      return _registration.registerResolver(this, key, fn);
+      return registration.registerResolver(this, key, fn);
     }
 
     return this.registerResolver(key, new StrategyResolver(0, fn));
-  };
+  }
 
-  Container.prototype.autoRegisterAll = function autoRegisterAll(fns) {
-    var i = fns.length;
+  autoRegisterAll(fns) {
+    let i = fns.length;
     while (i--) {
       this.autoRegister(fns[i]);
     }
-  };
+  }
 
-  Container.prototype.unregister = function unregister(key) {
+  unregister(key) {
     this._resolvers.delete(key);
-  };
+  }
 
-  Container.prototype.hasResolver = function hasResolver(key) {
-    var checkParent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
+  hasResolver(key, checkParent = false) {
     validateKey(key);
 
     return this._resolvers.has(key) || checkParent && this.parent !== null && this.parent.hasResolver(key, checkParent);
-  };
+  }
 
-  Container.prototype.getResolver = function getResolver(key) {
+  getResolver(key) {
     return this._resolvers.get(key);
-  };
+  }
 
-  Container.prototype.get = function get(key) {
+  get(key) {
     validateKey(key);
 
     if (key === Container) {
@@ -1972,27 +1820,27 @@ var Container = exports.Container = function () {
       return key.get(this, key);
     }
 
-    var resolver = this._resolvers.get(key);
+    let resolver = this._resolvers.get(key);
 
     if (resolver === undefined) {
       if (this.parent === null) {
         return this.autoRegister(key).get(this, key);
       }
 
-      var _registration2 = aureliaMetadata.metadata.get(aureliaMetadata.metadata.registration, key);
+      let registration = metadata.get(metadata.registration, key);
 
-      if (_registration2 === undefined) {
+      if (registration === undefined) {
         return this.parent._get(key);
       }
 
-      return _registration2.registerResolver(this, key, key).get(this, key);
+      return registration.registerResolver(this, key, key).get(this, key);
     }
 
     return resolver.get(this, key);
-  };
+  }
 
-  Container.prototype._get = function _get(key) {
-    var resolver = this._resolvers.get(key);
+  _get(key) {
+    let resolver = this._resolvers.get(key);
 
     if (resolver === undefined) {
       if (this.parent === null) {
@@ -2003,12 +1851,12 @@ var Container = exports.Container = function () {
     }
 
     return resolver.get(this, key);
-  };
+  }
 
-  Container.prototype.getAll = function getAll(key) {
+  getAll(key) {
     validateKey(key);
 
-    var resolver = this._resolvers.get(key);
+    let resolver = this._resolvers.get(key);
 
     if (resolver === undefined) {
       if (this.parent === null) {
@@ -2019,9 +1867,9 @@ var Container = exports.Container = function () {
     }
 
     if (resolver.strategy === 4) {
-      var state = resolver.state;
-      var i = state.length;
-      var results = new Array(i);
+      let state = resolver.state;
+      let i = state.length;
+      let results = new Array(i);
 
       while (i--) {
         results[i] = state[i].get(this, key);
@@ -2031,70 +1879,62 @@ var Container = exports.Container = function () {
     }
 
     return [resolver.get(this, key)];
-  };
+  }
 
-  Container.prototype.createChild = function createChild() {
-    var child = new Container(this._configuration);
+  createChild() {
+    let child = new Container(this._configuration);
     child.root = this.root;
     child.parent = this;
     return child;
-  };
+  }
 
-  Container.prototype.invoke = function invoke(fn, dynamicDependencies) {
+  invoke(fn, dynamicDependencies) {
     try {
-      var _handler = this._handlers.get(fn);
+      let handler = this._handlers.get(fn);
 
-      if (_handler === undefined) {
-        _handler = this._createInvocationHandler(fn);
-        this._handlers.set(fn, _handler);
+      if (handler === undefined) {
+        handler = this._createInvocationHandler(fn);
+        this._handlers.set(fn, handler);
       }
 
-      return _handler.invoke(this, dynamicDependencies);
+      return handler.invoke(this, dynamicDependencies);
     } catch (e) {
-      throw new aureliaPal.AggregateError('Error invoking ' + fn.name + '. Check the inner error for details.', e, true);
+      throw new AggregateError(`Error invoking ${fn.name}. Check the inner error for details.`, e, true);
     }
-  };
+  }
 
-  Container.prototype._createInvocationHandler = function _createInvocationHandler(fn) {
-    var dependencies = void 0;
+  _createInvocationHandler(fn) {
+    let dependencies;
 
     if (fn.inject === undefined) {
-      dependencies = aureliaMetadata.metadata.getOwn(aureliaMetadata.metadata.paramTypes, fn) || _emptyParameters;
+      dependencies = metadata.getOwn(metadata.paramTypes, fn) || _emptyParameters;
     } else {
       dependencies = [];
-      var ctor = fn;
+      let ctor = fn;
       while (typeof ctor === 'function') {
-        var _dependencies;
-
-        (_dependencies = dependencies).push.apply(_dependencies, getDependencies(ctor));
+        dependencies.push(...getDependencies(ctor));
         ctor = Object.getPrototypeOf(ctor);
       }
     }
 
-    var invoker = aureliaMetadata.metadata.getOwn(aureliaMetadata.metadata.invoker, fn) || classInvokers[dependencies.length] || classInvokers.fallback;
+    let invoker = metadata.getOwn(metadata.invoker, fn) || classInvokers[dependencies.length] || classInvokers.fallback;
 
-    var handler = new InvocationHandler(fn, invoker, dependencies);
+    let handler = new InvocationHandler(fn, invoker, dependencies);
     return this._onHandlerCreated !== undefined ? this._onHandlerCreated(handler) : handler;
-  };
-
-  return Container;
-}();
+  }
+};
 
 function autoinject(potentialTarget) {
-  var deco = function deco(target) {
+  let deco = function (target) {
     if (!target.hasOwnProperty('inject')) {
-      target.inject = (aureliaMetadata.metadata.getOwn(aureliaMetadata.metadata.paramTypes, target) || _emptyParameters).slice();
+      target.inject = (metadata.getOwn(metadata.paramTypes, target) || _emptyParameters).slice();
     }
   };
 
   return potentialTarget ? deco(potentialTarget) : deco;
 }
 
-function inject() {
-  for (var _len5 = arguments.length, rest = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-    rest[_key5] = arguments[_key5];
-  }
-
+function inject(...rest) {
   return function (target, key, descriptor) {
     if (typeof descriptor === 'number') {
       autoinject(target);
@@ -2105,43 +1945,13 @@ function inject() {
     }
 
     if (descriptor) {
-      var _fn = descriptor.value;
-      _fn.inject = rest;
+      const fn = descriptor.value;
+      fn.inject = rest;
     } else {
       target.inject = rest;
     }
   };
 }
-});
-
-unwrapExports(aureliaDependencyInjection);
-var aureliaDependencyInjection_1 = aureliaDependencyInjection.Container;
-var aureliaDependencyInjection_2 = aureliaDependencyInjection.InvocationHandler;
-var aureliaDependencyInjection_3 = aureliaDependencyInjection._emptyParameters;
-var aureliaDependencyInjection_4 = aureliaDependencyInjection.SingletonRegistration;
-var aureliaDependencyInjection_5 = aureliaDependencyInjection.TransientRegistration;
-var aureliaDependencyInjection_6 = aureliaDependencyInjection.FactoryInvoker;
-var aureliaDependencyInjection_7 = aureliaDependencyInjection.NewInstance;
-var aureliaDependencyInjection_8 = aureliaDependencyInjection.Factory;
-var aureliaDependencyInjection_9 = aureliaDependencyInjection.Parent;
-var aureliaDependencyInjection_10 = aureliaDependencyInjection.Optional;
-var aureliaDependencyInjection_11 = aureliaDependencyInjection.All;
-var aureliaDependencyInjection_12 = aureliaDependencyInjection.Lazy;
-var aureliaDependencyInjection_13 = aureliaDependencyInjection.StrategyResolver;
-var aureliaDependencyInjection_14 = aureliaDependencyInjection.resolver;
-var aureliaDependencyInjection_15 = aureliaDependencyInjection.getDecoratorDependencies;
-var aureliaDependencyInjection_16 = aureliaDependencyInjection.lazy;
-var aureliaDependencyInjection_17 = aureliaDependencyInjection.all;
-var aureliaDependencyInjection_18 = aureliaDependencyInjection.optional;
-var aureliaDependencyInjection_19 = aureliaDependencyInjection.parent;
-var aureliaDependencyInjection_20 = aureliaDependencyInjection.factory;
-var aureliaDependencyInjection_21 = aureliaDependencyInjection.newInstance;
-var aureliaDependencyInjection_22 = aureliaDependencyInjection.invoker;
-var aureliaDependencyInjection_23 = aureliaDependencyInjection.invokeAsFactory;
-var aureliaDependencyInjection_24 = aureliaDependencyInjection.registration;
-var aureliaDependencyInjection_25 = aureliaDependencyInjection.singleton;
-var aureliaDependencyInjection_26 = aureliaDependencyInjection.autoinject;
-var aureliaDependencyInjection_27 = aureliaDependencyInjection.inject;
 
 const stackSeparator = '\nEnqueued in TaskQueue by:\n';
 const microStackSeparator = '\nEnqueued in MicroTaskQueue by:\n';
@@ -2314,7 +2124,7 @@ function filterFlushStack(stack) {
   return index < 0 ? stack : stack.substr(0, index);
 }
 
-var _dec, _dec2, _class, _dec3, _class2, _dec4, _class3, _dec5, _class5, _dec6, _class7, _dec7, _class8, _dec8, _class9, _dec9, _class10, _class11, _temp, _dec10, _class12, _class13, _temp2;
+var _dec$1, _dec2$1, _class$1, _dec3$1, _class2$1, _dec4$1, _class3$1, _dec5$1, _class5$1, _dec6$1, _class7$1, _dec7$1, _class8, _dec8, _class9, _dec9, _class10, _class11, _temp, _dec10, _class12, _class13, _temp2;
 
 const targetContext = 'Binding:target';
 const sourceContext = 'Binding:source';
@@ -2664,7 +2474,7 @@ function subscriberCollection() {
   };
 }
 
-let ExpressionObserver = (_dec = connectable(), _dec2 = subscriberCollection(), _dec(_class = _dec2(_class = class ExpressionObserver {
+let ExpressionObserver = (_dec$1 = connectable(), _dec2$1 = subscriberCollection(), _dec$1(_class$1 = _dec2$1(_class$1 = class ExpressionObserver {
   constructor(scope, expression, observerLocator, lookupFunctions) {
     this.scope = scope;
     this.expression = expression;
@@ -2713,7 +2523,7 @@ let ExpressionObserver = (_dec = connectable(), _dec2 = subscriberCollection(), 
     this.expression.connect(this, this.scope);
     this.unobserve(false);
   }
-}) || _class) || _class);
+}) || _class$1) || _class$1);
 
 function isIndex(s) {
   return +s === s >>> 0;
@@ -3109,7 +2919,7 @@ function getChangeRecords(map) {
   return entries;
 }
 
-let ModifyCollectionObserver = (_dec3 = subscriberCollection(), _dec3(_class2 = class ModifyCollectionObserver {
+let ModifyCollectionObserver = (_dec3$1 = subscriberCollection(), _dec3$1(_class2$1 = class ModifyCollectionObserver {
   constructor(taskQueue, collection) {
     this.taskQueue = taskQueue;
     this.queued = false;
@@ -3208,9 +3018,9 @@ let ModifyCollectionObserver = (_dec3 = subscriberCollection(), _dec3(_class2 = 
       this.lengthObserver.call(this.collection[this.lengthPropertyName]);
     }
   }
-}) || _class2);
+}) || _class2$1);
 
-let CollectionLengthObserver = (_dec4 = subscriberCollection(), _dec4(_class3 = class CollectionLengthObserver {
+let CollectionLengthObserver = (_dec4$1 = subscriberCollection(), _dec4$1(_class3$1 = class CollectionLengthObserver {
   constructor(collection) {
     this.collection = collection;
     this.lengthPropertyName = collection instanceof Map || collection instanceof Set ? 'size' : 'length';
@@ -3238,7 +3048,7 @@ let CollectionLengthObserver = (_dec4 = subscriberCollection(), _dec4(_class3 = 
     this.callSubscribers(newValue, oldValue);
     this.currentValue = newValue;
   }
-}) || _class3);
+}) || _class3$1);
 
 const arrayProto = Array.prototype;
 const pop = arrayProto.pop;
@@ -4688,7 +4498,7 @@ let ParserImplementation = class ParserImplementation {
 
         buffer.push(fromCharCode(unescaped));
         marker = this.idx;
-      } else if (this.ch === 0 || this.idx >= this.len) {
+      } else if (this.ch === 0) {
         this.err('Unterminated quote');
       } else {
         this.next();
@@ -5464,7 +5274,7 @@ let DirtyChecker = class DirtyChecker {
   }
 };
 
-let DirtyCheckProperty = (_dec5 = subscriberCollection(), _dec5(_class5 = class DirtyCheckProperty {
+let DirtyCheckProperty = (_dec5$1 = subscriberCollection(), _dec5$1(_class5$1 = class DirtyCheckProperty {
   constructor(dirtyChecker, obj, propertyName) {
     this.dirtyChecker = dirtyChecker;
     this.obj = obj;
@@ -5505,7 +5315,7 @@ let DirtyCheckProperty = (_dec5 = subscriberCollection(), _dec5(_class5 = class 
       this.dirtyChecker.removeProperty(this);
     }
   }
-}) || _class5);
+}) || _class5$1);
 
 const logger = aureliaLogging_1('property-observation');
 
@@ -5539,7 +5349,7 @@ let PrimitiveObserver = class PrimitiveObserver {
   unsubscribe() {}
 };
 
-let SetterObserver = (_dec6 = subscriberCollection(), _dec6(_class7 = class SetterObserver {
+let SetterObserver = (_dec6$1 = subscriberCollection(), _dec6$1(_class7$1 = class SetterObserver {
   constructor(taskQueue, obj, propertyName) {
     this.taskQueue = taskQueue;
     this.obj = obj;
@@ -5609,7 +5419,7 @@ let SetterObserver = (_dec6 = subscriberCollection(), _dec6(_class7 = class Sett
       logger.warn(`Cannot observe property '${this.propertyName}' of object`, this.obj);
     }
   }
-}) || _class7);
+}) || _class7$1);
 
 let XLinkAttributeObserver = class XLinkAttributeObserver {
   constructor(element, propertyName, attributeName) {
@@ -5740,7 +5550,7 @@ let StyleObserver = class StyleObserver {
   }
 };
 
-let ValueAttributeObserver = (_dec7 = subscriberCollection(), _dec7(_class8 = class ValueAttributeObserver {
+let ValueAttributeObserver = (_dec7$1 = subscriberCollection(), _dec7$1(_class8 = class ValueAttributeObserver {
   constructor(element, propertyName, handler) {
     this.element = element;
     this.propertyName = propertyName;
@@ -7248,7 +7058,7 @@ function signalBindings(name) {
   }
 }
 
-var _class$1, _temp$1, _dec$1, _class2$1, _dec2$1, _class3$1, _dec3$1, _class4, _dec4$1, _class5$1, _dec5$1, _class6, _dec6$1, _class7$1, _class8$1, _temp2$1, _class9$1, _temp3, _class11$1, _dec7$1, _class13$1, _dec8$1, _class14, _class15, _temp4, _dec9$1, _class16, _dec10$1, _class17, _dec11, _class18;
+var _class$2, _temp$1, _dec$2, _class2$2, _dec2$2, _class3$2, _dec3$2, _class4$1, _dec4$2, _class5$2, _dec5$2, _class6$1, _dec6$2, _class7$2, _class8$1, _temp2$1, _class9$1, _temp3, _class11$1, _dec7$2, _class13$1, _dec8$1, _class14, _class15, _temp4, _dec9$1, _class16, _dec10$1, _class17, _dec11, _class18;
 
 const animationEvent = {
   enterBegin: 'animation:enter:begin',
@@ -7597,7 +7407,7 @@ biProto.inheritBindingContext = false;
 
 BehaviorInstruction.normal = new BehaviorInstruction();
 
-let TargetInstruction = (_temp$1 = _class$1 = class TargetInstruction {
+let TargetInstruction = (_temp$1 = _class$2 = class TargetInstruction {
   static shadowSlot(parentInjectorId) {
     let instruction = new TargetInstruction();
     instruction.parentInjectorId = parentInjectorId;
@@ -7649,7 +7459,7 @@ let TargetInstruction = (_temp$1 = _class$1 = class TargetInstruction {
     instruction.values = values;
     return instruction;
   }
-}, _class$1.noExpressions = Object.freeze([]), _temp$1);
+}, _class$2.noExpressions = Object.freeze([]), _temp$1);
 
 const tiProto = TargetInstruction.prototype;
 
@@ -7690,7 +7500,7 @@ const viewStrategy = protocol.create('aurelia:view-strategy', {
   }
 });
 
-let RelativeViewStrategy = (_dec$1 = viewStrategy(), _dec$1(_class2$1 = class RelativeViewStrategy {
+let RelativeViewStrategy = (_dec$2 = viewStrategy(), _dec$2(_class2$2 = class RelativeViewStrategy {
   constructor(path) {
     this.path = path;
     this.absolutePath = null;
@@ -7710,9 +7520,9 @@ let RelativeViewStrategy = (_dec$1 = viewStrategy(), _dec$1(_class2$1 = class Re
       this.absolutePath = relativeToFile(this.path, file);
     }
   }
-}) || _class2$1);
+}) || _class2$2);
 
-let ConventionalViewStrategy = (_dec2$1 = viewStrategy(), _dec2$1(_class3$1 = class ConventionalViewStrategy {
+let ConventionalViewStrategy = (_dec2$2 = viewStrategy(), _dec2$2(_class3$2 = class ConventionalViewStrategy {
   constructor(viewLocator, origin) {
     this.moduleId = origin.moduleId;
     this.viewUrl = viewLocator.convertOriginToViewUrl(origin);
@@ -7722,9 +7532,9 @@ let ConventionalViewStrategy = (_dec2$1 = viewStrategy(), _dec2$1(_class3$1 = cl
     compileInstruction.associatedModuleId = this.moduleId;
     return viewEngine.loadViewFactory(this.viewUrl, compileInstruction, loadContext, target);
   }
-}) || _class3$1);
+}) || _class3$2);
 
-let NoViewStrategy = (_dec3$1 = viewStrategy(), _dec3$1(_class4 = class NoViewStrategy {
+let NoViewStrategy = (_dec3$2 = viewStrategy(), _dec3$2(_class4$1 = class NoViewStrategy {
   constructor(dependencies, dependencyBaseUrl) {
     this.dependencies = dependencies || null;
     this.dependencyBaseUrl = dependencyBaseUrl || '';
@@ -7759,9 +7569,9 @@ let NoViewStrategy = (_dec3$1 = viewStrategy(), _dec3$1(_class4 = class NoViewSt
 
     return viewEngine.loadViewFactory(entry, compileInstruction, loadContext, target);
   }
-}) || _class4);
+}) || _class4$1);
 
-let TemplateRegistryViewStrategy = (_dec4$1 = viewStrategy(), _dec4$1(_class5$1 = class TemplateRegistryViewStrategy {
+let TemplateRegistryViewStrategy = (_dec4$2 = viewStrategy(), _dec4$2(_class5$2 = class TemplateRegistryViewStrategy {
   constructor(moduleId, entry) {
     this.moduleId = moduleId;
     this.entry = entry;
@@ -7777,9 +7587,9 @@ let TemplateRegistryViewStrategy = (_dec4$1 = viewStrategy(), _dec4$1(_class5$1 
     compileInstruction.associatedModuleId = this.moduleId;
     return viewEngine.loadViewFactory(entry, compileInstruction, loadContext, target);
   }
-}) || _class5$1);
+}) || _class5$2);
 
-let InlineViewStrategy = (_dec5$1 = viewStrategy(), _dec5$1(_class6 = class InlineViewStrategy {
+let InlineViewStrategy = (_dec5$2 = viewStrategy(), _dec5$2(_class6$1 = class InlineViewStrategy {
   constructor(markup, dependencies, dependencyBaseUrl) {
     this.markup = markup;
     this.dependencies = dependencies || null;
@@ -7812,9 +7622,9 @@ let InlineViewStrategy = (_dec5$1 = viewStrategy(), _dec5$1(_class6 = class Inli
     compileInstruction.associatedModuleId = this.moduleId;
     return viewEngine.loadViewFactory(entry, compileInstruction, loadContext, target);
   }
-}) || _class6);
+}) || _class6$1);
 
-let StaticViewStrategy = (_dec6$1 = viewStrategy(), _dec6$1(_class7$1 = class StaticViewStrategy {
+let StaticViewStrategy = (_dec6$2 = viewStrategy(), _dec6$2(_class7$2 = class StaticViewStrategy {
 
   constructor(config) {
     if (typeof config === 'string' || config instanceof DOM.Element && config.tagName === 'TEMPLATE') {
@@ -7873,14 +7683,14 @@ let StaticViewStrategy = (_dec6$1 = viewStrategy(), _dec6$1(_class7$1 = class St
       }
 
       return Promise.all(elDeps.map(el => el.load(container, el.target))).then(() => {
-        const factory = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
+        const factory$$1 = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
         this.factoryIsReady = true;
-        this.factory = factory;
-        return factory;
+        this.factory = factory$$1;
+        return factory$$1;
       });
     });
   }
-}) || _class7$1);
+}) || _class7$2);
 
 let ViewLocator = (_temp2$1 = _class8$1 = class ViewLocator {
   getViewStrategy(value) {
@@ -8137,9 +7947,9 @@ let ShadowSlot = class ShadowSlot {
       node.auAssignedSlot = this;
 
       let anchor = this._findAnchor(view, node, projectionSource, index);
-      let parent = anchor.parentNode;
+      let parent$$1 = anchor.parentNode;
 
-      parent.insertBefore(node, anchor);
+      parent$$1.insertBefore(node, anchor);
       this.children.push(node);
       this.projections++;
     }
@@ -8236,11 +8046,11 @@ let ShadowSlot = class ShadowSlot {
 
   projectFrom(view, projectionSource) {
     let anchor = DOM.createComment('anchor');
-    let parent = this.anchor.parentNode;
+    let parent$$1 = this.anchor.parentNode;
     anchor.auSlotProjectFrom = projectionSource;
     anchor.auOwnerView = view;
     anchor.auProjectionChildren = [];
-    parent.insertBefore(anchor, this.anchor);
+    parent$$1.insertBefore(anchor, this.anchor);
     this.children.push(anchor);
 
     if (this.projectFromAnchors === null) {
@@ -8513,10 +8323,10 @@ let ViewResources = class ViewResources {
     return resource;
   }
 
-  constructor(parent, viewUrl) {
+  constructor(parent$$1, viewUrl) {
     this.bindingLanguage = null;
 
-    this.parent = parent || null;
+    this.parent = parent$$1 || null;
     this.hasParent = this.parent !== null;
     this.viewUrl = viewUrl || '';
     this.lookupFunctions = {
@@ -8816,8 +8626,8 @@ let View = class View {
     refNode.parentNode.insertBefore(this.fragment, refNode);
   }
 
-  appendNodesTo(parent) {
-    parent.appendChild(this.fragment);
+  appendNodesTo(parent$$1) {
+    parent$$1.appendChild(this.fragment);
   }
 
   removeNodes() {
@@ -8940,18 +8750,18 @@ let ViewSlot = class ViewSlot {
   }
 
   transformChildNodesIntoView() {
-    let parent = this.anchor;
+    let parent$$1 = this.anchor;
 
     this.children.push({
-      fragment: parent,
-      firstChild: parent.firstChild,
-      lastChild: parent.lastChild,
+      fragment: parent$$1,
+      firstChild: parent$$1.firstChild,
+      lastChild: parent$$1.lastChild,
       returnToCache() {},
       removeNodes() {
         let last;
 
-        while (last = parent.lastChild) {
-          parent.removeChild(last);
+        while (last = parent$$1.lastChild) {
+          parent$$1.removeChild(last);
         }
       },
       created() {},
@@ -9308,7 +9118,7 @@ let ViewSlot = class ViewSlot {
   }
 };
 
-let ProviderResolver = aureliaDependencyInjection_14(_class11$1 = class ProviderResolver {
+let ProviderResolver = resolver(_class11$1 = class ProviderResolver {
   get(container, key) {
     let id = key.__providerId__;
     return id in container ? container[id] : container[id] = container.invoke(key);
@@ -9327,14 +9137,14 @@ function elementContainerGet(key) {
       return this.boundViewFactory;
     }
 
-    let factory = this.instruction.viewFactory;
+    let factory$$1 = this.instruction.viewFactory;
     let partReplacements = this.partReplacements;
 
     if (partReplacements) {
-      factory = partReplacements[factory.part] || factory;
+      factory$$1 = partReplacements[factory$$1.part] || factory$$1;
     }
 
-    this.boundViewFactory = new BoundViewFactory(this, factory, partReplacements);
+    this.boundViewFactory = new BoundViewFactory(this, factory$$1, partReplacements);
     return this.boundViewFactory;
   }
 
@@ -9367,8 +9177,8 @@ function elementContainerGet(key) {
   return this.superGet(key);
 }
 
-function createElementContainer(parent, element, instruction, children, partReplacements, resources) {
-  let container = parent.createChild();
+function createElementContainer(parent$$1, element, instruction, children, partReplacements, resources) {
+  let container = parent$$1.createChild();
   let providers;
   let i;
 
@@ -9749,7 +9559,7 @@ function makeShadowSlot(compiler, resources, node, instructions, parentInjectorI
 
 const defaultLetHandler = BindingLanguage.prototype.createLetExpressions;
 
-let ViewCompiler = (_dec7$1 = aureliaDependencyInjection_27(BindingLanguage, ViewResources), _dec7$1(_class13$1 = class ViewCompiler {
+let ViewCompiler = (_dec7$2 = inject(BindingLanguage, ViewResources), _dec7$2(_class13$1 = class ViewCompiler {
   constructor(bindingLanguage, resources) {
     this.bindingLanguage = bindingLanguage;
     this.resources = resources;
@@ -9790,18 +9600,18 @@ let ViewCompiler = (_dec7$1 = aureliaDependencyInjection_27(BindingLanguage, Vie
       }
     }
 
-    let factory = new ViewFactory(content, instructions, resources);
+    let factory$$1 = new ViewFactory(content, instructions, resources);
 
-    factory.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
-    factory.part = part;
+    factory$$1.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
+    factory$$1.part = part;
 
     if (cacheSize) {
-      factory.setCacheSize(cacheSize);
+      factory$$1.setCacheSize(cacheSize);
     }
 
-    resources._invokeHook('afterCompile', factory);
+    resources._invokeHook('afterCompile', factory$$1);
 
-    return factory;
+    return factory$$1;
   }
 
   _compileNode(node, resources, instructions, parentNode, parentInjectorId, targetLightDOM) {
@@ -10429,7 +10239,7 @@ let ProxyViewFactory = class ProxyViewFactory {
 
 let auSlotBehavior = null;
 
-let ViewEngine = (_dec8$1 = aureliaDependencyInjection_27(Loader, aureliaDependencyInjection_1, ViewCompiler, ModuleAnalyzer, ViewResources), _dec8$1(_class14 = (_temp4 = _class15 = class ViewEngine {
+let ViewEngine = (_dec8$1 = inject(Loader, Container, ViewCompiler, ModuleAnalyzer, ViewResources), _dec8$1(_class14 = (_temp4 = _class15 = class ViewEngine {
   constructor(loader, container, viewCompiler, moduleAnalyzer, appResources) {
     this.loader = loader;
     this.container = container;
@@ -10836,7 +10646,7 @@ function getObserver(instance, name) {
     let ctor = Object.getPrototypeOf(instance).constructor;
     let behavior = metadata.get(metadata.resource, ctor);
     if (!behavior.isInitialized) {
-      behavior.initialize(aureliaDependencyInjection_1.instance || new aureliaDependencyInjection_1(), instance.constructor);
+      behavior.initialize(Container.instance || new Container(), instance.constructor);
     }
 
     lookup = behavior.observerLocator.getOrCreateObserversLookup(instance);
@@ -11422,7 +11232,7 @@ let HtmlBehaviorResource = class HtmlBehaviorResource {
   }
 };
 
-function createChildObserverDecorator(selectorOrConfig, all) {
+function createChildObserverDecorator(selectorOrConfig, all$$1) {
   return function (target, key, descriptor) {
     let actualTarget = typeof key === 'string' ? target.constructor : target;
     let r = metadata.getOrCreateOwn(metadata.resource, HtmlBehaviorResource, actualTarget);
@@ -11439,7 +11249,7 @@ function createChildObserverDecorator(selectorOrConfig, all) {
       descriptor.configurable = true;
     }
 
-    selectorOrConfig.all = all;
+    selectorOrConfig.all = all$$1;
     r.addChildBinding(new ChildObserver(selectorOrConfig));
   };
 }
@@ -11522,7 +11332,7 @@ function onChildChange(mutations, observer) {
 }
 
 let ChildObserverBinder = class ChildObserverBinder {
-  constructor(selector, viewHost, property, viewModel, controller, changeHandler, all) {
+  constructor(selector, viewHost, property, viewModel, controller, changeHandler, all$$1) {
     this.selector = selector;
     this.viewHost = viewHost;
     this.property = property;
@@ -11530,7 +11340,7 @@ let ChildObserverBinder = class ChildObserverBinder {
     this.controller = controller;
     this.changeHandler = changeHandler in viewModel ? changeHandler : null;
     this.usesShadowDOM = controller.behavior.usesShadowDOM;
-    this.all = all;
+    this.all = all$$1;
 
     if (!this.usesShadowDOM && controller.view && controller.view.contentView) {
       this.contentView = controller.view.contentView;
@@ -11720,7 +11530,7 @@ function tryActivateViewModel(context) {
   return context.viewModel.activate(context.model) || Promise.resolve();
 }
 
-let CompositionEngine = (_dec10$1 = aureliaDependencyInjection_27(ViewEngine, ViewLocator), _dec10$1(_class17 = class CompositionEngine {
+let CompositionEngine = (_dec10$1 = inject(ViewEngine, ViewLocator), _dec10$1(_class17 = class CompositionEngine {
   constructor(viewEngine, viewLocator) {
     this.viewEngine = viewEngine;
     this.viewLocator = viewLocator;
@@ -12067,7 +11877,7 @@ function viewResources(...resources) {
   };
 }
 
-let TemplatingEngine = (_dec11 = aureliaDependencyInjection_27(aureliaDependencyInjection_1, ModuleAnalyzer, ViewCompiler, CompositionEngine), _dec11(_class18 = class TemplatingEngine {
+let TemplatingEngine = (_dec11 = inject(Container, ModuleAnalyzer, ViewCompiler, CompositionEngine), _dec11(_class18 = class TemplatingEngine {
   constructor(container, moduleAnalyzer, viewCompiler, compositionEngine) {
     this._container = container;
     this._moduleAnalyzer = moduleAnalyzer;
@@ -12095,9 +11905,9 @@ let TemplatingEngine = (_dec11 = aureliaDependencyInjection_27(aureliaDependency
 
     this._viewCompiler._compileNode(instruction.element, resources, compilerInstructions, instruction.element.parentNode, 'root', true);
 
-    let factory = new ViewFactory(instruction.element, compilerInstructions, resources);
+    let factory$$1 = new ViewFactory(instruction.element, compilerInstructions, resources);
     let container = instruction.container || this._container.createChild();
-    let view = factory.create(container, BehaviorInstruction.enhance());
+    let view = factory$$1.create(container, BehaviorInstruction.enhance());
 
     view.bind(instruction.bindingContext || {}, instruction.overrideContext);
 
@@ -12123,7 +11933,7 @@ function preventActionlessFormSubmit() {
 let Aurelia = class Aurelia {
   constructor(loader, container, resources) {
     this.loader = loader || new PLATFORM.Loader();
-    this.container = container || new aureliaDependencyInjection_1().makeGlobal();
+    this.container = container || new Container().makeGlobal();
     this.resources = resources || new ViewResources();
     this.use = new FrameworkConfiguration(this);
     this.logger = aureliaLogging_1('aurelia');
@@ -12439,12 +12249,12 @@ let FrameworkConfiguration = class FrameworkConfiguration {
       resource$$1 = toAdd[i];
       switch (typeof resource$$1) {
         case 'string':
-          let parent = resourcesRelativeTo[0];
+          let parent$$1 = resourcesRelativeTo[0];
           let grandParent = resourcesRelativeTo[1];
           let name = resource$$1;
 
-          if ((resource$$1.startsWith('./') || resource$$1.startsWith('../')) && parent !== '') {
-            name = join(parent, resource$$1);
+          if ((resource$$1.startsWith('./') || resource$$1.startsWith('../')) && parent$$1 !== '') {
+            name = join(parent$$1, resource$$1);
           }
 
           this.resourcesToLoad[name] = { moduleId: name, relativeTo: grandParent };
@@ -12578,9 +12388,9 @@ let FrameworkConfiguration = class FrameworkConfiguration {
 
 const LogManager = TheLogManager;
 
-var _class$2, _temp$2, _dec$2, _class2$2, _dec2$2, _class3$2, _class4$1, _temp2$2, _class5$2, _temp3$1;
+var _class$3, _temp$2, _dec$3, _class2$3, _dec2$3, _class3$3, _class4$2, _temp2$2, _class5$3, _temp3$1;
 
-let AttributeMap = (_temp$2 = _class$2 = class AttributeMap {
+let AttributeMap = (_temp$2 = _class$3 = class AttributeMap {
 
   constructor(svg) {
     this.elements = Object.create(null);
@@ -12648,7 +12458,7 @@ let AttributeMap = (_temp$2 = _class$2 = class AttributeMap {
     }
     return camelCase(attributeName);
   }
-}, _class$2.inject = [SVGAnalyzer], _temp$2);
+}, _class$3.inject = [SVGAnalyzer], _temp$2);
 
 let InterpolationBindingExpression = class InterpolationBindingExpression {
   constructor(observerLocator, targetProperty, parts, mode, lookupFunctions, attribute) {
@@ -12743,7 +12553,7 @@ let InterpolationBinding = class InterpolationBinding {
   }
 };
 
-let ChildInterpolationBinding = (_dec$2 = connectable(), _dec$2(_class2$2 = class ChildInterpolationBinding {
+let ChildInterpolationBinding = (_dec$3 = connectable(), _dec$3(_class2$3 = class ChildInterpolationBinding {
   constructor(target, observerLocator, sourceExpression, mode, lookupFunctions, targetProperty, left, right) {
     if (target instanceof InterpolationBinding) {
       this.parent = target;
@@ -12842,7 +12652,7 @@ let ChildInterpolationBinding = (_dec$2 = connectable(), _dec$2(_class2$2 = clas
       this.observeArray(this.rawValue);
     }
   }
-}) || _class2$2);
+}) || _class2$3);
 
 let LetExpression = class LetExpression {
   constructor(observerLocator, targetProperty, sourceExpression, lookupFunctions, toBindingContext) {
@@ -12858,7 +12668,7 @@ let LetExpression = class LetExpression {
   }
 };
 
-let LetBinding = (_dec2$2 = connectable(), _dec2$2(_class3$2 = class LetBinding {
+let LetBinding = (_dec2$3 = connectable(), _dec2$3(_class3$3 = class LetBinding {
   constructor(observerLocator, sourceExpression, targetProperty, lookupFunctions, toBindingContext) {
     this.observerLocator = observerLocator;
     this.sourceExpression = sourceExpression;
@@ -12924,7 +12734,7 @@ let LetBinding = (_dec2$2 = connectable(), _dec2$2(_class3$2 = class LetBinding 
     this.updateTarget();
     this.sourceExpression.connect(this, this.source);
   }
-}) || _class3$2);
+}) || _class3$3);
 
 let LetInterpolationBindingExpression = class LetInterpolationBindingExpression {
   constructor(observerLocator, targetProperty, parts, lookupFunctions, toBindingContext) {
@@ -12985,7 +12795,7 @@ let LetInterpolationBinding = class LetInterpolationBinding {
   }
 };
 
-let SyntaxInterpreter = (_temp2$2 = _class4$1 = class SyntaxInterpreter {
+let SyntaxInterpreter = (_temp2$2 = _class4$2 = class SyntaxInterpreter {
 
   constructor(parser, observerLocator, eventManager, attributeMap) {
     this.parser = parser;
@@ -13182,13 +12992,13 @@ let SyntaxInterpreter = (_temp2$2 = _class4$1 = class SyntaxInterpreter {
 
     return instruction;
   }
-}, _class4$1.inject = [Parser, ObserverLocator, EventManager, AttributeMap], _temp2$2);
+}, _class4$2.inject = [Parser, ObserverLocator, EventManager, AttributeMap], _temp2$2);
 
 SyntaxInterpreter.prototype['one-way'] = SyntaxInterpreter.prototype['to-view'];
 
 let info = {};
 
-let TemplatingBindingLanguage = (_temp3$1 = _class5$2 = class TemplatingBindingLanguage extends BindingLanguage {
+let TemplatingBindingLanguage = (_temp3$1 = _class5$3 = class TemplatingBindingLanguage extends BindingLanguage {
 
   constructor(parser, observerLocator, syntaxInterpreter, attributeMap) {
     super();
@@ -13380,14 +13190,14 @@ let TemplatingBindingLanguage = (_temp3$1 = _class5$2 = class TemplatingBindingL
     parts[partIndex] = value.substr(pos);
     return parts;
   }
-}, _class5$2.inject = [Parser, ObserverLocator, SyntaxInterpreter, AttributeMap], _temp3$1);
+}, _class5$3.inject = [Parser, ObserverLocator, SyntaxInterpreter, AttributeMap], _temp3$1);
 
 function configure(config) {
   config.container.registerSingleton(BindingLanguage, TemplatingBindingLanguage);
   config.container.registerAlias(BindingLanguage, TemplatingBindingLanguage);
 }
 
-var _dec$3, _class$3, _class2$3, _descriptor, _descriptor2, _descriptor3, _descriptor4;
+var _dec$4, _class$4, _class2$4, _descriptor, _descriptor2, _descriptor3, _descriptor4;
 
 function _initDefineProp(target, property, descriptor, context) {
   if (!descriptor) return;
@@ -13428,10 +13238,10 @@ function _applyDecoratedDescriptor(target, property, decorators, descriptor, con
   return desc;
 }
 
-let Compose = (_dec$3 = customElement('compose'), _dec$3(_class$3 = noView(_class$3 = (_class2$3 = class Compose {
+let Compose = (_dec$4 = customElement('compose'), _dec$4(_class$4 = noView(_class$4 = (_class2$4 = class Compose {
 
   static inject() {
-    return [DOM.Element, aureliaDependencyInjection_1, CompositionEngine, ViewSlot, ViewResources, TaskQueue];
+    return [DOM.Element, Container, CompositionEngine, ViewSlot, ViewResources, TaskQueue];
   }
 
   constructor(element, container, compositionEngine, viewSlot, viewResources$$1, taskQueue) {
@@ -13492,19 +13302,19 @@ let Compose = (_dec$3 = customElement('compose'), _dec$3(_class$3 = noView(_clas
     this.changes.viewModel = newValue;
     requestUpdate(this);
   }
-}, (_descriptor = _applyDecoratedDescriptor(_class2$3.prototype, 'model', [bindable], {
+}, (_descriptor = _applyDecoratedDescriptor(_class2$4.prototype, 'model', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor2 = _applyDecoratedDescriptor(_class2$3.prototype, 'view', [bindable], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class2$4.prototype, 'view', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor3 = _applyDecoratedDescriptor(_class2$3.prototype, 'viewModel', [bindable], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class2$4.prototype, 'viewModel', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor4 = _applyDecoratedDescriptor(_class2$3.prototype, 'swapOrder', [bindable], {
+}), _descriptor4 = _applyDecoratedDescriptor(_class2$4.prototype, 'swapOrder', [bindable], {
   enumerable: true,
   initializer: null
-})), _class2$3)) || _class$3) || _class$3);
+})), _class2$4)) || _class$4) || _class$4);
 
 function isEmpty(obj) {
   for (const key in obj) {
@@ -13657,7 +13467,7 @@ let IfCore = class IfCore {
   }
 };
 
-var _dec$4, _dec2$3, _dec3$2, _class$4, _class2$4, _descriptor$1, _descriptor2$1;
+var _dec$5, _dec2$4, _dec3$3, _class$5, _class2$5, _descriptor$1, _descriptor2$1;
 
 function _initDefineProp$1(target, property, descriptor, context) {
   if (!descriptor) return;
@@ -13698,7 +13508,7 @@ function _applyDecoratedDescriptor$1(target, property, decorators, descriptor, c
   return desc;
 }
 
-let If = (_dec$4 = customAttribute('if'), _dec2$3 = aureliaDependencyInjection_27(BoundViewFactory, ViewSlot), _dec3$2 = bindable({ primaryProperty: true }), _dec$4(_class$4 = templateController(_class$4 = _dec2$3(_class$4 = (_class2$4 = class If extends IfCore {
+let If = (_dec$5 = customAttribute('if'), _dec2$4 = inject(BoundViewFactory, ViewSlot), _dec3$3 = bindable({ primaryProperty: true }), _dec$5(_class$5 = templateController(_class$5 = _dec2$4(_class$5 = (_class2$5 = class If extends IfCore {
   constructor(...args) {
     var _temp;
 
@@ -13752,17 +13562,17 @@ let If = (_dec$4 = customAttribute('if'), _dec2$3 = aureliaDependencyInjection_2
         return promise ? promise.then(() => add._show()) : add._show();
     }
   }
-}, (_descriptor$1 = _applyDecoratedDescriptor$1(_class2$4.prototype, 'condition', [_dec3$2], {
+}, (_descriptor$1 = _applyDecoratedDescriptor$1(_class2$5.prototype, 'condition', [_dec3$3], {
   enumerable: true,
   initializer: null
-}), _descriptor2$1 = _applyDecoratedDescriptor$1(_class2$4.prototype, 'swapOrder', [bindable], {
+}), _descriptor2$1 = _applyDecoratedDescriptor$1(_class2$5.prototype, 'swapOrder', [bindable], {
   enumerable: true,
   initializer: null
-})), _class2$4)) || _class$4) || _class$4) || _class$4);
+})), _class2$5)) || _class$5) || _class$5) || _class$5);
 
-var _dec$5, _dec2$4, _class$5;
+var _dec$6, _dec2$5, _class$6;
 
-let Else = (_dec$5 = customAttribute('else'), _dec2$4 = aureliaDependencyInjection_27(BoundViewFactory, ViewSlot), _dec$5(_class$5 = templateController(_class$5 = _dec2$4(_class$5 = class Else extends IfCore {
+let Else = (_dec$6 = customAttribute('else'), _dec2$5 = inject(BoundViewFactory, ViewSlot), _dec$6(_class$6 = templateController(_class$6 = _dec2$5(_class$6 = class Else extends IfCore {
   constructor(viewFactory, viewSlot) {
     super(viewFactory, viewSlot);
     this._registerInIf();
@@ -13789,11 +13599,11 @@ let Else = (_dec$5 = customAttribute('else'), _dec2$4 = aureliaDependencyInjecti
     this.ifVm = previous.au.if.viewModel;
     this.ifVm.elseVm = this;
   }
-}) || _class$5) || _class$5) || _class$5);
+}) || _class$6) || _class$6) || _class$6);
 
-var _dec$6, _dec2$5, _class$6;
+var _dec$7, _dec2$6, _class$7;
 
-let With = (_dec$6 = customAttribute('with'), _dec2$5 = aureliaDependencyInjection_27(BoundViewFactory, ViewSlot), _dec$6(_class$6 = templateController(_class$6 = _dec2$5(_class$6 = class With {
+let With = (_dec$7 = customAttribute('with'), _dec2$6 = inject(BoundViewFactory, ViewSlot), _dec$7(_class$7 = templateController(_class$7 = _dec2$6(_class$7 = class With {
   constructor(viewFactory, viewSlot) {
     this.viewFactory = viewFactory;
     this.viewSlot = viewSlot;
@@ -13824,7 +13634,7 @@ let With = (_dec$6 = customAttribute('with'), _dec2$5 = aureliaDependencyInjecti
       this.view.unbind();
     }
   }
-}) || _class$6) || _class$6) || _class$6);
+}) || _class$7) || _class$7) || _class$7);
 
 let NullRepeatStrategy = class NullRepeatStrategy {
   instanceChanged(repeat, items) {
@@ -14492,7 +14302,7 @@ let AbstractRepeater = class AbstractRepeater {
   }
 };
 
-var _dec$7, _dec2$6, _class$7, _class2$5, _descriptor$2, _descriptor2$2, _descriptor3$1, _descriptor4$1;
+var _dec$8, _dec2$7, _class$8, _class2$6, _descriptor$2, _descriptor2$2, _descriptor3$1, _descriptor4$1;
 
 function _initDefineProp$2(target, property, descriptor, context) {
   if (!descriptor) return;
@@ -14533,7 +14343,7 @@ function _applyDecoratedDescriptor$2(target, property, decorators, descriptor, c
   return desc;
 }
 
-let Repeat = (_dec$7 = customAttribute('repeat'), _dec2$6 = aureliaDependencyInjection_27(BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, RepeatStrategyLocator), _dec$7(_class$7 = templateController(_class$7 = _dec2$6(_class$7 = (_class2$5 = class Repeat extends AbstractRepeater {
+let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, RepeatStrategyLocator), _dec$8(_class$8 = templateController(_class$8 = _dec2$7(_class$8 = (_class2$6 = class Repeat extends AbstractRepeater {
   constructor(viewFactory, instruction, viewSlot, viewResources$$1, observerLocator, strategyLocator) {
     super({
       local: 'item',
@@ -14748,19 +14558,19 @@ let Repeat = (_dec$7 = customAttribute('repeat'), _dec2$6 = aureliaDependencyInj
       }
     }
   }
-}, (_descriptor$2 = _applyDecoratedDescriptor$2(_class2$5.prototype, 'items', [bindable], {
+}, (_descriptor$2 = _applyDecoratedDescriptor$2(_class2$6.prototype, 'items', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor2$2 = _applyDecoratedDescriptor$2(_class2$5.prototype, 'local', [bindable], {
+}), _descriptor2$2 = _applyDecoratedDescriptor$2(_class2$6.prototype, 'local', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor3$1 = _applyDecoratedDescriptor$2(_class2$5.prototype, 'key', [bindable], {
+}), _descriptor3$1 = _applyDecoratedDescriptor$2(_class2$6.prototype, 'key', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor4$1 = _applyDecoratedDescriptor$2(_class2$5.prototype, 'value', [bindable], {
+}), _descriptor4$1 = _applyDecoratedDescriptor$2(_class2$6.prototype, 'value', [bindable], {
   enumerable: true,
   initializer: null
-})), _class2$5)) || _class$7) || _class$7) || _class$7);
+})), _class2$6)) || _class$8) || _class$8) || _class$8);
 
 const aureliaHideClassName = 'aurelia-hide';
 
@@ -14777,43 +14587,12 @@ function injectAureliaHideStyleAtBoundary(domBoundary) {
   }
 }
 
-var _dec$8, _class$8;
-
-let Show = (_dec$8 = customAttribute('show'), _dec$8(_class$8 = class Show {
-
-  static inject() {
-    return [DOM.Element, Animator, aureliaDependencyInjection_10.of(DOM.boundary, true)];
-  }
-
-  constructor(element, animator, domBoundary) {
-    this.element = element;
-    this.animator = animator;
-    this.domBoundary = domBoundary;
-  }
-
-  created() {
-    injectAureliaHideStyleAtBoundary(this.domBoundary);
-  }
-
-  valueChanged(newValue) {
-    if (newValue) {
-      this.animator.removeClass(this.element, aureliaHideClassName);
-    } else {
-      this.animator.addClass(this.element, aureliaHideClassName);
-    }
-  }
-
-  bind(bindingContext) {
-    this.valueChanged(this.value);
-  }
-}) || _class$8);
-
 var _dec$9, _class$9;
 
-let Hide = (_dec$9 = customAttribute('hide'), _dec$9(_class$9 = class Hide {
+let Show = (_dec$9 = customAttribute('show'), _dec$9(_class$9 = class Show {
 
   static inject() {
-    return [DOM.Element, Animator, aureliaDependencyInjection_10.of(DOM.boundary, true)];
+    return [DOM.Element, Animator, Optional.of(DOM.boundary, true)];
   }
 
   constructor(element, animator, domBoundary) {
@@ -14828,9 +14607,9 @@ let Hide = (_dec$9 = customAttribute('hide'), _dec$9(_class$9 = class Hide {
 
   valueChanged(newValue) {
     if (newValue) {
-      this.animator.addClass(this.element, aureliaHideClassName);
-    } else {
       this.animator.removeClass(this.element, aureliaHideClassName);
+    } else {
+      this.animator.addClass(this.element, aureliaHideClassName);
     }
   }
 
@@ -14838,6 +14617,37 @@ let Hide = (_dec$9 = customAttribute('hide'), _dec$9(_class$9 = class Hide {
     this.valueChanged(this.value);
   }
 }) || _class$9);
+
+var _dec$a, _class$a;
+
+let Hide = (_dec$a = customAttribute('hide'), _dec$a(_class$a = class Hide {
+
+  static inject() {
+    return [DOM.Element, Animator, Optional.of(DOM.boundary, true)];
+  }
+
+  constructor(element, animator, domBoundary) {
+    this.element = element;
+    this.animator = animator;
+    this.domBoundary = domBoundary;
+  }
+
+  created() {
+    injectAureliaHideStyleAtBoundary(this.domBoundary);
+  }
+
+  valueChanged(newValue) {
+    if (newValue) {
+      this.animator.addClass(this.element, aureliaHideClassName);
+    } else {
+      this.animator.removeClass(this.element, aureliaHideClassName);
+    }
+  }
+
+  bind(bindingContext) {
+    this.valueChanged(this.value);
+  }
+}) || _class$a);
 
 const SCRIPT_REGEX = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
 
@@ -14847,9 +14657,9 @@ let HTMLSanitizer = class HTMLSanitizer {
   }
 };
 
-var _dec$a, _dec2$7, _class$a;
+var _dec$b, _dec2$8, _class$b;
 
-let SanitizeHTMLValueConverter = (_dec$a = valueConverter('sanitizeHTML'), _dec2$7 = aureliaDependencyInjection_27(HTMLSanitizer), _dec$a(_class$a = _dec2$7(_class$a = class SanitizeHTMLValueConverter {
+let SanitizeHTMLValueConverter = (_dec$b = valueConverter('sanitizeHTML'), _dec2$8 = inject(HTMLSanitizer), _dec$b(_class$b = _dec2$8(_class$b = class SanitizeHTMLValueConverter {
   constructor(sanitizer) {
     this.sanitizer = sanitizer;
   }
@@ -14861,11 +14671,11 @@ let SanitizeHTMLValueConverter = (_dec$a = valueConverter('sanitizeHTML'), _dec2
 
     return this.sanitizer.sanitize(untrustedMarkup);
   }
-}) || _class$a) || _class$a);
+}) || _class$b) || _class$b);
 
-var _dec$b, _dec2$8, _class$b;
+var _dec$c, _dec2$9, _class$c;
 
-let Replaceable = (_dec$b = customAttribute('replaceable'), _dec2$8 = aureliaDependencyInjection_27(BoundViewFactory, ViewSlot), _dec$b(_class$b = templateController(_class$b = _dec2$8(_class$b = class Replaceable {
+let Replaceable = (_dec$c = customAttribute('replaceable'), _dec2$9 = inject(BoundViewFactory, ViewSlot), _dec$c(_class$c = templateController(_class$c = _dec2$9(_class$c = class Replaceable {
   constructor(viewFactory, viewSlot) {
     this.viewFactory = viewFactory;
     this.viewSlot = viewSlot;
@@ -14884,11 +14694,11 @@ let Replaceable = (_dec$b = customAttribute('replaceable'), _dec2$8 = aureliaDep
   unbind() {
     this.view.unbind();
   }
-}) || _class$b) || _class$b) || _class$b);
+}) || _class$c) || _class$c) || _class$c);
 
-var _dec$c, _class$c;
+var _dec$d, _class$d;
 
-let Focus = (_dec$c = customAttribute('focus', bindingMode.twoWay), _dec$c(_class$c = class Focus {
+let Focus = (_dec$d = customAttribute('focus', bindingMode.twoWay), _dec$d(_class$d = class Focus {
 
   static inject() {
     return [DOM.Element, TaskQueue];
@@ -14944,7 +14754,7 @@ let Focus = (_dec$c = customAttribute('focus', bindingMode.twoWay), _dec$c(_clas
       this.value = false;
     }
   }
-}) || _class$c);
+}) || _class$d);
 
 let cssUrlMatcher = /url\((?!['"]data)([^)]+)\)/gi;
 
@@ -15020,17 +14830,17 @@ function _createCSSResource(address) {
   return ViewCSS;
 }
 
-var _dec$d, _class$d;
+var _dec$e, _class$e;
 
-let AttrBindingBehavior = (_dec$d = bindingBehavior('attr'), _dec$d(_class$d = class AttrBindingBehavior {
+let AttrBindingBehavior = (_dec$e = bindingBehavior('attr'), _dec$e(_class$e = class AttrBindingBehavior {
   bind(binding, source) {
     binding.targetObserver = new DataAttributeObserver(binding.target, binding.targetProperty);
   }
 
   unbind(binding, source) {}
-}) || _class$d);
+}) || _class$e);
 
-var _dec$e, _dec2$9, _class$e, _dec3$3, _dec4$2, _class2$6, _dec5$2, _dec6$2, _class3$3, _dec7$2, _dec8$2, _class4$2, _dec9$2, _dec10$2, _class5$3;
+var _dec$f, _dec2$a, _class$f, _dec3$4, _dec4$3, _class2$7, _dec5$3, _dec6$3, _class3$4, _dec7$3, _dec8$2, _class4$3, _dec9$2, _dec10$2, _class5$4;
 
 let modeBindingBehavior = {
   bind(binding, source, lookupFunctions) {
@@ -15044,37 +14854,37 @@ let modeBindingBehavior = {
   }
 };
 
-let OneTimeBindingBehavior = (_dec$e = mixin(modeBindingBehavior), _dec2$9 = bindingBehavior('oneTime'), _dec$e(_class$e = _dec2$9(_class$e = class OneTimeBindingBehavior {
+let OneTimeBindingBehavior = (_dec$f = mixin(modeBindingBehavior), _dec2$a = bindingBehavior('oneTime'), _dec$f(_class$f = _dec2$a(_class$f = class OneTimeBindingBehavior {
   constructor() {
     this.mode = bindingMode.oneTime;
   }
-}) || _class$e) || _class$e);
+}) || _class$f) || _class$f);
 
-let OneWayBindingBehavior = (_dec3$3 = mixin(modeBindingBehavior), _dec4$2 = bindingBehavior('oneWay'), _dec3$3(_class2$6 = _dec4$2(_class2$6 = class OneWayBindingBehavior {
+let OneWayBindingBehavior = (_dec3$4 = mixin(modeBindingBehavior), _dec4$3 = bindingBehavior('oneWay'), _dec3$4(_class2$7 = _dec4$3(_class2$7 = class OneWayBindingBehavior {
   constructor() {
     this.mode = bindingMode.toView;
   }
-}) || _class2$6) || _class2$6);
+}) || _class2$7) || _class2$7);
 
-let ToViewBindingBehavior = (_dec5$2 = mixin(modeBindingBehavior), _dec6$2 = bindingBehavior('toView'), _dec5$2(_class3$3 = _dec6$2(_class3$3 = class ToViewBindingBehavior {
+let ToViewBindingBehavior = (_dec5$3 = mixin(modeBindingBehavior), _dec6$3 = bindingBehavior('toView'), _dec5$3(_class3$4 = _dec6$3(_class3$4 = class ToViewBindingBehavior {
   constructor() {
     this.mode = bindingMode.toView;
   }
-}) || _class3$3) || _class3$3);
+}) || _class3$4) || _class3$4);
 
-let FromViewBindingBehavior = (_dec7$2 = mixin(modeBindingBehavior), _dec8$2 = bindingBehavior('fromView'), _dec7$2(_class4$2 = _dec8$2(_class4$2 = class FromViewBindingBehavior {
+let FromViewBindingBehavior = (_dec7$3 = mixin(modeBindingBehavior), _dec8$2 = bindingBehavior('fromView'), _dec7$3(_class4$3 = _dec8$2(_class4$3 = class FromViewBindingBehavior {
   constructor() {
     this.mode = bindingMode.fromView;
   }
-}) || _class4$2) || _class4$2);
+}) || _class4$3) || _class4$3);
 
-let TwoWayBindingBehavior = (_dec9$2 = mixin(modeBindingBehavior), _dec10$2 = bindingBehavior('twoWay'), _dec9$2(_class5$3 = _dec10$2(_class5$3 = class TwoWayBindingBehavior {
+let TwoWayBindingBehavior = (_dec9$2 = mixin(modeBindingBehavior), _dec10$2 = bindingBehavior('twoWay'), _dec9$2(_class5$4 = _dec10$2(_class5$4 = class TwoWayBindingBehavior {
   constructor() {
     this.mode = bindingMode.twoWay;
   }
-}) || _class5$3) || _class5$3);
+}) || _class5$4) || _class5$4);
 
-var _dec$f, _class$f;
+var _dec$g, _class$g;
 
 function throttle(newValue) {
   let state = this.throttleState;
@@ -15096,7 +14906,7 @@ function throttle(newValue) {
   }
 }
 
-let ThrottleBindingBehavior = (_dec$f = bindingBehavior('throttle'), _dec$f(_class$f = class ThrottleBindingBehavior {
+let ThrottleBindingBehavior = (_dec$g = bindingBehavior('throttle'), _dec$g(_class$g = class ThrottleBindingBehavior {
   bind(binding, source, delay = 200) {
     let methodToThrottle = 'updateTarget';
     if (binding.callSource) {
@@ -15124,9 +14934,9 @@ let ThrottleBindingBehavior = (_dec$f = bindingBehavior('throttle'), _dec$f(_cla
     clearTimeout(binding.throttleState.timeoutId);
     binding.throttleState = null;
   }
-}) || _class$f);
+}) || _class$g);
 
-var _dec$g, _class$g;
+var _dec$h, _class$h;
 
 const unset = {};
 
@@ -15154,7 +14964,7 @@ function debounceCall(context, newValue, oldValue) {
   }, state.delay);
 }
 
-let DebounceBindingBehavior = (_dec$g = bindingBehavior('debounce'), _dec$g(_class$g = class DebounceBindingBehavior {
+let DebounceBindingBehavior = (_dec$h = bindingBehavior('debounce'), _dec$h(_class$h = class DebounceBindingBehavior {
   bind(binding, source, delay = 200) {
     const isCallSource = binding.callSource !== undefined;
     const methodToDebounce = isCallSource ? 'callSource' : 'call';
@@ -15182,9 +14992,9 @@ let DebounceBindingBehavior = (_dec$g = bindingBehavior('debounce'), _dec$g(_cla
     clearTimeout(binding.debounceState.timeoutId);
     binding.debounceState = null;
   }
-}) || _class$g);
+}) || _class$h);
 
-var _dec$h, _class$h;
+var _dec$i, _class$i;
 
 function findOriginalEventTarget$1(event) {
   return event.path && event.path[0] || event.deepPath && event.deepPath[0] || event.target;
@@ -15196,7 +15006,7 @@ function handleSelfEvent(event) {
   this.selfEventCallSource(event);
 }
 
-let SelfBindingBehavior = (_dec$h = bindingBehavior('self'), _dec$h(_class$h = class SelfBindingBehavior {
+let SelfBindingBehavior = (_dec$i = bindingBehavior('self'), _dec$i(_class$i = class SelfBindingBehavior {
   bind(binding, source) {
     if (!binding.callSource || !binding.targetEvent) throw new Error('Self binding behavior only supports event.');
     binding.selfEventCallSource = binding.callSource;
@@ -15207,7 +15017,7 @@ let SelfBindingBehavior = (_dec$h = bindingBehavior('self'), _dec$h(_class$h = c
     binding.callSource = binding.selfEventCallSource;
     binding.selfEventCallSource = null;
   }
-}) || _class$h);
+}) || _class$i);
 
 let BindingSignaler = class BindingSignaler {
   constructor() {
@@ -15226,9 +15036,9 @@ let BindingSignaler = class BindingSignaler {
   }
 };
 
-var _dec$i, _class$i;
+var _dec$j, _class$j;
 
-let SignalBindingBehavior = (_dec$i = bindingBehavior('signal'), _dec$i(_class$i = class SignalBindingBehavior {
+let SignalBindingBehavior = (_dec$j = bindingBehavior('signal'), _dec$j(_class$j = class SignalBindingBehavior {
   static inject() {
     return [BindingSignaler];
   }
@@ -15277,14 +15087,14 @@ let SignalBindingBehavior = (_dec$i = bindingBehavior('signal'), _dec$i(_class$i
       bindings.splice(bindings.indexOf(binding), 1);
     }
   }
-}) || _class$i);
+}) || _class$j);
 
-var _dec$j, _class$j;
+var _dec$k, _class$k;
 
 const eventNamesRequired = 'The updateTrigger binding behavior requires at least one event name argument: eg <input value.bind="firstName & updateTrigger:\'blur\'">';
 const notApplicableMessage = 'The updateTrigger binding behavior can only be applied to two-way/ from-view bindings on input/select elements.';
 
-let UpdateTriggerBindingBehavior = (_dec$j = bindingBehavior('updateTrigger'), _dec$j(_class$j = class UpdateTriggerBindingBehavior {
+let UpdateTriggerBindingBehavior = (_dec$k = bindingBehavior('updateTrigger'), _dec$k(_class$k = class UpdateTriggerBindingBehavior {
 
   bind(binding, source, ...events) {
     if (events.length === 0) {
@@ -15311,7 +15121,7 @@ let UpdateTriggerBindingBehavior = (_dec$j = bindingBehavior('updateTrigger'), _
     binding.targetObserver.handler = binding.targetObserver.originalHandler;
     binding.targetObserver.originalHandler = null;
   }
-}) || _class$j);
+}) || _class$k);
 
 function _createDynamicElement(name, viewUrl, bindableNames) {
   var _dec, _dec2, _class;
@@ -15595,4 +15405,4 @@ initialize();
   };
 })(FrameworkConfiguration.prototype);
 
-export { Aurelia, FrameworkConfiguration, LogManager, aureliaDependencyInjection as __moduleExports, aureliaDependencyInjection_1 as Container, aureliaDependencyInjection_2 as InvocationHandler, aureliaDependencyInjection_3 as _emptyParameters, aureliaDependencyInjection_4 as SingletonRegistration, aureliaDependencyInjection_5 as TransientRegistration, aureliaDependencyInjection_6 as FactoryInvoker, aureliaDependencyInjection_7 as NewInstance, aureliaDependencyInjection_8 as Factory, aureliaDependencyInjection_9 as Parent, aureliaDependencyInjection_10 as Optional, aureliaDependencyInjection_11 as All, aureliaDependencyInjection_12 as Lazy, aureliaDependencyInjection_13 as StrategyResolver, aureliaDependencyInjection_14 as resolver, aureliaDependencyInjection_15 as getDecoratorDependencies, aureliaDependencyInjection_16 as lazy, aureliaDependencyInjection_17 as all, aureliaDependencyInjection_18 as optional, aureliaDependencyInjection_19 as parent, aureliaDependencyInjection_20 as factory, aureliaDependencyInjection_21 as newInstance, aureliaDependencyInjection_22 as invoker, aureliaDependencyInjection_23 as invokeAsFactory, aureliaDependencyInjection_24 as registration, aureliaDependencyInjection_25 as singleton, aureliaDependencyInjection_26 as autoinject, aureliaDependencyInjection_27 as inject, targetContext, sourceContext, camelCase, createOverrideContext, getContextFor, createScopeForTest, connectable, enqueueBindingConnect, subscriberCollection, ExpressionObserver, calcSplices, mergeSplice, projectArraySplices, getChangeRecords, ModifyCollectionObserver, CollectionLengthObserver, getArrayObserver, Expression, BindingBehavior, ValueConverter, Assign, Conditional, AccessThis, AccessScope, AccessMember, AccessKeyed, CallScope, CallMember, CallFunction, Binary, Unary, LiteralPrimitive, LiteralString, LiteralTemplate, LiteralArray, LiteralObject, Unparser, ExpressionCloner, cloneExpression, bindingMode, Parser, ParserImplementation, getMapObserver, delegationStrategy, EventManager, EventSubscriber, DirtyChecker, DirtyCheckProperty, propertyAccessor, PrimitiveObserver, SetterObserver, XLinkAttributeObserver, dataAttributeAccessor, DataAttributeObserver, StyleObserver, ValueAttributeObserver, CheckedObserver, SelectValueObserver, ClassObserver, hasDeclaredDependencies, declarePropertyDependencies, computedFrom, ComputedExpression, createComputedObserver, elements, presentationElements, presentationAttributes, SVGAnalyzer, ObserverLocator, ObjectObservationAdapter, BindingExpression, Binding, CallExpression, Call, ValueConverterResource, valueConverter, BindingBehaviorResource, bindingBehavior, ListenerExpression, Listener, NameExpression, BindingEngine, getSetObserver, observable, connectBindingToSignal, signalBindings, metadata, Origin, decorators, deprecated, mixin, protocol, animationEvent, Animator, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, CompositionTransaction, _hyphenate, _isAllWhitespace, ViewEngineHooksResource, viewEngineHooks, ElementEvents, ResourceLoadContext, ViewCompileInstruction, BehaviorInstruction, TargetInstruction, viewStrategy, RelativeViewStrategy, ConventionalViewStrategy, NoViewStrategy, TemplateRegistryViewStrategy, InlineViewStrategy, StaticViewStrategy, ViewLocator, BindingLanguage, SlotCustomAttribute, PassThroughSlot, ShadowSlot, ShadowDOM, validateBehaviorName, ViewResources, View, ViewSlot, BoundViewFactory, ViewFactory, ViewCompiler, ResourceModule, ResourceDescription, ModuleAnalyzer, ViewEngine, Controller, BehaviorPropertyObserver, BindableProperty, HtmlBehaviorResource, children, child, SwapStrategies, CompositionEngine, ElementConfigResource, resource, behavior, customElement, customAttribute, templateController, bindable, dynamicOptions, useShadowDOM, processAttributes, processContent, containerless, useViewStrategy, useView, inlineView, noView, view, elementConfig, viewResources, TemplatingEngine, TemplateDependency, TemplateRegistryEntry, Loader, TaskQueue, relativeToFile, join, buildQueryString, parseQueryString, AggregateError, FEATURE, PLATFORM, DOM, isInitialized, initializePAL, reset };
+export { Aurelia, FrameworkConfiguration, LogManager, resolver, StrategyResolver, Lazy, All, Optional, Parent, Factory, NewInstance, getDecoratorDependencies, lazy, all, optional, parent, factory, newInstance, invoker, invokeAsFactory, FactoryInvoker, registration, transient, singleton, TransientRegistration, SingletonRegistration, _emptyParameters, InvocationHandler, Container, autoinject, inject, targetContext, sourceContext, camelCase, createOverrideContext, getContextFor, createScopeForTest, connectable, enqueueBindingConnect, subscriberCollection, ExpressionObserver, calcSplices, mergeSplice, projectArraySplices, getChangeRecords, ModifyCollectionObserver, CollectionLengthObserver, getArrayObserver, Expression, BindingBehavior, ValueConverter, Assign, Conditional, AccessThis, AccessScope, AccessMember, AccessKeyed, CallScope, CallMember, CallFunction, Binary, Unary, LiteralPrimitive, LiteralString, LiteralTemplate, LiteralArray, LiteralObject, Unparser, ExpressionCloner, cloneExpression, bindingMode, Parser, ParserImplementation, getMapObserver, delegationStrategy, EventManager, EventSubscriber, DirtyChecker, DirtyCheckProperty, propertyAccessor, PrimitiveObserver, SetterObserver, XLinkAttributeObserver, dataAttributeAccessor, DataAttributeObserver, StyleObserver, ValueAttributeObserver, CheckedObserver, SelectValueObserver, ClassObserver, hasDeclaredDependencies, declarePropertyDependencies, computedFrom, ComputedExpression, createComputedObserver, elements, presentationElements, presentationAttributes, SVGAnalyzer, ObserverLocator, ObjectObservationAdapter, BindingExpression, Binding, CallExpression, Call, ValueConverterResource, valueConverter, BindingBehaviorResource, bindingBehavior, ListenerExpression, Listener, NameExpression, BindingEngine, getSetObserver, observable, connectBindingToSignal, signalBindings, metadata, Origin, decorators, deprecated, mixin, protocol, animationEvent, Animator, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, CompositionTransaction, _hyphenate, _isAllWhitespace, ViewEngineHooksResource, viewEngineHooks, ElementEvents, ResourceLoadContext, ViewCompileInstruction, BehaviorInstruction, TargetInstruction, viewStrategy, RelativeViewStrategy, ConventionalViewStrategy, NoViewStrategy, TemplateRegistryViewStrategy, InlineViewStrategy, StaticViewStrategy, ViewLocator, BindingLanguage, SlotCustomAttribute, PassThroughSlot, ShadowSlot, ShadowDOM, validateBehaviorName, ViewResources, View, ViewSlot, BoundViewFactory, ViewFactory, ViewCompiler, ResourceModule, ResourceDescription, ModuleAnalyzer, ViewEngine, Controller, BehaviorPropertyObserver, BindableProperty, HtmlBehaviorResource, children, child, SwapStrategies, CompositionEngine, ElementConfigResource, resource, behavior, customElement, customAttribute, templateController, bindable, dynamicOptions, useShadowDOM, processAttributes, processContent, containerless, useViewStrategy, useView, inlineView, noView, view, elementConfig, viewResources, TemplatingEngine, TemplateDependency, TemplateRegistryEntry, Loader, TaskQueue, relativeToFile, join, buildQueryString, parseQueryString, AggregateError, FEATURE, PLATFORM, DOM, isInitialized, initializePAL, reset };
