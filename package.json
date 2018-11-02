@@ -8,6 +8,7 @@
   "main": "dist/aurelia_router.umd.js",
   "browser": "dist/aurelia_router.umd.js",
   "module": "dist/aurelia_router.esm.js",
+  "unpkg": "dist/aurelia_router.umd.min.js",
   "jsdelivr": "dist/aurelia_router.umd.min.js",
   "homepage": "http://aurelia.io",
   "bugs": {
