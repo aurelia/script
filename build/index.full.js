@@ -42,3 +42,26 @@ initialize();
 
 
 export * from 'aurelia-framework';
+export { EventAggregator, includeEventsIn } from 'aurelia-event-aggregator';
+export {
+  CommitChangesStep,
+  NavigationInstruction,
+  NavModel,
+  isNavigationCommand,
+  Redirect,
+  RedirectToRoute,
+  pipelineStatus,
+  Pipeline,
+  RouterConfiguration,
+  activationStrategy,
+  BuildNavigationPlanStep,
+  Router,
+  CanDeactivatePreviousStep,
+  CanActivateNextStep,
+  DeactivatePreviousStep,
+  ActivateNextStep,
+  RouteLoader,
+  LoadRouteStep,
+  PipelineProvider,
+  AppRouter,
+} from 'aurelia-router';

@@ -16383,6 +16383,24 @@
     }
   };
 
+  let RedirectToRoute = class RedirectToRoute {
+    constructor(route, params = {}, options = {}) {
+      this.route = route;
+      this.params = params;
+      this.options = Object.assign({ trigger: true, replace: true }, options);
+      this.shouldContinueProcessing = false;
+    }
+
+    setRouter(router) {
+      this.router = router;
+    }
+
+    navigate(appRouter) {
+      let navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
+      navigatingRouter.navigateToRoute(this.route, this.params, this.options);
+    }
+  };
+
   const pipelineStatus = {
     completed: 'completed',
     canceled: 'canceled',
@@ -18184,6 +18202,28 @@
     };
   })(FrameworkConfiguration.prototype);
 
+  exports.EventAggregator = EventAggregator;
+  exports.includeEventsIn = includeEventsIn;
+  exports.CommitChangesStep = CommitChangesStep;
+  exports.NavigationInstruction = NavigationInstruction;
+  exports.NavModel = NavModel;
+  exports.isNavigationCommand = isNavigationCommand;
+  exports.Redirect = Redirect;
+  exports.RedirectToRoute = RedirectToRoute;
+  exports.pipelineStatus = pipelineStatus;
+  exports.Pipeline = Pipeline;
+  exports.RouterConfiguration = RouterConfiguration;
+  exports.activationStrategy = activationStrategy;
+  exports.BuildNavigationPlanStep = BuildNavigationPlanStep;
+  exports.Router = Router;
+  exports.CanDeactivatePreviousStep = CanDeactivatePreviousStep;
+  exports.CanActivateNextStep = CanActivateNextStep;
+  exports.DeactivatePreviousStep = DeactivatePreviousStep;
+  exports.ActivateNextStep = ActivateNextStep;
+  exports.RouteLoader = RouteLoader;
+  exports.LoadRouteStep = LoadRouteStep;
+  exports.PipelineProvider = PipelineProvider;
+  exports.AppRouter = AppRouter;
   exports.Aurelia = Aurelia;
   exports.FrameworkConfiguration = FrameworkConfiguration;
   exports.LogManager = LogManager;
