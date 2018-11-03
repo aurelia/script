@@ -15411,6 +15411,8 @@
     };
   })(FrameworkConfiguration.prototype);
 
+  exports.EventAggregator = EventAggregator;
+  exports.includeEventsIn = includeEventsIn;
   exports.Aurelia = Aurelia;
   exports.FrameworkConfiguration = FrameworkConfiguration;
   exports.LogManager = LogManager;

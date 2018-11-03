@@ -46,3 +46,4 @@ initialize();
 
 
 export * from 'aurelia-framework';
+export { EventAggregator, includeEventsIn } from 'aurelia-event-aggregator';
