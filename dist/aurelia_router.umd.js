@@ -1083,32 +1083,7 @@
   }
   PLATFORM.Loader = EsmLoader;
 
-  function unwrapExports (x) {
-  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
-  }
-
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
-  }
-
-  var aureliaLogging = createCommonjsModule(function (module, exports) {
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.getLogger = getLogger;
-  exports.addAppender = addAppender;
-  exports.removeAppender = removeAppender;
-  exports.getAppenders = getAppenders;
-  exports.clearAppenders = clearAppenders;
-  exports.addCustomLevel = addCustomLevel;
-  exports.removeCustomLevel = removeCustomLevel;
-  exports.setLevel = setLevel;
-  exports.getLevel = getLevel;
-
-
-
-  var logLevel = exports.logLevel = {
+  const logLevel = {
     none: 0,
     error: 10,
     warn: 20,
@@ -1116,74 +1091,70 @@
     debug: 40
   };
 
-  var loggers = {};
-  var appenders = [];
-  var globalDefaultLevel = logLevel.none;
+  let loggers = {};
+  let appenders = [];
+  let globalDefaultLevel = logLevel.none;
 
-  var standardLevels = ['none', 'error', 'warn', 'info', 'debug'];
+  const standardLevels = ['none', 'error', 'warn', 'info', 'debug'];
   function isStandardLevel(level) {
-    return standardLevels.filter(function (l) {
-      return l === level;
-    }).length > 0;
+    return standardLevels.filter(l => l === level).length > 0;
   }
 
   function appendArgs() {
-    return [this].concat(Array.prototype.slice.call(arguments));
+    return [this, ...arguments];
   }
 
   function logFactory(level) {
-    var threshold = logLevel[level];
+    const threshold = logLevel[level];
     return function () {
       if (this.level < threshold) {
         return;
       }
 
-      var args = appendArgs.apply(this, arguments);
-      var i = appenders.length;
+      const args = appendArgs.apply(this, arguments);
+      let i = appenders.length;
       while (i--) {
-        var _appenders$i;
-
-        (_appenders$i = appenders[i])[level].apply(_appenders$i, args);
+        appenders[i][level](...args);
       }
     };
   }
 
   function logFactoryCustom(level) {
-    var threshold = logLevel[level];
+    const threshold = logLevel[level];
     return function () {
       if (this.level < threshold) {
         return;
       }
 
-      var args = appendArgs.apply(this, arguments);
-      var i = appenders.length;
+      const args = appendArgs.apply(this, arguments);
+      let i = appenders.length;
       while (i--) {
-        var appender = appenders[i];
+        const appender = appenders[i];
         if (appender[level] !== undefined) {
-          appender[level].apply(appender, args);
+          appender[level](...args);
         }
       }
     };
   }
 
   function connectLoggers() {
-    var proto = Logger.prototype;
-    for (var _level in logLevel) {
-      if (isStandardLevel(_level)) {
-        if (_level !== 'none') {
-          proto[_level] = logFactory(_level);
+    let proto = Logger.prototype;
+    for (let level in logLevel) {
+      if (isStandardLevel(level)) {
+        if (level !== 'none') {
+          proto[level] = logFactory(level);
         }
       } else {
-        proto[_level] = logFactoryCustom(_level);
+        proto[level] = logFactoryCustom(level);
       }
     }
   }
 
   function disconnectLoggers() {
-    var proto = Logger.prototype;
-    for (var _level2 in logLevel) {
-      if (_level2 !== 'none') {
-        proto[_level2] = function () {};
+    let proto = Logger.prototype;
+    for (let level in logLevel) {
+      if (level !== 'none') {
+        proto[level] = function () {};
       }
     }
   }
@@ -1199,13 +1170,11 @@
   }
 
   function removeAppender(appender) {
-    appenders = appenders.filter(function (a) {
-      return a !== appender;
-    });
+    appenders = appenders.filter(a => a !== appender);
   }
 
   function getAppenders() {
-    return [].concat(appenders);
+    return [...appenders];
   }
 
   function clearAppenders() {
@@ -1215,7 +1184,7 @@
 
   function addCustomLevel(name, value) {
     if (logLevel[name] !== undefined) {
-      throw Error('Log level "' + name + '" already exists.');
+      throw Error(`Log level "${name}" already exists.`);
     }
 
     if (isNaN(value)) {
@@ -1237,7 +1206,7 @@
     }
 
     if (isStandardLevel(name)) {
-      throw Error('Built-in log level "' + name + '" cannot be removed.');
+      throw Error(`Built-in log level "${name}" cannot be removed.`);
     }
 
     delete logLevel[name];
@@ -1246,7 +1215,7 @@
 
   function setLevel(level) {
     globalDefaultLevel = level;
-    for (var key in loggers) {
+    for (let key in loggers) {
       loggers[key].setLevel(level);
     }
   }
@@ -1255,11 +1224,9 @@
     return globalDefaultLevel;
   }
 
-  var Logger = exports.Logger = function () {
-    function Logger(id) {
-      
-
-      var cached = loggers[id];
+  let Logger = class Logger {
+    constructor(id) {
+      let cached = loggers[id];
       if (cached) {
         return cached;
       }
@@ -1269,53 +1236,35 @@
       this.level = globalDefaultLevel;
     }
 
-    Logger.prototype.debug = function debug(message) {};
+    debug(message, ...rest) {}
 
-    Logger.prototype.info = function info(message) {};
+    info(message, ...rest) {}
 
-    Logger.prototype.warn = function warn(message) {};
+    warn(message, ...rest) {}
 
-    Logger.prototype.error = function error(message) {};
+    error(message, ...rest) {}
 
-    Logger.prototype.setLevel = function setLevel(level) {
+    setLevel(level) {
       this.level = level;
-    };
+    }
 
-    Logger.prototype.isDebugEnabled = function isDebugEnabled() {
+    isDebugEnabled() {
       return this.level === logLevel.debug;
-    };
-
-    return Logger;
-  }();
-  });
-
-  var aureliaLogging$1 = unwrapExports(aureliaLogging);
-  var aureliaLogging_1 = aureliaLogging.getLogger;
-  var aureliaLogging_2 = aureliaLogging.addAppender;
-  var aureliaLogging_3 = aureliaLogging.removeAppender;
-  var aureliaLogging_4 = aureliaLogging.getAppenders;
-  var aureliaLogging_5 = aureliaLogging.clearAppenders;
-  var aureliaLogging_6 = aureliaLogging.addCustomLevel;
-  var aureliaLogging_7 = aureliaLogging.removeCustomLevel;
-  var aureliaLogging_8 = aureliaLogging.setLevel;
-  var aureliaLogging_9 = aureliaLogging.getLevel;
-  var aureliaLogging_10 = aureliaLogging.logLevel;
-  var aureliaLogging_11 = aureliaLogging.Logger;
+    }
+  };
 
   var TheLogManager = /*#__PURE__*/Object.freeze({
-    default: aureliaLogging$1,
-    __moduleExports: aureliaLogging,
-    getLogger: aureliaLogging_1,
-    addAppender: aureliaLogging_2,
-    removeAppender: aureliaLogging_3,
-    getAppenders: aureliaLogging_4,
-    clearAppenders: aureliaLogging_5,
-    addCustomLevel: aureliaLogging_6,
-    removeCustomLevel: aureliaLogging_7,
-    setLevel: aureliaLogging_8,
-    getLevel: aureliaLogging_9,
-    logLevel: aureliaLogging_10,
-    Logger: aureliaLogging_11
+    logLevel: logLevel,
+    getLogger: getLogger,
+    addAppender: addAppender,
+    removeAppender: removeAppender,
+    getAppenders: getAppenders,
+    clearAppenders: clearAppenders,
+    addCustomLevel: addCustomLevel,
+    removeCustomLevel: removeCustomLevel,
+    setLevel: setLevel,
+    getLevel: getLevel,
+    Logger: Logger
   });
 
   var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _class4, _dec5, _class5, _dec6, _class6, _dec7, _class7;
@@ -3066,7 +3015,7 @@
   const unshift = arrayProto.unshift;
 
   if (arrayProto.__au_patched__) {
-    aureliaLogging_1('array-observation').warn('Detected 2nd attempt of patching array from Aurelia binding.' + ' This is probably caused by dependency mismatch between core modules and a 3rd party plugin.' + ' Please see https://github.com/aurelia/cli/pull/906 if you are using webpack.');
+    getLogger('array-observation').warn('Detected 2nd attempt of patching array from Aurelia binding.' + ' This is probably caused by dependency mismatch between core modules and a 3rd party plugin.' + ' Please see https://github.com/aurelia/cli/pull/906 if you are using webpack.');
   } else {
     Reflect.defineProperty(arrayProto, '__au_patched__', { value: 1 });
     arrayProto.pop = function () {
@@ -5323,7 +5272,7 @@
     }
   }) || _class5$1);
 
-  const logger = aureliaLogging_1('property-observation');
+  const logger = getLogger('property-observation');
 
   const propertyAccessor = {
     getValue: (obj, propertyName) => obj[propertyName],
@@ -6264,7 +6213,7 @@
       this.parser = parser;
 
       this.adapters = [];
-      this.logger = aureliaLogging_1('observer-locator');
+      this.logger = getLogger('observer-locator');
     }
 
     getObserver(obj, propertyName) {
@@ -8225,7 +8174,7 @@
   function validateBehaviorName(name, type) {
     if (/[A-Z]/.test(name)) {
       let newName = _hyphenate(name);
-      aureliaLogging_1('templating').warn(`'${name}' is not a valid ${type} name and has been converted to '${newName}'. Upper-case letters are not allowed because the DOM is not case-sensitive.`);
+      getLogger('templating').warn(`'${name}' is not a valid ${type} name and has been converted to '${newName}'. Upper-case letters are not allowed because the DOM is not case-sensitive.`);
       return newName;
     }
     return name;
@@ -10206,7 +10155,7 @@
     }
   };
 
-  let logger$1 = aureliaLogging_1('templating');
+  let logger$1 = getLogger('templating');
 
   function ensureRegistryEntry(loader, urlOrRegistryEntry) {
     if (urlOrRegistryEntry instanceof TemplateRegistryEntry) {
@@ -11799,7 +11748,7 @@
         try {
           processor(compiler, resources, node, attributes, elementInstruction);
         } catch (error) {
-          aureliaLogging_1('templating').error(error);
+          getLogger('templating').error(error);
         }
       };
     };
@@ -11816,7 +11765,7 @@
         try {
           return processor(compiler, resources, node, instruction);
         } catch (error) {
-          aureliaLogging_1('templating').error(error);
+          getLogger('templating').error(error);
           return false;
         }
       } : doNotProcessContent;
@@ -11942,7 +11891,7 @@
       this.container = container || new Container().makeGlobal();
       this.resources = resources || new ViewResources();
       this.use = new FrameworkConfiguration(this);
-      this.logger = aureliaLogging_1('aurelia');
+      this.logger = getLogger('aurelia');
       this.hostConfigured = false;
       this.host = null;
 
@@ -12049,7 +11998,7 @@
     }
   };
 
-  const logger$2 = aureliaLogging_1('aurelia');
+  const logger$2 = getLogger('aurelia');
   const extPattern = /\.[^/.]+$/;
 
   function runTasks(config, tasks) {
@@ -12348,17 +12297,17 @@
     }
 
     developmentLogging(level) {
-      let logLevel = level ? aureliaLogging_10[level] : undefined;
+      let logLevel$$1 = level ? logLevel[level] : undefined;
 
-      if (logLevel === undefined) {
-        logLevel = aureliaLogging_10.debug;
+      if (logLevel$$1 === undefined) {
+        logLevel$$1 = logLevel.debug;
       }
 
       this.preTask(() => {
         return this.aurelia.loader.normalize('aurelia-logging-console', this.bootstrapperName).then(name => {
           return this.aurelia.loader.loadModule(name).then(m => {
-            aureliaLogging_2(new m.ConsoleAppender());
-            aureliaLogging_8(logLevel);
+            addAppender(new m.ConsoleAppender());
+            setLevel(logLevel$$1);
           });
         });
       });
@@ -12487,7 +12436,7 @@
 
   function validateTarget(target, propertyName) {
     if (propertyName === 'style') {
-      aureliaLogging_1('templating-binding').info('Internet Explorer does not support interpolation in "style" attributes.  Use the style attribute\'s alias, "css" instead.');
+      getLogger('templating-binding').info('Internet Explorer does not support interpolation in "style" attributes.  Use the style attribute\'s alias, "css" instead.');
     } else if (target.parentElement && target.parentElement.nodeName === 'TEXTAREA' && propertyName === 'textContent') {
       throw new Error('Interpolation binding cannot be used in the content of a textarea element.  Use <textarea value.bind="expression"></textarea> instead.');
     }
@@ -12819,7 +12768,7 @@
     }
 
     handleUnknownCommand(resources, element, info, existingInstruction, context) {
-      aureliaLogging_1('templating-binding').warn('Unknown binding command.', info);
+      getLogger('templating-binding').warn('Unknown binding command.', info);
       return existingInstruction;
     }
 
@@ -13096,7 +13045,7 @@
         if (parts.length === 2) {
           command = parts[1];
           if (command !== 'bind') {
-            aureliaLogging_1('templating-binding-language').warn(`Detected invalid let command. Expected "${parts[0]}.bind", given "${attrName}"`);
+            getLogger('templating-binding-language').warn(`Detected invalid let command. Expected "${parts[0]}.bind", given "${attrName}"`);
             continue;
           }
           expressions.push(new LetExpression(this.observerLocator, camelCase(parts[0]), this.parser.parse(attrValue), resources.lookupFunctions, toBindingContext));
@@ -13104,7 +13053,7 @@
           attrName = camelCase(attrName);
           parts = this.parseInterpolation(resources, attrValue);
           if (parts === null) {
-            aureliaLogging_1('templating-binding-language').warn(`Detected string literal in let bindings. Did you mean "${attrName}.bind=${attrValue}" or "${attrName}=\${${attrValue}}" ?`);
+            getLogger('templating-binding-language').warn(`Detected string literal in let bindings. Did you mean "${attrName}.bind=${attrValue}" or "${attrName}=\${${attrValue}}" ?`);
           }
           if (parts) {
             expressions.push(new LetInterpolationBindingExpression(this.observerLocator, attrName, parts, resources.lookupFunctions, toBindingContext));
@@ -15188,7 +15137,7 @@
     ['.css', '.less', '.sass', '.scss', '.styl'].forEach(ext => viewEngine.addResourcePlugin(ext, styleResourcePlugin));
   }
 
-  const logger$3 = aureliaLogging_1('event-aggregator');
+  const logger$3 = getLogger('event-aggregator');
 
   let Handler = class Handler {
     constructor(messageType, callback) {
@@ -17558,7 +17507,7 @@
     }
   };
 
-  const logger$4 = aureliaLogging_1('app-router');
+  const logger$4 = getLogger('app-router');
 
   let AppRouter = class AppRouter extends Router {
     static inject() {
@@ -18051,7 +18000,7 @@
 
   var _dec$n, _dec2$c, _dec3$5, _dec4$4, _class$o;
 
-  const logger$5 = aureliaLogging_1('route-href');
+  const logger$5 = getLogger('route-href');
 
   let RouteHref = (_dec$n = customAttribute('route-href'), _dec2$c = bindable({ name: 'route', changeHandler: 'processChange', primaryProperty: true }), _dec3$5 = bindable({ name: 'params', changeHandler: 'processChange' }), _dec4$4 = bindable({ name: 'attribute', defaultValue: 'href' }), _dec$n(_class$o = _dec2$c(_class$o = _dec3$5(_class$o = _dec4$4(_class$o = class RouteHref {
 
@@ -18108,75 +18057,30 @@
     config.container.registerAlias(Router, AppRouter);
   }
 
-  var aureliaLoggingConsole = createCommonjsModule(function (module, exports) {
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.ConsoleAppender = undefined;
-
-
-
-
-
-  var ConsoleAppender = exports.ConsoleAppender = function () {
-    function ConsoleAppender() {
-      
+  let ConsoleAppender = class ConsoleAppender {
+    debug(logger, ...rest) {
+      console.debug(`DEBUG [${ logger.id }]`, ...rest);
     }
 
-    ConsoleAppender.prototype.debug = function debug(logger) {
-      var _console;
+    info(logger, ...rest) {
+      console.info(`INFO [${ logger.id }]`, ...rest);
+    }
 
-      for (var _len = arguments.length, rest = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        rest[_key - 1] = arguments[_key];
-      }
+    warn(logger, ...rest) {
+      console.warn(`WARN [${ logger.id }]`, ...rest);
+    }
 
-      (_console = console).debug.apply(_console, ['DEBUG [' + logger.id + ']'].concat(rest));
-    };
-
-    ConsoleAppender.prototype.info = function info(logger) {
-      var _console2;
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-        rest[_key2 - 1] = arguments[_key2];
-      }
-
-      (_console2 = console).info.apply(_console2, ['INFO [' + logger.id + ']'].concat(rest));
-    };
-
-    ConsoleAppender.prototype.warn = function warn(logger) {
-      var _console3;
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-        rest[_key3 - 1] = arguments[_key3];
-      }
-
-      (_console3 = console).warn.apply(_console3, ['WARN [' + logger.id + ']'].concat(rest));
-    };
-
-    ConsoleAppender.prototype.error = function error(logger) {
-      var _console4;
-
-      for (var _len4 = arguments.length, rest = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-        rest[_key4 - 1] = arguments[_key4];
-      }
-
-      (_console4 = console).error.apply(_console4, ['ERROR [' + logger.id + ']'].concat(rest));
-    };
-
-    return ConsoleAppender;
-  }();
-  });
-
-  unwrapExports(aureliaLoggingConsole);
-  var aureliaLoggingConsole_1 = aureliaLoggingConsole.ConsoleAppender;
+    error(logger, ...rest) {
+      console.error(`ERROR [${ logger.id }]`, ...rest);
+    }
+  };
 
   initialize();
 
   // Using static convention to avoid having to fetch / load module dynamically
   (frameworkCfgProto => {
     frameworkCfgProto.developmentLogging = function() {
-      LogManager.addAppender(new aureliaLoggingConsole_1());
+      LogManager.addAppender(new ConsoleAppender());
       LogManager.setLevel(LogManager.logLevel.debug);
       return this;
     };
