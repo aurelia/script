@@ -32,7 +32,7 @@
     "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm"
   },
   "devDependencies": {
-    "aurelia-binding": "git+https://github.com/aurelia/binding.git",
+    "aurelia-binding": "^2.1.7",
     "aurelia-bootstrapper": "^2.1.1",
     "aurelia-cli": "^1.0.0-beta.1",
     "aurelia-dependency-injection": "git+https://github.com/aurelia/dependency-injection.git",
@@ -52,7 +52,7 @@
     "aurelia-route-recognizer": "git+https://github.com/aurelia/route-recognizer.git",
     "aurelia-router": "git+https://github.com/aurelia/router.git",
     "aurelia-task-queue": "git+https://github.com/aurelia/task-queue.git",
-    "aurelia-templating": "git+https://github.com/aurelia/templating.git",
+    "aurelia-templating": "^1.10.1",
     "aurelia-templating-binding": "git+https://github.com/aurelia/templating-binding.git",
     "aurelia-templating-resources": "git+https://github.com/aurelia/templating-resources.git",
     "aurelia-templating-router": "git+https://github.com/aurelia/templating-router.git",

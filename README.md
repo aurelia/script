@@ -42,3 +42,6 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
   4. `build` folder contains entry/ setup script, code for building / emiting code to `dist` and `example` folders.
      * `index.js` and `index.full.js` are custom entries to give rollup instruction how to bundle all core modules. `index.js` will result in a bundle without router related features. `index.full.js` will result in a bundle with all features.
      * `rollup.config.js` is rollup config for running `npm run bundle` and `npm run build` scripts
+
+### Notes:
+  `aurelia-script` uses new ECMAScript feature: dynamic import via `import()` API. If your target browser does not support such API, `aurelia-script` won't be able to run. Browser support matrix is at https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#Browser_compatibility (check for Dynamic import)
