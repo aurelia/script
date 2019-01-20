@@ -677,7 +677,7 @@ function buildParam(key, value, traditional) {
   if (Array.isArray(value)) {
     for (let i = 0, l = value.length; i < l; i++) {
       if (traditional) {
-        result.push(`${ encodeKey(key) }=${ encode(value[i]) }`);
+        result.push(`${encodeKey(key)}=${encode(value[i])}`);
       } else {
         let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
         result = result.concat(buildParam(arrayKey, value[i]));
@@ -688,7 +688,7 @@ function buildParam(key, value, traditional) {
       result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
     }
   } else {
-    result.push(`${ encodeKey(key) }=${ encode(value) }`);
+    result.push(`${encodeKey(key)}=${encode(value)}`);
   }
   return result;
 }
@@ -1877,6 +1877,10 @@ function autoinject(potentialTarget) {
   let deco = function (target) {
     if (!target.hasOwnProperty('inject')) {
       target.inject = (metadata.getOwn(metadata.paramTypes, target) || _emptyParameters).slice();
+
+      if (target.inject.length > 0 && target.inject[target.inject.length - 1] === Object) {
+        target.inject.pop();
+      }
     }
   };
 
@@ -2200,7 +2204,7 @@ function connectable() {
 const queue = [];
 const queued = {};
 let nextId = 0;
-const minimumImmediate = 100;
+let minimumImmediate = 100;
 const frameBudget = 15;
 
 let isFlushRequested = false;
@@ -2250,6 +2254,22 @@ function enqueueBindingConnect(binding) {
     isFlushRequested = true;
     PLATFORM.requestAnimationFrame(flush);
   }
+}
+
+function setConnectQueueThreshold(value) {
+  minimumImmediate = value;
+}
+
+function enableConnectQueue() {
+  setConnectQueueThreshold(100);
+}
+
+function disableConnectQueue() {
+  setConnectQueueThreshold(Number.MAX_SAFE_INTEGER);
+}
+
+function getConnectQueueSize() {
+  return queue.length;
 }
 
 function addSubscriber(context, callable) {
@@ -4482,6 +4502,8 @@ let ParserImplementation = class ParserImplementation {
         }
       } else if (this.ch === 0x5C) {
         result += fromCharCode(unescape(this.next()));
+      } else if (this.ch === 0 || this.idx >= this.len) {
+        this.err('Unterminated template literal');
       } else {
         result += fromCharCode(this.ch);
       }
@@ -15258,7 +15280,7 @@ function configure$3(config) {
 }
 
 function mi$1(name) {
-  throw new Error(`History must implement ${ name }().`);
+  throw new Error(`History must implement ${name}().`);
 }
 
 let History = class History {
@@ -15292,6 +15314,14 @@ let History = class History {
 
   getState(key) {
     mi$1('getState');
+  }
+
+  getHistoryIndex() {
+    mi$1('getHistoryIndex');
+  }
+
+  go(movement) {
+    mi$1('go');
   }
 };
 
@@ -15340,7 +15370,7 @@ let DefaultLinkHandler = class DefaultLinkHandler extends LinkHandler {
       return info;
     }
 
-    if (target.hasAttribute('download') || target.hasAttribute('router-ignore')) {
+    if (target.hasAttribute('download') || target.hasAttribute('router-ignore') || target.hasAttribute('data-router-ignore')) {
       return info;
     }
 
@@ -15514,6 +15544,19 @@ let BrowserHistory = (_temp$3 = _class$l = class BrowserHistory extends History 
   getState(key) {
     let state = Object.assign({}, this.history.state);
     return state[key];
+  }
+
+  getHistoryIndex() {
+    let historyIndex = this.getState('HistoryIndex');
+    if (historyIndex === undefined) {
+      historyIndex = this.history.length - 1;
+      this.setState('HistoryIndex', historyIndex);
+    }
+    return historyIndex;
+  }
+
+  go(movement) {
+    this.history.go(movement);
   }
 
   _getHash() {
@@ -15714,6 +15757,7 @@ let RouteRecognizer = class RouteRecognizer {
   constructor() {
     this.rootState = new State();
     this.names = {};
+    this.routes = new Map();
   }
 
   add(route) {
@@ -15761,13 +15805,13 @@ let RouteRecognizer = class RouteRecognizer {
 
     let handlers = [{ handler: route.handler, names: names }];
 
+    this.routes.set(route.handler, { segments, handlers });
     if (routeName) {
       let routeNames = Array.isArray(routeName) ? routeName : [routeName];
       for (let i = 0; i < routeNames.length; i++) {
-        this.names[routeNames[i]] = {
-          segments: segments,
-          handlers: handlers
-        };
+        if (!(routeNames[i] in this.names)) {
+          this.names[routeNames[i]] = { segments, handlers };
+        }
       }
     }
 
@@ -15785,23 +15829,27 @@ let RouteRecognizer = class RouteRecognizer {
     return currentState;
   }
 
-  handlersFor(name) {
-    let route = this.names[name];
+  getRoute(nameOrRoute) {
+    return typeof nameOrRoute === 'string' ? this.names[nameOrRoute] : this.routes.get(nameOrRoute);
+  }
+
+  handlersFor(nameOrRoute) {
+    let route = this.getRoute(nameOrRoute);
     if (!route) {
-      throw new Error(`There is no route named ${name}`);
+      throw new Error(`There is no route named ${nameOrRoute}`);
     }
 
     return [...route.handlers];
   }
 
-  hasRoute(name) {
-    return !!this.names[name];
+  hasRoute(nameOrRoute) {
+    return !!this.getRoute(nameOrRoute);
   }
 
-  generate(name, params) {
-    let route = this.names[name];
+  generate(nameOrRoute, params) {
+    let route = this.getRoute(nameOrRoute);
     if (!route) {
-      throw new Error(`There is no route named ${name}`);
+      throw new Error(`There is no route named ${nameOrRoute}`);
     }
 
     let handler = route.handlers[0].handler;
@@ -15824,7 +15872,7 @@ let RouteRecognizer = class RouteRecognizer {
       let segmentValue = segment.generate(routeParams, consumed);
       if (segmentValue === null || segmentValue === undefined) {
         if (!segment.optional) {
-          throw new Error(`A value is required for route parameter '${segment.name}' in route '${name}'.`);
+          throw new Error(`A value is required for route parameter '${segment.name}' in route '${nameOrRoute}'.`);
         }
       } else {
         output += '/';
@@ -18053,19 +18101,19 @@ function configure$5(config) {
 
 let ConsoleAppender = class ConsoleAppender {
   debug(logger, ...rest) {
-    console.debug(`DEBUG [${ logger.id }]`, ...rest);
+    console.debug(`DEBUG [${logger.id}]`, ...rest);
   }
 
   info(logger, ...rest) {
-    console.info(`INFO [${ logger.id }]`, ...rest);
+    console.info(`INFO [${logger.id}]`, ...rest);
   }
 
   warn(logger, ...rest) {
-    console.warn(`WARN [${ logger.id }]`, ...rest);
+    console.warn(`WARN [${logger.id}]`, ...rest);
   }
 
   error(logger, ...rest) {
-    console.error(`ERROR [${ logger.id }]`, ...rest);
+    console.error(`ERROR [${logger.id}]`, ...rest);
   }
 };
 
@@ -18100,4 +18148,4 @@ initialize();
   };
 })(FrameworkConfiguration.prototype);
 
-export { EventAggregator, includeEventsIn, CommitChangesStep, NavigationInstruction, NavModel, isNavigationCommand, Redirect, RedirectToRoute, pipelineStatus, Pipeline, RouterConfiguration, activationStrategy, BuildNavigationPlanStep, Router, CanDeactivatePreviousStep, CanActivateNextStep, DeactivatePreviousStep, ActivateNextStep, RouteLoader, LoadRouteStep, PipelineProvider, AppRouter, Aurelia, FrameworkConfiguration, LogManager, resolver, StrategyResolver, Lazy, All, Optional, Parent, Factory, NewInstance, getDecoratorDependencies, lazy, all, optional, parent, factory, newInstance, invoker, invokeAsFactory, FactoryInvoker, registration, transient, singleton, TransientRegistration, SingletonRegistration, _emptyParameters, InvocationHandler, Container, autoinject, inject, targetContext, sourceContext, camelCase, createOverrideContext, getContextFor, createScopeForTest, connectable, enqueueBindingConnect, subscriberCollection, ExpressionObserver, calcSplices, mergeSplice, projectArraySplices, getChangeRecords, ModifyCollectionObserver, CollectionLengthObserver, getArrayObserver, Expression, BindingBehavior, ValueConverter, Assign, Conditional, AccessThis, AccessScope, AccessMember, AccessKeyed, CallScope, CallMember, CallFunction, Binary, Unary, LiteralPrimitive, LiteralString, LiteralTemplate, LiteralArray, LiteralObject, Unparser, ExpressionCloner, cloneExpression, bindingMode, Parser, ParserImplementation, getMapObserver, delegationStrategy, EventManager, EventSubscriber, DirtyChecker, DirtyCheckProperty, propertyAccessor, PrimitiveObserver, SetterObserver, XLinkAttributeObserver, dataAttributeAccessor, DataAttributeObserver, StyleObserver, ValueAttributeObserver, CheckedObserver, SelectValueObserver, ClassObserver, hasDeclaredDependencies, declarePropertyDependencies, computedFrom, ComputedExpression, createComputedObserver, elements, presentationElements, presentationAttributes, SVGAnalyzer, ObserverLocator, ObjectObservationAdapter, BindingExpression, Binding, CallExpression, Call, ValueConverterResource, valueConverter, BindingBehaviorResource, bindingBehavior, ListenerExpression, Listener, NameExpression, BindingEngine, getSetObserver, observable, connectBindingToSignal, signalBindings, metadata, Origin, decorators, deprecated, mixin, protocol, animationEvent, Animator, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, CompositionTransaction, _hyphenate, _isAllWhitespace, ViewEngineHooksResource, viewEngineHooks, ElementEvents, ResourceLoadContext, ViewCompileInstruction, BehaviorInstruction, TargetInstruction, viewStrategy, RelativeViewStrategy, ConventionalViewStrategy, NoViewStrategy, TemplateRegistryViewStrategy, InlineViewStrategy, StaticViewStrategy, ViewLocator, BindingLanguage, SlotCustomAttribute, PassThroughSlot, ShadowSlot, ShadowDOM, validateBehaviorName, ViewResources, View, ViewSlot, BoundViewFactory, ViewFactory, ViewCompiler, ResourceModule, ResourceDescription, ModuleAnalyzer, ViewEngine, Controller, BehaviorPropertyObserver, BindableProperty, HtmlBehaviorResource, children, child, SwapStrategies, CompositionEngine, ElementConfigResource, resource, behavior, customElement, customAttribute, templateController, bindable, dynamicOptions, useShadowDOM, processAttributes, processContent, containerless, useViewStrategy, useView, inlineView, noView, view, elementConfig, viewResources, TemplatingEngine, TemplateDependency, TemplateRegistryEntry, Loader, TaskQueue, relativeToFile, join, buildQueryString, parseQueryString, AggregateError, FEATURE, PLATFORM, DOM, isInitialized, initializePAL, reset };
+export { EventAggregator, includeEventsIn, If, Else, Repeat, Compose, Show, Hide, Focus, With, Replaceable, AbstractRepeater, ArrayRepeatStrategy, AttrBindingBehavior, BindingSignaler, DebounceBindingBehavior, FromViewBindingBehavior, HTMLSanitizer, MapRepeatStrategy, NullRepeatStrategy, NumberRepeatStrategy, OneTimeBindingBehavior, OneWayBindingBehavior, RepeatStrategyLocator, SanitizeHTMLValueConverter, SelfBindingBehavior, SetRepeatStrategy, SignalBindingBehavior, ThrottleBindingBehavior, ToViewBindingBehavior, TwoWayBindingBehavior, UpdateTriggerBindingBehavior, createFullOverrideContext, updateOneTimeBinding, updateOverrideContext, isOneTime, viewsRequireLifecycle, unwrapExpression, getItemsSourceExpression, CommitChangesStep, NavigationInstruction, NavModel, isNavigationCommand, Redirect, RedirectToRoute, pipelineStatus, Pipeline, RouterConfiguration, activationStrategy, BuildNavigationPlanStep, Router, CanDeactivatePreviousStep, CanActivateNextStep, DeactivatePreviousStep, ActivateNextStep, RouteLoader, LoadRouteStep, PipelineProvider, AppRouter, Aurelia, FrameworkConfiguration, LogManager, resolver, StrategyResolver, Lazy, All, Optional, Parent, Factory, NewInstance, getDecoratorDependencies, lazy, all, optional, parent, factory, newInstance, invoker, invokeAsFactory, FactoryInvoker, registration, transient, singleton, TransientRegistration, SingletonRegistration, _emptyParameters, InvocationHandler, Container, autoinject, inject, targetContext, sourceContext, camelCase, createOverrideContext, getContextFor, createScopeForTest, connectable, enqueueBindingConnect, setConnectQueueThreshold, enableConnectQueue, disableConnectQueue, getConnectQueueSize, subscriberCollection, ExpressionObserver, calcSplices, mergeSplice, projectArraySplices, getChangeRecords, ModifyCollectionObserver, CollectionLengthObserver, getArrayObserver, Expression, BindingBehavior, ValueConverter, Assign, Conditional, AccessThis, AccessScope, AccessMember, AccessKeyed, CallScope, CallMember, CallFunction, Binary, Unary, LiteralPrimitive, LiteralString, LiteralTemplate, LiteralArray, LiteralObject, Unparser, ExpressionCloner, cloneExpression, bindingMode, Parser, ParserImplementation, getMapObserver, delegationStrategy, EventManager, EventSubscriber, DirtyChecker, DirtyCheckProperty, propertyAccessor, PrimitiveObserver, SetterObserver, XLinkAttributeObserver, dataAttributeAccessor, DataAttributeObserver, StyleObserver, ValueAttributeObserver, CheckedObserver, SelectValueObserver, ClassObserver, hasDeclaredDependencies, declarePropertyDependencies, computedFrom, ComputedExpression, createComputedObserver, elements, presentationElements, presentationAttributes, SVGAnalyzer, ObserverLocator, ObjectObservationAdapter, BindingExpression, Binding, CallExpression, Call, ValueConverterResource, valueConverter, BindingBehaviorResource, bindingBehavior, ListenerExpression, Listener, NameExpression, BindingEngine, getSetObserver, observable, connectBindingToSignal, signalBindings, metadata, Origin, decorators, deprecated, mixin, protocol, animationEvent, Animator, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, CompositionTransaction, _hyphenate, _isAllWhitespace, ViewEngineHooksResource, viewEngineHooks, ElementEvents, ResourceLoadContext, ViewCompileInstruction, BehaviorInstruction, TargetInstruction, viewStrategy, RelativeViewStrategy, ConventionalViewStrategy, NoViewStrategy, TemplateRegistryViewStrategy, InlineViewStrategy, StaticViewStrategy, ViewLocator, BindingLanguage, SlotCustomAttribute, PassThroughSlot, ShadowSlot, ShadowDOM, validateBehaviorName, ViewResources, View, ViewSlot, BoundViewFactory, ViewFactory, ViewCompiler, ResourceModule, ResourceDescription, ModuleAnalyzer, ViewEngine, Controller, BehaviorPropertyObserver, BindableProperty, HtmlBehaviorResource, children, child, SwapStrategies, CompositionEngine, ElementConfigResource, resource, behavior, customElement, customAttribute, templateController, bindable, dynamicOptions, useShadowDOM, processAttributes, processContent, containerless, useViewStrategy, useView, inlineView, noView, view, elementConfig, viewResources, TemplatingEngine, TemplateDependency, TemplateRegistryEntry, Loader, TaskQueue, relativeToFile, join, buildQueryString, parseQueryString, AggregateError, FEATURE, PLATFORM, DOM, isInitialized, initializePAL, reset };

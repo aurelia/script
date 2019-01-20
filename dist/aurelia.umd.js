@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.au = {})));
-}(this, (function (exports) { 'use strict';
+  (global = global || self, factory(global.au = {}));
+}(this, function (exports) { 'use strict';
 
   function AggregateError(message, innerError, skipIfAlreadyAggregate) {
     if (innerError) {
@@ -683,7 +683,7 @@
     if (Array.isArray(value)) {
       for (let i = 0, l = value.length; i < l; i++) {
         if (traditional) {
-          result.push(`${ encodeKey(key) }=${ encode(value[i]) }`);
+          result.push(`${encodeKey(key)}=${encode(value[i])}`);
         } else {
           let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
           result = result.concat(buildParam(arrayKey, value[i]));
@@ -694,7 +694,7 @@
         result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
       }
     } else {
-      result.push(`${ encodeKey(key) }=${ encode(value) }`);
+      result.push(`${encodeKey(key)}=${encode(value)}`);
     }
     return result;
   }
@@ -1883,6 +1883,10 @@
     let deco = function (target) {
       if (!target.hasOwnProperty('inject')) {
         target.inject = (metadata.getOwn(metadata.paramTypes, target) || _emptyParameters).slice();
+
+        if (target.inject.length > 0 && target.inject[target.inject.length - 1] === Object) {
+          target.inject.pop();
+        }
       }
     };
 
@@ -2206,7 +2210,7 @@
   const queue = [];
   const queued = {};
   let nextId = 0;
-  const minimumImmediate = 100;
+  let minimumImmediate = 100;
   const frameBudget = 15;
 
   let isFlushRequested = false;
@@ -2256,6 +2260,22 @@
       isFlushRequested = true;
       PLATFORM.requestAnimationFrame(flush);
     }
+  }
+
+  function setConnectQueueThreshold(value) {
+    minimumImmediate = value;
+  }
+
+  function enableConnectQueue() {
+    setConnectQueueThreshold(100);
+  }
+
+  function disableConnectQueue() {
+    setConnectQueueThreshold(Number.MAX_SAFE_INTEGER);
+  }
+
+  function getConnectQueueSize() {
+    return queue.length;
   }
 
   function addSubscriber(context, callable) {
@@ -4488,6 +4508,8 @@
           }
         } else if (this.ch === 0x5C) {
           result += fromCharCode(unescape(this.next()));
+        } else if (this.ch === 0 || this.idx >= this.len) {
+          this.err('Unterminated template literal');
         } else {
           result += fromCharCode(this.ch);
         }
@@ -15265,19 +15287,19 @@
 
   let ConsoleAppender = class ConsoleAppender {
     debug(logger, ...rest) {
-      console.debug(`DEBUG [${ logger.id }]`, ...rest);
+      console.debug(`DEBUG [${logger.id}]`, ...rest);
     }
 
     info(logger, ...rest) {
-      console.info(`INFO [${ logger.id }]`, ...rest);
+      console.info(`INFO [${logger.id}]`, ...rest);
     }
 
     warn(logger, ...rest) {
-      console.warn(`WARN [${ logger.id }]`, ...rest);
+      console.warn(`WARN [${logger.id}]`, ...rest);
     }
 
     error(logger, ...rest) {
-      console.error(`ERROR [${ logger.id }]`, ...rest);
+      console.error(`ERROR [${logger.id}]`, ...rest);
     }
   };
 
@@ -15317,6 +15339,43 @@
 
   exports.EventAggregator = EventAggregator;
   exports.includeEventsIn = includeEventsIn;
+  exports.If = If;
+  exports.Else = Else;
+  exports.Repeat = Repeat;
+  exports.Compose = Compose;
+  exports.Show = Show;
+  exports.Hide = Hide;
+  exports.Focus = Focus;
+  exports.With = With;
+  exports.Replaceable = Replaceable;
+  exports.AbstractRepeater = AbstractRepeater;
+  exports.ArrayRepeatStrategy = ArrayRepeatStrategy;
+  exports.AttrBindingBehavior = AttrBindingBehavior;
+  exports.BindingSignaler = BindingSignaler;
+  exports.DebounceBindingBehavior = DebounceBindingBehavior;
+  exports.FromViewBindingBehavior = FromViewBindingBehavior;
+  exports.HTMLSanitizer = HTMLSanitizer;
+  exports.MapRepeatStrategy = MapRepeatStrategy;
+  exports.NullRepeatStrategy = NullRepeatStrategy;
+  exports.NumberRepeatStrategy = NumberRepeatStrategy;
+  exports.OneTimeBindingBehavior = OneTimeBindingBehavior;
+  exports.OneWayBindingBehavior = OneWayBindingBehavior;
+  exports.RepeatStrategyLocator = RepeatStrategyLocator;
+  exports.SanitizeHTMLValueConverter = SanitizeHTMLValueConverter;
+  exports.SelfBindingBehavior = SelfBindingBehavior;
+  exports.SetRepeatStrategy = SetRepeatStrategy;
+  exports.SignalBindingBehavior = SignalBindingBehavior;
+  exports.ThrottleBindingBehavior = ThrottleBindingBehavior;
+  exports.ToViewBindingBehavior = ToViewBindingBehavior;
+  exports.TwoWayBindingBehavior = TwoWayBindingBehavior;
+  exports.UpdateTriggerBindingBehavior = UpdateTriggerBindingBehavior;
+  exports.createFullOverrideContext = createFullOverrideContext;
+  exports.updateOneTimeBinding = updateOneTimeBinding;
+  exports.updateOverrideContext = updateOverrideContext;
+  exports.isOneTime = isOneTime;
+  exports.viewsRequireLifecycle = viewsRequireLifecycle;
+  exports.unwrapExpression = unwrapExpression;
+  exports.getItemsSourceExpression = getItemsSourceExpression;
   exports.Aurelia = Aurelia;
   exports.FrameworkConfiguration = FrameworkConfiguration;
   exports.LogManager = LogManager;
@@ -15356,6 +15415,10 @@
   exports.createScopeForTest = createScopeForTest;
   exports.connectable = connectable;
   exports.enqueueBindingConnect = enqueueBindingConnect;
+  exports.setConnectQueueThreshold = setConnectQueueThreshold;
+  exports.enableConnectQueue = enableConnectQueue;
+  exports.disableConnectQueue = disableConnectQueue;
+  exports.getConnectQueueSize = getConnectQueueSize;
   exports.subscriberCollection = subscriberCollection;
   exports.ExpressionObserver = ExpressionObserver;
   exports.calcSplices = calcSplices;
@@ -15522,4 +15585,4 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
