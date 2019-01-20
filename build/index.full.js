@@ -77,7 +77,6 @@ export {
   createFullOverrideContext,
   updateOneTimeBinding,
   updateOverrideContext,
-  updateOverrideContexts,
   isOneTime,
   viewsRequireLifecycle,
   unwrapExpression,
