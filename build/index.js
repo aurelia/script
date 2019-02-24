@@ -1,11 +1,11 @@
 import 'aurelia-polyfills';
 import { initialize } from 'aurelia-pal-browser';
 import 'aurelia-loader-esm';
-import { LogManager, FrameworkConfiguration } from 'aurelia-framework';
+import { LogManager, FrameworkConfiguration, Aurelia, View } from 'aurelia-framework';
 import { configure as configureBindingLanguage } from 'aurelia-templating-binding';
 import { configure as configureDefaultResources } from 'aurelia-templating-resources';
 import { configure as configureEventAggregator } from 'aurelia-event-aggregator';
-// import { configure as configureHistory } from 'aurelia-history-browser';
+import { configure as configureHistory } from 'aurelia-history-browser';
 // import { configure as configureRouter } from 'aurelia-templating-router';
 import { ConsoleAppender } from 'aurelia-logging-console';
 import { getLogger } from 'aurelia-logging';
@@ -32,18 +32,70 @@ initialize();
     return this.plugin(configureEventAggregator);
   };
 
-  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
   frameworkCfgProto.history = function() {
-    getLogger('aurelia').error(errorMsg);
-    return this;
+    return this.plugin(configureHistory);
   };
-
+  
+  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
   frameworkCfgProto.router = function() {
     getLogger('aurelia').error(errorMsg);
     return this;
   };
 })(FrameworkConfiguration.prototype);
 
+/**
+ * Bootstrap a new Aurelia instance and start an application
+ * @param {QuickStartOptions} options
+ * @returns {Aurelia} the running Aurelia instance
+ */
+export async function start(options = {}) {
+  const aurelia = new Aurelia();
+  aurelia.use.standardConfiguration();
+  if (options.debug) {
+    aurelia.use.developmentLogging();
+  }
+  if (Array.isArray(options.resources)) {
+    aurelia.use.globalResources(options.resources);
+  }
+  await aurelia.start();
+  await aurelia.setRoot(options.root || 'app.js', options.host || document.body);
+  return aurelia;
+}
+
+/**
+ * Bootstrap a new Aurelia instance and start an application by enhancing a DOM tree
+ * @param {QuickEnhanceOptions} options Configuration for enhancing a DOM tree
+ * @returns {View} the enhanced View by selected options
+ */
+export async function enhance(options = {}) {
+  const aurelia = new Aurelia();
+  aurelia.use.standardConfiguration();
+  if (options.debug) {
+    aurelia.use.developmentLogging();
+  }
+  if (Array.isArray(options.resources)) {
+    aurelia.use.globalResources(options.resources);
+  }
+  await aurelia.start();
+  if (typeof options.root === 'function') {
+    options.root = aurelia.container.get(options.root);
+  }
+  return aurelia.enhance(options.root || {}, options.host || document.body);
+}
+
+/** @typedef QuickStartOptions
+ * @property {string | Function} [root] application root. Either string or a class, which will be instantiated with DI
+ * @property {string | Element} [host] application host, element or a string, which will be used to query the element
+ * @property {Array<string | Function>} [resources] global resources for the application
+ * @property {boolean} [debug] true to use development console logging
+ */
+
+/** @typedef QuickEnhanceOptions
+ * @property {{} | Function} [root] binding context for enhancement, can be either object or a class, which will be instantiated with DI
+ * @property {string | Element} [host] host node of to be enhanced tree
+ * @property {Array<string | Function>} [resources] global resources for the application
+ * @property {boolean} [debug] true to use development console logging
+ */
 
 export * from 'aurelia-framework';
 export { EventAggregator, includeEventsIn } from 'aurelia-event-aggregator';
