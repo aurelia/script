@@ -9,6 +9,10 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
 ## Online Playground with Single file script
   * Codesandbox: https://codesandbox.io/s/wnr6zxv6vl
   * Codepen: https://codepen.io/bigopon/pen/MzGLZe
+  * With Aurelia Store: https://codesandbox.io/s/n3r48qvzjl
+  * With Aurelia UI Virtualization: https://codesandbox.io/s/m781l8oyqj
+  * With Aurelia Dialog: https://codesandbox.io/s/62lmyy16xn
+  * With Aurelia Validation: https://codesandbox.io/s/6y1zzon47r
 
 ## Build
 

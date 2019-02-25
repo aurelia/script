@@ -1,11 +1,11 @@
 import 'aurelia-polyfills';
 import { initialize } from 'aurelia-pal-browser';
 import 'aurelia-loader-esm';
-import { LogManager, FrameworkConfiguration } from 'aurelia-framework';
+import { LogManager, FrameworkConfiguration, Aurelia, View } from 'aurelia-framework';
 import { configure as configureBindingLanguage } from 'aurelia-templating-binding';
 import { configure as configureDefaultResources } from 'aurelia-templating-resources';
 import { configure as configureEventAggregator } from 'aurelia-event-aggregator';
-// import { configure as configureHistory } from 'aurelia-history-browser';
+import { configure as configureHistory } from 'aurelia-history-browser';
 // import { configure as configureRouter } from 'aurelia-templating-router';
 import { ConsoleAppender } from 'aurelia-logging-console';
 import { getLogger } from 'aurelia-logging';
@@ -32,18 +32,21 @@ initialize();
     return this.plugin(configureEventAggregator);
   };
 
-  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
   frameworkCfgProto.history = function() {
-    getLogger('aurelia').error(errorMsg);
-    return this;
+    return this.plugin(configureHistory);
   };
-
+  
+  const errorMsg = 'This bundle does not support router feature. Consider using full bundle';
   frameworkCfgProto.router = function() {
     getLogger('aurelia').error(errorMsg);
     return this;
   };
 })(FrameworkConfiguration.prototype);
 
+export {
+  start,
+  enhance
+} from './index.quick-start';
 
 export * from 'aurelia-framework';
 export { EventAggregator, includeEventsIn } from 'aurelia-event-aggregator';

@@ -1,7 +1,7 @@
 import 'aurelia-polyfills';
 import { initialize } from 'aurelia-pal-browser';
 import 'aurelia-loader-esm';
-import { LogManager, FrameworkConfiguration } from 'aurelia-framework';
+import { LogManager, FrameworkConfiguration, Aurelia } from 'aurelia-framework';
 import { configure as configureBindingLanguage } from 'aurelia-templating-binding';
 import { configure as configureDefaultResources } from 'aurelia-templating-resources';
 import { configure as configureEventAggregator } from 'aurelia-event-aggregator';
@@ -40,6 +40,10 @@ initialize();
   };
 })(FrameworkConfiguration.prototype);
 
+export {
+  start,
+  enhance
+} from './index.quick-start';
 
 export * from 'aurelia-framework';
 export { EventAggregator, includeEventsIn } from 'aurelia-event-aggregator';
