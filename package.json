@@ -27,11 +27,15 @@
     "minify:esm": "terser ./dist/aurelia.esm.js -o ./dist/aurelia.esm.min.js --config-file ./build/terser.config.json",
     "minify:router:umd": "terser ./dist/aurelia_router.umd.js -o ./dist/aurelia_router.umd.min.js --config-file ./build/terser.config.json",
     "minify:router:esm": "terser ./dist/aurelia_router.esm.js -o ./dist/aurelia_router.esm.min.js --config-file ./build/terser.config.json",
+    "minify:no-loader:umd": "terser ./dist/aurelia_no_loader.es5.umd.js -o ./dist/aurelia_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
+    "minify:router:no-loader:umd": "terser ./dist/aurelia_router_no_loader.es5.umd.js -o ./dist/aurelia_router_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
     "bundle": "npm run build:full",
     "postbundle": "npm run minify",
-    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm"
+    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && minify:no-loader:umd && minify:router:no-loader:umd"
   },
   "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "aurelia-binding": "^2.2.0",
     "aurelia-bootstrapper": "^2.1.1",
     "aurelia-dependency-injection": "^1.4.2",
@@ -56,6 +60,7 @@
     "aurelia-templating-resources": "^1.7.2",
     "aurelia-templating-router": "git+https://github.com/aurelia/templating-router.git",
     "rollup": "^1.1.1",
+    "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-replace": "^2.1.0",
