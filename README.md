@@ -6,6 +6,92 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
 
 > To keep up to date on [Aurelia](http://www.aurelia.io/), please visit and subscribe to [the official blog](http://blog.aurelia.io/) and [our email list](http://eepurl.com/ces50j). We also invite you to [follow us on twitter](https://twitter.com/aureliaeffect). If you have questions, please [join our community on Gitter](https://gitter.im/aurelia/discuss) or use [stack overflow](http://stackoverflow.com/search?q=aurelia). Documentation can be found [in our developer hub](http://aurelia.io).
 
+## Getting started with Aurelia Script
+
+### Simple examples
+
+In the good old day, you chuck in a script tag into your html and start writing app. Aurelia Script is a way to help you return to that, with Aurelia. Simply add:
+
+```html
+  <script src='https://unpkg.com/aurelia-script@1.4.0'></script>
+```
+
+into your main html and you are ready to go, like the following:
+
+```html
+	<script>
+    au
+      .start({
+        debug: true,
+        // root: 'app.js', // can be ommitted, default is app.js
+        // host: document.body // can be ommitted, default is document.body
+      })
+      .catch(ex => {
+        document.body.textContent = `Bootstrap error: ${ex}`;
+      })
+	</script>
+```
+
+If you want to enhance a section of your page, which is a typical requirement in CMS environment:
+
+```html
+	<script>
+    au
+      .enhance({
+        host: document.querySelector('.datepicker')
+        // root can be a string, an object or a constructor function
+        // aurelia will automatically instantiate if a function is given
+        root: class DatePickerViewModel {
+          format = 'dd/MM/yyyy'
+        },
+      });
+  </script>
+```
+
+If you want to reuse the same `Aurelia` instance for multiple enhancements, you can do:
+
+```js
+  var aurelia = new au.Aurelia();
+  aurelia.start().then(() => {
+    // here you are ready to enhance or start a new app
+  });
+```
+
+### What is with `au`:
+
+`au` is a global namespace for all exports from Aurelia modules, instead of importing from `aurelia-framework` module. This is because aurelia-script is bundled in UMD module format, to enable simple, old school style usage. For example:
+
+The equivalent of 
+
+```ts
+import { CompositionEngine, ViewCompiler } from 'aurelia-framework';
+```
+
+In Aurelia Script would be:
+```ts
+const { CompositionEngine, ViewCompiler } = au;
+```
+
+### With ESM:
+
+There is another distribution bundle that is in ES module format, which you can think of it as a barrel export version of all Aurelia modules in ESM. For example:
+
+The equivalent of 
+
+```ts
+import { BindingEngine, CompositionEngine, ViewCompiler } from 'aurelia-framework';
+```
+
+In Aurelia Script esm distribution would be:
+
+```ts
+import {
+  BindingEngine,
+  CompositionEngine,
+  ViewCompiler
+} from 'https://unpkg.com/aurelia-script@1.4.0/dist/aurelia.esm.min.js';
+```
+
 ## Online Playground with Single file script
   * Codesandbox: https://codesandbox.io/s/wnr6zxv6vl
   * Codepen: https://codepen.io/bigopon/pen/MzGLZe
@@ -14,7 +100,9 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
   * With Aurelia Dialog: https://codesandbox.io/s/62lmyy16xn
   * With Aurelia Validation: https://codesandbox.io/s/6y1zzon47r
 
-## Build
+## Development
+
+### Build
 
   1. Install the dependencies
 
@@ -31,7 +119,7 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
   npm run bundle
   ```
 
-## Run the example project
+### Run the example project
   1. Go to example folder inside this project
   2. Start a http server
   3. Navigate to `index.html` in browser
