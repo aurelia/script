@@ -23,17 +23,15 @@
   "scripts": {
     "build": "rollup -c ./build/rollup.config.js --environment ROUTER:false",
     "build:full": "rollup -c ./build/rollup.config.js",
-    "minify:no-loader:es5:umd": "terser ./dist/aurelia_no_loader.es5.umd.js -o ./dist/aurelia_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
-    "minify:router:no-loader:es5:umd": "terser ./dist/aurelia_router_no_loader.es5.umd.js -o ./dist/aurelia_router_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
     "minify:umd": "terser ./dist/aurelia.umd.js -o ./dist/aurelia.umd.min.js --config-file ./build/terser.config.json",
     "minify:esm": "terser ./dist/aurelia.esm.js -o ./dist/aurelia.esm.min.js --config-file ./build/terser.config.json",
     "minify:router:umd": "terser ./dist/aurelia_router.umd.js -o ./dist/aurelia_router.umd.min.js --config-file ./build/terser.config.json",
     "minify:router:esm": "terser ./dist/aurelia_router.esm.js -o ./dist/aurelia_router.esm.min.js --config-file ./build/terser.config.json",
-    "minify:no-loader:umd": "terser ./dist/aurelia_no_loader.es5.umd.js -o ./dist/aurelia_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
-    "minify:router:no-loader:umd": "terser ./dist/aurelia_router_no_loader.es5.umd.js -o ./dist/aurelia_router_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
+    "minify:no-loader:es5:umd": "terser ./dist/aurelia_no_loader.es5.umd.js -o ./dist/aurelia_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
+    "minify:router:no-loader:es5:umd": "terser ./dist/aurelia_router_no_loader.es5.umd.js -o ./dist/aurelia_router_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
     "bundle": "npm run build:full",
     "postbundle": "npm run minify",
-    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && minify:no-loader:umd && minify:router:no-loader:umd && minify:no-loader:es5:umd && minify:router:no-loader:es5:umd"
+    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && minify:no-loader:es5:umd && minify:router:no-loader:es5:umd"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
