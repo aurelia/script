@@ -93,7 +93,7 @@ export {
   isNavigationCommand,
   Redirect,
   RedirectToRoute,
-  pipelineStatus,
+  PipelineStatus,
   Pipeline,
   RouterConfiguration,
   activationStrategy,

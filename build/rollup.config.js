@@ -167,4 +167,15 @@ export default [
       })
     ]
   },
-]
+].map(config => {
+  config.plugins.unshift({
+    resolveId(importee) {
+      return importee === 'aurelia-templating-binding'
+        ? './node_modules/aurelia-templating-binding/dist/es2015/aurelia-templating-binding.js'
+        : importee === 'aurelia-route-recognizer'
+          ? './node_modules/aurelia-route-recognizer/dist/es2015/aurelia-route-recognizer.js'
+          : null;
+    }
+  })
+  return config;
+})
