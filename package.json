@@ -31,7 +31,7 @@
     "minify:router:no-loader:es5:umd": "terser ./dist/aurelia_router_no_loader.es5.umd.js -o ./dist/aurelia_router_no_loader.es5.umd.min.js --config-file ./build/terser.es5.config.json",
     "bundle": "npm run build:full",
     "postbundle": "npm run minify",
-    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && minify:no-loader:es5:umd && minify:router:no-loader:es5:umd"
+    "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && npm run minify:no-loader:es5:umd && npm run minify:router:no-loader:es5:umd"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
