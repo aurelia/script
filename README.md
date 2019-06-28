@@ -57,6 +57,10 @@ If you want to reuse the same `Aurelia` instance for multiple enhancements, you 
   });
 ```
 
+### Using aurelia-script with ES5:
+
+For some projects that need to run in ES5, there are 2 dists that can be used: `dist/aurelia_no_loader.es5.umd.js` and `dist/aurelia_router_no_loader.es5.umd.js` (or equivalent minified versions). This is great when you just want to use Aurelia for its templating/binding capabilities (progressive enhancement, sub section of a bigger app for example). As their name suggest, there's no loader bundled with them, but you can easily add a loader to fit your need, in case you need to dynamically load a module. Both Requirejs and SystemJS are compatible with ES5 environments to dynamically load modules at runtime. Just make sure you configure Aurelia modules aliases correctly if those modules happen to have a dependencies on one of Aurelia modules.
+
 ### What is with `au`:
 
 `au` is a global namespace for all exports from Aurelia modules, instead of importing from `aurelia-framework` module. This is because aurelia-script is bundled in UMD module format, to enable simple, old school style usage. For example:
