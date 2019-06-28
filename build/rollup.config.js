@@ -168,13 +168,14 @@ export default [
     ]
   },
 ].map(config => {
+  const es6Mappings = {
+    'aurelia-templating-binding': './node_modules/aurelia-templating-binding/dist/es2015/aurelia-templating-binding.js',
+    'aurelia-route-recognizer': './node_modules/aurelia-route-recognizer/dist/es2015/aurelia-route-recognizer.js',
+    'aurelia-loader': './node_modules/aurelia-loader/dist/es2015/aurelia-loader.js'
+  }
   config.plugins.unshift({
     resolveId(importee) {
-      return importee === 'aurelia-templating-binding'
-        ? './node_modules/aurelia-templating-binding/dist/es2015/aurelia-templating-binding.js'
-        : importee === 'aurelia-route-recognizer'
-          ? './node_modules/aurelia-route-recognizer/dist/es2015/aurelia-route-recognizer.js'
-          : null;
+      return es6Mappings[importee] || null;
     }
   });
   config.onwarn = function(warning, warn) {
