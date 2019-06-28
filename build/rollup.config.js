@@ -176,6 +176,14 @@ export default [
           ? './node_modules/aurelia-route-recognizer/dist/es2015/aurelia-route-recognizer.js'
           : null;
     }
-  })
+  });
+  config.onwarn = function(warning, warn) {
+    // skip certain warnings
+    if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
+  
+    if (warning.code === 'NON_EXISTENT_EXPORT') return;
+
+    throw new Error(warning.message);
+  };
   return config;
 })

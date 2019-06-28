@@ -34,8 +34,8 @@
     "minify": "npm run minify:esm && npm run minify:umd && npm run minify:router:umd && npm run minify:router:esm && npm run minify:no-loader:es5:umd && npm run minify:router:no-loader:es5:umd"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/preset-env": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
     "aurelia-binding": "^2.2.0",
     "aurelia-bootstrapper": "^2.1.1",
     "aurelia-dependency-injection": "^1.4.2",
@@ -59,11 +59,11 @@
     "aurelia-templating-binding": "^1.5.3",
     "aurelia-templating-resources": "^1.7.2",
     "aurelia-templating-router": "^1.4.0",
-    "rollup": "^1.1.1",
-    "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-replace": "^2.1.0",
+    "rollup": "^1.16.2",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-node-resolve": "^5.1.0",
+    "rollup-plugin-replace": "^2.2.0",
     "terser": "^3.10.0"
   }
 }
