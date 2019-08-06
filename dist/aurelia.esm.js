@@ -90,12 +90,12 @@ if (!String.prototype.endsWith || function () {
   }
 }()) {
   String.prototype.endsWith = function (searchString, position) {
-    let subjectString = this.toString();
+    var subjectString = this.toString();
     if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
       position = subjectString.length;
     }
     position -= searchString.length;
-    let lastIndex = subjectString.indexOf(searchString, position);
+    var lastIndex = subjectString.indexOf(searchString, position);
     return lastIndex !== -1 && lastIndex === position;
   };
 }
@@ -115,8 +115,8 @@ if (!String.prototype.startsWith || function () {
 
 {
 
-  const emptyMetadata = Object.freeze({});
-  const metadataContainerKey = '__metadata__';
+  var emptyMetadata = Object.freeze({});
+  var metadataContainerKey = '__metadata__';
 
   if (typeof Reflect.getOwnMetadata !== 'function') {
     Reflect.getOwnMetadata = function (metadataKey, target, targetKey) {
@@ -128,8 +128,8 @@ if (!String.prototype.startsWith || function () {
 
   if (typeof Reflect.defineMetadata !== 'function') {
     Reflect.defineMetadata = function (metadataKey, metadataValue, target, targetKey) {
-      let metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
-      let targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
+      var metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
+      var targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
       targetContainer[metadataKey] = metadataValue;
     };
   }
@@ -582,9 +582,11 @@ protocol.create = function (name, options) {
   return result;
 };
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 function trimDots(ary) {
-  for (let i = 0; i < ary.length; ++i) {
-    let part = ary[i];
+  for (var i = 0; i < ary.length; ++i) {
+    var part = ary[i];
     if (part === '.') {
       ary.splice(i, 1);
       i -= 1;
@@ -600,12 +602,12 @@ function trimDots(ary) {
 }
 
 function relativeToFile(name, file) {
-  let fileParts = file && file.split('/');
-  let nameParts = name.trim().split('/');
+  var fileParts = file && file.split('/');
+  var nameParts = name.trim().split('/');
 
   if (nameParts[0].charAt(0) === '.' && fileParts) {
-    let normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
-    nameParts.unshift(...normalizedBaseParts);
+    var normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
+    nameParts.unshift.apply(nameParts, normalizedBaseParts);
   }
 
   trimDots(nameParts);
@@ -622,11 +624,11 @@ function join(path1, path2) {
     return path1;
   }
 
-  let schemeMatch = path1.match(/^([^/]*?:)\//);
-  let scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
+  var schemeMatch = path1.match(/^([^/]*?:)\//);
+  var scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
   path1 = path1.substr(scheme.length);
 
-  let urlPrefix;
+  var urlPrefix = void 0;
   if (path1.indexOf('///') === 0 && scheme === 'file:') {
     urlPrefix = '///';
   } else if (path1.indexOf('//') === 0) {
@@ -637,13 +639,13 @@ function join(path1, path2) {
     urlPrefix = '';
   }
 
-  let trailingSlash = path2.slice(-1) === '/' ? '/' : '';
+  var trailingSlash = path2.slice(-1) === '/' ? '/' : '';
 
-  let url1 = path1.split('/');
-  let url2 = path2.split('/');
-  let url3 = [];
+  var url1 = path1.split('/');
+  var url2 = path2.split('/');
+  var url3 = [];
 
-  for (let i = 0, ii = url1.length; i < ii; ++i) {
+  for (var i = 0, ii = url1.length; i < ii; ++i) {
     if (url1[i] === '..') {
       url3.pop();
     } else if (url1[i] === '.' || url1[i] === '') {
@@ -653,51 +655,53 @@ function join(path1, path2) {
     }
   }
 
-  for (let i = 0, ii = url2.length; i < ii; ++i) {
-    if (url2[i] === '..') {
+  for (var _i = 0, _ii = url2.length; _i < _ii; ++_i) {
+    if (url2[_i] === '..') {
       url3.pop();
-    } else if (url2[i] === '.' || url2[i] === '') {
+    } else if (url2[_i] === '.' || url2[_i] === '') {
       continue;
     } else {
-      url3.push(url2[i]);
+      url3.push(url2[_i]);
     }
   }
 
   return scheme + urlPrefix + url3.join('/') + trailingSlash;
 }
 
-let encode = encodeURIComponent;
-let encodeKey = k => encode(k).replace('%24', '$');
+var encode = encodeURIComponent;
+var encodeKey = function encodeKey(k) {
+  return encode(k).replace('%24', '$');
+};
 
 function buildParam(key, value, traditional) {
-  let result = [];
+  var result = [];
   if (value === null || value === undefined) {
     return result;
   }
   if (Array.isArray(value)) {
-    for (let i = 0, l = value.length; i < l; i++) {
+    for (var i = 0, l = value.length; i < l; i++) {
       if (traditional) {
-        result.push(`${encodeKey(key)}=${encode(value[i])}`);
+        result.push(encodeKey(key) + '=' + encode(value[i]));
       } else {
-        let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
+        var arrayKey = key + '[' + (_typeof(value[i]) === 'object' && value[i] !== null ? i : '') + ']';
         result = result.concat(buildParam(arrayKey, value[i]));
       }
     }
-  } else if (typeof value === 'object' && !traditional) {
-    for (let propertyName in value) {
+  } else if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' && !traditional) {
+    for (var propertyName in value) {
       result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
     }
   } else {
-    result.push(`${encodeKey(key)}=${encode(value)}`);
+    result.push(encodeKey(key) + '=' + encode(value));
   }
   return result;
 }
 
 function buildQueryString(params, traditional) {
-  let pairs = [];
-  let keys = Object.keys(params || {}).sort();
-  for (let i = 0, len = keys.length; i < len; i++) {
-    let key = keys[i];
+  var pairs = [];
+  var keys = Object.keys(params || {}).sort();
+  for (var i = 0, len = keys.length; i < len; i++) {
+    var key = keys[i];
     pairs = pairs.concat(buildParam(key, params[key], traditional));
   }
 
@@ -721,12 +725,12 @@ function processScalarParam(existedParam, value) {
 }
 
 function parseComplexParam(queryParams, keys, value) {
-  let currentParams = queryParams;
-  let keysLastIndex = keys.length - 1;
-  for (let j = 0; j <= keysLastIndex; j++) {
-    let key = keys[j] === '' ? currentParams.length : keys[j];
+  var currentParams = queryParams;
+  var keysLastIndex = keys.length - 1;
+  for (var j = 0; j <= keysLastIndex; j++) {
+    var key = keys[j] === '' ? currentParams.length : keys[j];
     if (j < keysLastIndex) {
-      let prevValue = !currentParams[key] || typeof currentParams[key] === 'object' ? currentParams[key] : [currentParams[key]];
+      var prevValue = !currentParams[key] || _typeof(currentParams[key]) === 'object' ? currentParams[key] : [currentParams[key]];
       currentParams = currentParams[key] = prevValue || (isNaN(keys[j + 1]) ? {} : []);
     } else {
       currentParams = currentParams[key] = value;
@@ -735,26 +739,26 @@ function parseComplexParam(queryParams, keys, value) {
 }
 
 function parseQueryString(queryString) {
-  let queryParams = {};
+  var queryParams = {};
   if (!queryString || typeof queryString !== 'string') {
     return queryParams;
   }
 
-  let query = queryString;
+  var query = queryString;
   if (query.charAt(0) === '?') {
     query = query.substr(1);
   }
 
-  let pairs = query.replace(/\+/g, ' ').split('&');
-  for (let i = 0; i < pairs.length; i++) {
-    let pair = pairs[i].split('=');
-    let key = decodeURIComponent(pair[0]);
+  var pairs = query.replace(/\+/g, ' ').split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i].split('=');
+    var key = decodeURIComponent(pair[0]);
     if (!key) {
       continue;
     }
 
-    let keys = key.split('][');
-    let keysLastIndex = keys.length - 1;
+    var keys = key.split('][');
+    var keysLastIndex = keys.length - 1;
 
     if (/\[/.test(keys[0]) && /\]$/.test(keys[keysLastIndex])) {
       keys[keysLastIndex] = keys[keysLastIndex].replace(/\]$/, '');
@@ -765,7 +769,7 @@ function parseQueryString(queryString) {
     }
 
     if (pair.length >= 2) {
-      let value = pair[1] ? decodeURIComponent(pair[1]) : '';
+      var value = pair[1] ? decodeURIComponent(pair[1]) : '';
       if (keysLastIndex) {
         parseComplexParam(queryParams, keys, value);
       } else {
@@ -820,7 +824,7 @@ let TemplateRegistryEntry = class TemplateRegistryEntry {
       src = current.getAttribute('from');
 
       if (!src) {
-        throw new Error(`<require> element in ${ address } has no "from" attribute.`);
+        throw new Error(`<require> element in ${address} has no "from" attribute.`);
       }
 
       dependencies[i] = new TemplateDependency(relativeToFile(src, address), current.getAttribute('as'));
@@ -3168,7 +3172,7 @@ let Expression = class Expression {
   }
 
   toString() {
-    return super.toString();
+    return  super.toString();
   }
 };
 
@@ -7654,10 +7658,10 @@ let StaticViewStrategy = (_dec6$2 = viewStrategy(), _dec6$2(_class7$2 = class St
       }
 
       return Promise.all(elDeps.map(el => el.load(container, el.target))).then(() => {
-        const factory$$1 = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
+        const factory = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
         this.factoryIsReady = true;
-        this.factory = factory$$1;
-        return factory$$1;
+        this.factory = factory;
+        return factory;
       });
     });
   }
@@ -7918,9 +7922,9 @@ let ShadowSlot = class ShadowSlot {
       node.auAssignedSlot = this;
 
       let anchor = this._findAnchor(view, node, projectionSource, index);
-      let parent$$1 = anchor.parentNode;
+      let parent = anchor.parentNode;
 
-      parent$$1.insertBefore(node, anchor);
+      parent.insertBefore(node, anchor);
       this.children.push(node);
       this.projections++;
     }
@@ -8017,11 +8021,11 @@ let ShadowSlot = class ShadowSlot {
 
   projectFrom(view, projectionSource) {
     let anchor = DOM.createComment('anchor');
-    let parent$$1 = this.anchor.parentNode;
+    let parent = this.anchor.parentNode;
     anchor.auSlotProjectFrom = projectionSource;
     anchor.auOwnerView = view;
     anchor.auProjectionChildren = [];
-    parent$$1.insertBefore(anchor, this.anchor);
+    parent.insertBefore(anchor, this.anchor);
     this.children.push(anchor);
 
     if (this.projectFromAnchors === null) {
@@ -8294,10 +8298,10 @@ let ViewResources = class ViewResources {
     return resource;
   }
 
-  constructor(parent$$1, viewUrl) {
+  constructor(parent, viewUrl) {
     this.bindingLanguage = null;
 
-    this.parent = parent$$1 || null;
+    this.parent = parent || null;
     this.hasParent = this.parent !== null;
     this.viewUrl = viewUrl || '';
     this.lookupFunctions = {
@@ -8405,16 +8409,16 @@ let ViewResources = class ViewResources {
     return this.attributes[attribute] || (this.hasParent ? this.parent.getAttribute(attribute) : null);
   }
 
-  registerValueConverter(name, valueConverter$$1) {
-    register(this.valueConverters, name, valueConverter$$1, 'a ValueConverter');
+  registerValueConverter(name, valueConverter) {
+    register(this.valueConverters, name, valueConverter, 'a ValueConverter');
   }
 
   getValueConverter(name) {
     return this.valueConverters[name] || (this.hasParent ? this.parent.getValueConverter(name) : null);
   }
 
-  registerBindingBehavior(name, bindingBehavior$$1) {
-    register(this.bindingBehaviors, name, bindingBehavior$$1, 'a BindingBehavior');
+  registerBindingBehavior(name, bindingBehavior) {
+    register(this.bindingBehaviors, name, bindingBehavior, 'a BindingBehavior');
   }
 
   getBindingBehavior(name) {
@@ -8597,8 +8601,8 @@ let View = class View {
     refNode.parentNode.insertBefore(this.fragment, refNode);
   }
 
-  appendNodesTo(parent$$1) {
-    parent$$1.appendChild(this.fragment);
+  appendNodesTo(parent) {
+    parent.appendChild(this.fragment);
   }
 
   removeNodes() {
@@ -8721,18 +8725,18 @@ let ViewSlot = class ViewSlot {
   }
 
   transformChildNodesIntoView() {
-    let parent$$1 = this.anchor;
+    let parent = this.anchor;
 
     this.children.push({
-      fragment: parent$$1,
-      firstChild: parent$$1.firstChild,
-      lastChild: parent$$1.lastChild,
+      fragment: parent,
+      firstChild: parent.firstChild,
+      lastChild: parent.lastChild,
       returnToCache() {},
       removeNodes() {
         let last;
 
-        while (last = parent$$1.lastChild) {
-          parent$$1.removeChild(last);
+        while (last = parent.lastChild) {
+          parent.removeChild(last);
         }
       },
       created() {},
@@ -9108,14 +9112,14 @@ function elementContainerGet(key) {
       return this.boundViewFactory;
     }
 
-    let factory$$1 = this.instruction.viewFactory;
+    let factory = this.instruction.viewFactory;
     let partReplacements = this.partReplacements;
 
     if (partReplacements) {
-      factory$$1 = partReplacements[factory$$1.part] || factory$$1;
+      factory = partReplacements[factory.part] || factory;
     }
 
-    this.boundViewFactory = new BoundViewFactory(this, factory$$1, partReplacements);
+    this.boundViewFactory = new BoundViewFactory(this, factory, partReplacements);
     return this.boundViewFactory;
   }
 
@@ -9148,8 +9152,8 @@ function elementContainerGet(key) {
   return this.superGet(key);
 }
 
-function createElementContainer(parent$$1, element, instruction, children, partReplacements, resources) {
-  let container = parent$$1.createChild();
+function createElementContainer(parent, element, instruction, children, partReplacements, resources) {
+  let container = parent.createChild();
   let providers;
   let i;
 
@@ -9571,18 +9575,18 @@ let ViewCompiler = (_dec7$2 = inject(BindingLanguage, ViewResources), _dec7$2(_c
       }
     }
 
-    let factory$$1 = new ViewFactory(content, instructions, resources);
+    let factory = new ViewFactory(content, instructions, resources);
 
-    factory$$1.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
-    factory$$1.part = part;
+    factory.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
+    factory.part = part;
 
     if (cacheSize) {
-      factory$$1.setCacheSize(cacheSize);
+      factory.setCacheSize(cacheSize);
     }
 
-    resources._invokeHook('afterCompile', factory$$1);
+    resources._invokeHook('afterCompile', factory);
 
-    return factory$$1;
+    return factory;
   }
 
   _compileNode(node, resources, instructions, parentNode, parentInjectorId, targetLightDOM) {
@@ -11203,7 +11207,7 @@ let HtmlBehaviorResource = class HtmlBehaviorResource {
   }
 };
 
-function createChildObserverDecorator(selectorOrConfig, all$$1) {
+function createChildObserverDecorator(selectorOrConfig, all) {
   return function (target, key, descriptor) {
     let actualTarget = typeof key === 'string' ? target.constructor : target;
     let r = metadata.getOrCreateOwn(metadata.resource, HtmlBehaviorResource, actualTarget);
@@ -11220,7 +11224,7 @@ function createChildObserverDecorator(selectorOrConfig, all$$1) {
       descriptor.configurable = true;
     }
 
-    selectorOrConfig.all = all$$1;
+    selectorOrConfig.all = all;
     r.addChildBinding(new ChildObserver(selectorOrConfig));
   };
 }
@@ -11303,7 +11307,7 @@ function onChildChange(mutations, observer) {
 }
 
 let ChildObserverBinder = class ChildObserverBinder {
-  constructor(selector, viewHost, property, viewModel, controller, changeHandler, all$$1) {
+  constructor(selector, viewHost, property, viewModel, controller, changeHandler, all) {
     this.selector = selector;
     this.viewHost = viewHost;
     this.property = property;
@@ -11311,7 +11315,7 @@ let ChildObserverBinder = class ChildObserverBinder {
     this.controller = controller;
     this.changeHandler = changeHandler in viewModel ? changeHandler : null;
     this.usesShadowDOM = controller.behavior.usesShadowDOM;
-    this.all = all$$1;
+    this.all = all;
 
     if (!this.usesShadowDOM && controller.view && controller.view.contentView) {
       this.contentView = controller.view.contentView;
@@ -11876,9 +11880,9 @@ let TemplatingEngine = (_dec11 = inject(Container, ModuleAnalyzer, ViewCompiler,
 
     this._viewCompiler._compileNode(instruction.element, resources, compilerInstructions, instruction.element.parentNode, 'root', true);
 
-    let factory$$1 = new ViewFactory(instruction.element, compilerInstructions, resources);
+    let factory = new ViewFactory(instruction.element, compilerInstructions, resources);
     let container = instruction.container || this._container.createChild();
-    let view = factory$$1.create(container, BehaviorInstruction.enhance());
+    let view = factory.create(container, BehaviorInstruction.enhance());
 
     view.bind(instruction.bindingContext || {}, instruction.overrideContext);
 
@@ -12213,25 +12217,25 @@ let FrameworkConfiguration = class FrameworkConfiguration {
     assertProcessed(this);
 
     let toAdd = Array.isArray(resources) ? resources : arguments;
-    let resource$$1;
+    let resource;
     let resourcesRelativeTo = this.resourcesRelativeTo || ['', ''];
 
     for (let i = 0, ii = toAdd.length; i < ii; ++i) {
-      resource$$1 = toAdd[i];
-      switch (typeof resource$$1) {
+      resource = toAdd[i];
+      switch (typeof resource) {
         case 'string':
-          let parent$$1 = resourcesRelativeTo[0];
+          let parent = resourcesRelativeTo[0];
           let grandParent = resourcesRelativeTo[1];
-          let name = resource$$1;
+          let name = resource;
 
-          if ((resource$$1.startsWith('./') || resource$$1.startsWith('../')) && parent$$1 !== '') {
-            name = join(parent$$1, resource$$1);
+          if ((resource.startsWith('./') || resource.startsWith('../')) && parent !== '') {
+            name = join(parent, resource);
           }
 
           this.resourcesToLoad[name] = { moduleId: name, relativeTo: grandParent };
           break;
         case 'function':
-          let meta = this.aurelia.resources.autoRegister(this.container, resource$$1);
+          let meta = this.aurelia.resources.autoRegister(this.container, resource);
           if (meta instanceof HtmlBehaviorResource && meta.elementName !== null) {
             if (this.behaviorsToLoad.push(meta) === 1) {
               this.postTask(() => loadBehaviors(this));
@@ -12239,7 +12243,7 @@ let FrameworkConfiguration = class FrameworkConfiguration {
           }
           break;
         default:
-          throw new Error(invalidConfigMsg(resource$$1, 'resource'));
+          throw new Error(invalidConfigMsg(resource, 'resource'));
       }
     }
 
@@ -12313,17 +12317,17 @@ let FrameworkConfiguration = class FrameworkConfiguration {
   }
 
   developmentLogging(level) {
-    let logLevel$$1 = level ? logLevel[level] : undefined;
+    let logLevel$1 = level ? logLevel[level] : undefined;
 
-    if (logLevel$$1 === undefined) {
-      logLevel$$1 = logLevel.debug;
+    if (logLevel$1 === undefined) {
+      logLevel$1 = logLevel.debug;
     }
 
     this.preTask(() => {
       return this.aurelia.loader.normalize('aurelia-logging-console', this.bootstrapperName).then(name => {
         return this.aurelia.loader.loadModule(name).then(m => {
           addAppender(new m.ConsoleAppender());
-          setLevel(logLevel$$1);
+          setLevel(logLevel$1);
         });
       });
     });
@@ -12483,9 +12487,9 @@ let InterpolationBinding = class InterpolationBinding {
 
   updateOneTimeBindings() {
     for (let i = 1, ii = this.parts.length; i < ii; i += 2) {
-      let child$$1 = this[`childBinding${i}`];
-      if (child$$1.mode === bindingMode.oneTime) {
-        child$$1.call();
+      let child = this[`childBinding${i}`];
+      if (child.mode === bindingMode.oneTime) {
+        child.call();
       }
     }
   }
@@ -13215,7 +13219,7 @@ let Compose = (_dec$4 = customElement('compose'), _dec$4(_class$4 = noView(_clas
     return [DOM.Element, Container, CompositionEngine, ViewSlot, ViewResources, TaskQueue];
   }
 
-  constructor(element, container, compositionEngine, viewSlot, viewResources$$1, taskQueue) {
+  constructor(element, container, compositionEngine, viewSlot, viewResources, taskQueue) {
     _initDefineProp(this, 'model', _descriptor, this);
 
     _initDefineProp(this, 'view', _descriptor2, this);
@@ -13228,7 +13232,7 @@ let Compose = (_dec$4 = customElement('compose'), _dec$4(_class$4 = noView(_clas
     this.container = container;
     this.compositionEngine = compositionEngine;
     this.viewSlot = viewSlot;
-    this.viewResources = viewResources$$1;
+    this.viewResources = viewResources;
     this.taskQueue = taskQueue;
     this.currentController = null;
     this.currentViewModel = null;
@@ -14315,7 +14319,7 @@ function _applyDecoratedDescriptor$2(target, property, decorators, descriptor, c
 }
 
 let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, RepeatStrategyLocator), _dec$8(_class$8 = templateController(_class$8 = _dec2$7(_class$8 = (_class2$6 = class Repeat extends AbstractRepeater {
-  constructor(viewFactory, instruction, viewSlot, viewResources$$1, observerLocator, strategyLocator) {
+  constructor(viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -14332,7 +14336,7 @@ let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFact
     this.viewFactory = viewFactory;
     this.instruction = instruction;
     this.viewSlot = viewSlot;
-    this.lookupFunctions = viewResources$$1.lookupFunctions;
+    this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.key = 'key';
     this.value = 'value';
@@ -14488,15 +14492,15 @@ let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFact
   }
 
   addView(bindingContext, overrideContext) {
-    let view$$1 = this.viewFactory.create();
-    view$$1.bind(bindingContext, overrideContext);
-    this.viewSlot.add(view$$1);
+    let view = this.viewFactory.create();
+    view.bind(bindingContext, overrideContext);
+    this.viewSlot.add(view);
   }
 
   insertView(index, bindingContext, overrideContext) {
-    let view$$1 = this.viewFactory.create();
-    view$$1.bind(bindingContext, overrideContext);
-    this.viewSlot.insert(index, view$$1);
+    let view = this.viewFactory.create();
+    view.bind(bindingContext, overrideContext);
+    this.viewSlot.insert(index, view);
   }
 
   moveView(sourceIndex, targetIndex) {
@@ -14515,16 +14519,16 @@ let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFact
     return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
   }
 
-  updateBindings(view$$1) {
-    let j = view$$1.bindings.length;
+  updateBindings(view) {
+    let j = view.bindings.length;
     while (j--) {
-      updateOneTimeBinding(view$$1.bindings[j]);
+      updateOneTimeBinding(view.bindings[j]);
     }
-    j = view$$1.controllers.length;
+    j = view.controllers.length;
     while (j--) {
-      let k = view$$1.controllers[j].boundProperties.length;
+      let k = view.controllers[j].boundProperties.length;
       while (k--) {
-        let binding = view$$1.controllers[j].boundProperties[k].binding;
+        let binding = view.controllers[j].boundProperties[k].binding;
         updateOneTimeBinding(binding);
       }
     }
@@ -15121,17 +15125,17 @@ function configure$1(config) {
   viewEngine.addResourcePlugin('.html', {
     'fetch': function (address) {
       return loader.loadTemplate(address).then(registryEntry => {
-        let bindable$$1 = registryEntry.template.getAttribute('bindable');
+        let bindable = registryEntry.template.getAttribute('bindable');
         let elementName = getElementName(address);
 
-        if (bindable$$1) {
-          bindable$$1 = bindable$$1.split(',').map(x => x.trim());
+        if (bindable) {
+          bindable = bindable.split(',').map(x => x.trim());
           registryEntry.template.removeAttribute('bindable');
         } else {
-          bindable$$1 = [];
+          bindable = [];
         }
 
-        return { [elementName]: _createDynamicElement(elementName, address, bindable$$1) };
+        return { [elementName]: _createDynamicElement(elementName, address, bindable) };
       });
     }
   });
@@ -15403,4 +15407,4 @@ initialize();
   };
 })(FrameworkConfiguration.prototype);
 
-export { start, enhance, EventAggregator, includeEventsIn, If, Else, Repeat, Compose, Show, Hide, Focus, With, Replaceable, AbstractRepeater, ArrayRepeatStrategy, AttrBindingBehavior, BindingSignaler, DebounceBindingBehavior, FromViewBindingBehavior, HTMLSanitizer, MapRepeatStrategy, NullRepeatStrategy, NumberRepeatStrategy, OneTimeBindingBehavior, OneWayBindingBehavior, RepeatStrategyLocator, SanitizeHTMLValueConverter, SelfBindingBehavior, SetRepeatStrategy, SignalBindingBehavior, ThrottleBindingBehavior, ToViewBindingBehavior, TwoWayBindingBehavior, UpdateTriggerBindingBehavior, createFullOverrideContext, updateOneTimeBinding, updateOverrideContext, isOneTime, viewsRequireLifecycle, unwrapExpression, getItemsSourceExpression, Aurelia, FrameworkConfiguration, LogManager, resolver, StrategyResolver, Lazy, All, Optional, Parent, Factory, NewInstance, getDecoratorDependencies, lazy, all, optional, parent, factory, newInstance, invoker, invokeAsFactory, FactoryInvoker, registration, transient, singleton, TransientRegistration, SingletonRegistration, _emptyParameters, InvocationHandler, Container, autoinject, inject, targetContext, sourceContext, camelCase, createOverrideContext, getContextFor, createScopeForTest, connectable, enqueueBindingConnect, setConnectQueueThreshold, enableConnectQueue, disableConnectQueue, getConnectQueueSize, subscriberCollection, ExpressionObserver, calcSplices, mergeSplice, projectArraySplices, getChangeRecords, ModifyCollectionObserver, CollectionLengthObserver, getArrayObserver, Expression, BindingBehavior, ValueConverter, Assign, Conditional, AccessThis, AccessScope, AccessMember, AccessKeyed, CallScope, CallMember, CallFunction, Binary, Unary, LiteralPrimitive, LiteralString, LiteralTemplate, LiteralArray, LiteralObject, Unparser, ExpressionCloner, cloneExpression, bindingMode, Parser, ParserImplementation, getMapObserver, delegationStrategy, EventManager, EventSubscriber, DirtyChecker, DirtyCheckProperty, propertyAccessor, PrimitiveObserver, SetterObserver, XLinkAttributeObserver, dataAttributeAccessor, DataAttributeObserver, StyleObserver, ValueAttributeObserver, CheckedObserver, SelectValueObserver, ClassObserver, hasDeclaredDependencies, declarePropertyDependencies, computedFrom, ComputedExpression, createComputedObserver, elements, presentationElements, presentationAttributes, SVGAnalyzer, ObserverLocator, ObjectObservationAdapter, BindingExpression, Binding, CallExpression, Call, ValueConverterResource, valueConverter, BindingBehaviorResource, bindingBehavior, ListenerExpression, Listener, NameExpression, BindingEngine, getSetObserver, observable, connectBindingToSignal, signalBindings, metadata, Origin, decorators, deprecated, mixin, protocol, animationEvent, Animator, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, CompositionTransaction, _hyphenate, _isAllWhitespace, ViewEngineHooksResource, viewEngineHooks, ElementEvents, ResourceLoadContext, ViewCompileInstruction, BehaviorInstruction, TargetInstruction, viewStrategy, RelativeViewStrategy, ConventionalViewStrategy, NoViewStrategy, TemplateRegistryViewStrategy, InlineViewStrategy, StaticViewStrategy, ViewLocator, BindingLanguage, SlotCustomAttribute, PassThroughSlot, ShadowSlot, ShadowDOM, validateBehaviorName, ViewResources, View, ViewSlot, BoundViewFactory, ViewFactory, ViewCompiler, ResourceModule, ResourceDescription, ModuleAnalyzer, ViewEngine, Controller, BehaviorPropertyObserver, BindableProperty, HtmlBehaviorResource, children, child, SwapStrategies, CompositionEngine, ElementConfigResource, resource, behavior, customElement, customAttribute, templateController, bindable, dynamicOptions, useShadowDOM, processAttributes, processContent, containerless, useViewStrategy, useView, inlineView, noView, view, elementConfig, viewResources, TemplatingEngine, TemplateDependency, TemplateRegistryEntry, Loader, TaskQueue, relativeToFile, join, buildQueryString, parseQueryString, AggregateError, FEATURE, PLATFORM, DOM, isInitialized, initializePAL, reset };
+export { AbstractRepeater, AccessKeyed, AccessMember, AccessScope, AccessThis, AggregateError, All, Animator, ArrayRepeatStrategy, Assign, AttrBindingBehavior, Aurelia, BehaviorInstruction, BehaviorPropertyObserver, Binary, BindableProperty, Binding, BindingBehavior, BindingBehaviorResource, BindingEngine, BindingExpression, BindingLanguage, BindingSignaler, BoundViewFactory, Call, CallExpression, CallFunction, CallMember, CallScope, CheckedObserver, ClassObserver, CollectionLengthObserver, Compose, CompositionEngine, CompositionTransaction, CompositionTransactionNotifier, CompositionTransactionOwnershipToken, ComputedExpression, Conditional, Container, Controller, ConventionalViewStrategy, DOM, DataAttributeObserver, DebounceBindingBehavior, DirtyCheckProperty, DirtyChecker, ElementConfigResource, ElementEvents, Else, EventAggregator, EventManager, EventSubscriber, Expression, ExpressionCloner, ExpressionObserver, FEATURE, Factory, FactoryInvoker, Focus, FrameworkConfiguration, FromViewBindingBehavior, HTMLSanitizer, Hide, HtmlBehaviorResource, If, InlineViewStrategy, InvocationHandler, Lazy, Listener, ListenerExpression, LiteralArray, LiteralObject, LiteralPrimitive, LiteralString, LiteralTemplate, Loader, LogManager, MapRepeatStrategy, ModifyCollectionObserver, ModuleAnalyzer, NameExpression, NewInstance, NoViewStrategy, NullRepeatStrategy, NumberRepeatStrategy, ObjectObservationAdapter, ObserverLocator, OneTimeBindingBehavior, OneWayBindingBehavior, Optional, Origin, PLATFORM, Parent, Parser, ParserImplementation, PassThroughSlot, PrimitiveObserver, RelativeViewStrategy, Repeat, RepeatStrategyLocator, Replaceable, ResourceDescription, ResourceLoadContext, ResourceModule, SVGAnalyzer, SanitizeHTMLValueConverter, SelectValueObserver, SelfBindingBehavior, SetRepeatStrategy, SetterObserver, ShadowDOM, ShadowSlot, Show, SignalBindingBehavior, SingletonRegistration, SlotCustomAttribute, StaticViewStrategy, StrategyResolver, StyleObserver, SwapStrategies, TargetInstruction, TaskQueue, TemplateDependency, TemplateRegistryEntry, TemplateRegistryViewStrategy, TemplatingEngine, ThrottleBindingBehavior, ToViewBindingBehavior, TransientRegistration, TwoWayBindingBehavior, Unary, Unparser, UpdateTriggerBindingBehavior, ValueAttributeObserver, ValueConverter, ValueConverterResource, View, ViewCompileInstruction, ViewCompiler, ViewEngine, ViewEngineHooksResource, ViewFactory, ViewLocator, ViewResources, ViewSlot, With, XLinkAttributeObserver, _emptyParameters, _hyphenate, _isAllWhitespace, all, animationEvent, autoinject, behavior, bindable, bindingBehavior, bindingMode, buildQueryString, calcSplices, camelCase, child, children, cloneExpression, computedFrom, connectBindingToSignal, connectable, containerless, createComputedObserver, createFullOverrideContext, createOverrideContext, createScopeForTest, customAttribute, customElement, dataAttributeAccessor, declarePropertyDependencies, decorators, delegationStrategy, deprecated, disableConnectQueue, dynamicOptions, elementConfig, elements, enableConnectQueue, enhance, enqueueBindingConnect, factory, getArrayObserver, getChangeRecords, getConnectQueueSize, getContextFor, getDecoratorDependencies, getItemsSourceExpression, getMapObserver, getSetObserver, hasDeclaredDependencies, includeEventsIn, initializePAL, inject, inlineView, invokeAsFactory, invoker, isInitialized, isOneTime, join, lazy, mergeSplice, metadata, mixin, newInstance, noView, observable, optional, parent, parseQueryString, presentationAttributes, presentationElements, processAttributes, processContent, projectArraySplices, propertyAccessor, protocol, registration, relativeToFile, reset, resolver, resource, setConnectQueueThreshold, signalBindings, singleton, sourceContext, start, subscriberCollection, targetContext, templateController, transient, unwrapExpression, updateOneTimeBinding, updateOverrideContext, useShadowDOM, useView, useViewStrategy, validateBehaviorName, valueConverter, view, viewEngineHooks, viewResources, viewStrategy, viewsRequireLifecycle };

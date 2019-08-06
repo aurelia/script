@@ -96,12 +96,12 @@
     }
   }()) {
     String.prototype.endsWith = function (searchString, position) {
-      let subjectString = this.toString();
+      var subjectString = this.toString();
       if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
         position = subjectString.length;
       }
       position -= searchString.length;
-      let lastIndex = subjectString.indexOf(searchString, position);
+      var lastIndex = subjectString.indexOf(searchString, position);
       return lastIndex !== -1 && lastIndex === position;
     };
   }
@@ -121,8 +121,8 @@
 
   {
 
-    const emptyMetadata = Object.freeze({});
-    const metadataContainerKey = '__metadata__';
+    var emptyMetadata = Object.freeze({});
+    var metadataContainerKey = '__metadata__';
 
     if (typeof Reflect.getOwnMetadata !== 'function') {
       Reflect.getOwnMetadata = function (metadataKey, target, targetKey) {
@@ -134,8 +134,8 @@
 
     if (typeof Reflect.defineMetadata !== 'function') {
       Reflect.defineMetadata = function (metadataKey, metadataValue, target, targetKey) {
-        let metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
-        let targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
+        var metadataContainer = target.hasOwnProperty(metadataContainerKey) ? target[metadataContainerKey] : target[metadataContainerKey] = {};
+        var targetContainer = metadataContainer[targetKey] || (metadataContainer[targetKey] = {});
         targetContainer[metadataKey] = metadataValue;
       };
     }
@@ -588,9 +588,11 @@
     return result;
   };
 
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
   function trimDots(ary) {
-    for (let i = 0; i < ary.length; ++i) {
-      let part = ary[i];
+    for (var i = 0; i < ary.length; ++i) {
+      var part = ary[i];
       if (part === '.') {
         ary.splice(i, 1);
         i -= 1;
@@ -606,12 +608,12 @@
   }
 
   function relativeToFile(name, file) {
-    let fileParts = file && file.split('/');
-    let nameParts = name.trim().split('/');
+    var fileParts = file && file.split('/');
+    var nameParts = name.trim().split('/');
 
     if (nameParts[0].charAt(0) === '.' && fileParts) {
-      let normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
-      nameParts.unshift(...normalizedBaseParts);
+      var normalizedBaseParts = fileParts.slice(0, fileParts.length - 1);
+      nameParts.unshift.apply(nameParts, normalizedBaseParts);
     }
 
     trimDots(nameParts);
@@ -628,11 +630,11 @@
       return path1;
     }
 
-    let schemeMatch = path1.match(/^([^/]*?:)\//);
-    let scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
+    var schemeMatch = path1.match(/^([^/]*?:)\//);
+    var scheme = schemeMatch && schemeMatch.length > 0 ? schemeMatch[1] : '';
     path1 = path1.substr(scheme.length);
 
-    let urlPrefix;
+    var urlPrefix = void 0;
     if (path1.indexOf('///') === 0 && scheme === 'file:') {
       urlPrefix = '///';
     } else if (path1.indexOf('//') === 0) {
@@ -643,13 +645,13 @@
       urlPrefix = '';
     }
 
-    let trailingSlash = path2.slice(-1) === '/' ? '/' : '';
+    var trailingSlash = path2.slice(-1) === '/' ? '/' : '';
 
-    let url1 = path1.split('/');
-    let url2 = path2.split('/');
-    let url3 = [];
+    var url1 = path1.split('/');
+    var url2 = path2.split('/');
+    var url3 = [];
 
-    for (let i = 0, ii = url1.length; i < ii; ++i) {
+    for (var i = 0, ii = url1.length; i < ii; ++i) {
       if (url1[i] === '..') {
         url3.pop();
       } else if (url1[i] === '.' || url1[i] === '') {
@@ -659,51 +661,53 @@
       }
     }
 
-    for (let i = 0, ii = url2.length; i < ii; ++i) {
-      if (url2[i] === '..') {
+    for (var _i = 0, _ii = url2.length; _i < _ii; ++_i) {
+      if (url2[_i] === '..') {
         url3.pop();
-      } else if (url2[i] === '.' || url2[i] === '') {
+      } else if (url2[_i] === '.' || url2[_i] === '') {
         continue;
       } else {
-        url3.push(url2[i]);
+        url3.push(url2[_i]);
       }
     }
 
     return scheme + urlPrefix + url3.join('/') + trailingSlash;
   }
 
-  let encode = encodeURIComponent;
-  let encodeKey = k => encode(k).replace('%24', '$');
+  var encode = encodeURIComponent;
+  var encodeKey = function encodeKey(k) {
+    return encode(k).replace('%24', '$');
+  };
 
   function buildParam(key, value, traditional) {
-    let result = [];
+    var result = [];
     if (value === null || value === undefined) {
       return result;
     }
     if (Array.isArray(value)) {
-      for (let i = 0, l = value.length; i < l; i++) {
+      for (var i = 0, l = value.length; i < l; i++) {
         if (traditional) {
-          result.push(`${encodeKey(key)}=${encode(value[i])}`);
+          result.push(encodeKey(key) + '=' + encode(value[i]));
         } else {
-          let arrayKey = key + '[' + (typeof value[i] === 'object' && value[i] !== null ? i : '') + ']';
+          var arrayKey = key + '[' + (_typeof(value[i]) === 'object' && value[i] !== null ? i : '') + ']';
           result = result.concat(buildParam(arrayKey, value[i]));
         }
       }
-    } else if (typeof value === 'object' && !traditional) {
-      for (let propertyName in value) {
+    } else if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object' && !traditional) {
+      for (var propertyName in value) {
         result = result.concat(buildParam(key + '[' + propertyName + ']', value[propertyName]));
       }
     } else {
-      result.push(`${encodeKey(key)}=${encode(value)}`);
+      result.push(encodeKey(key) + '=' + encode(value));
     }
     return result;
   }
 
   function buildQueryString(params, traditional) {
-    let pairs = [];
-    let keys = Object.keys(params || {}).sort();
-    for (let i = 0, len = keys.length; i < len; i++) {
-      let key = keys[i];
+    var pairs = [];
+    var keys = Object.keys(params || {}).sort();
+    for (var i = 0, len = keys.length; i < len; i++) {
+      var key = keys[i];
       pairs = pairs.concat(buildParam(key, params[key], traditional));
     }
 
@@ -727,12 +731,12 @@
   }
 
   function parseComplexParam(queryParams, keys, value) {
-    let currentParams = queryParams;
-    let keysLastIndex = keys.length - 1;
-    for (let j = 0; j <= keysLastIndex; j++) {
-      let key = keys[j] === '' ? currentParams.length : keys[j];
+    var currentParams = queryParams;
+    var keysLastIndex = keys.length - 1;
+    for (var j = 0; j <= keysLastIndex; j++) {
+      var key = keys[j] === '' ? currentParams.length : keys[j];
       if (j < keysLastIndex) {
-        let prevValue = !currentParams[key] || typeof currentParams[key] === 'object' ? currentParams[key] : [currentParams[key]];
+        var prevValue = !currentParams[key] || _typeof(currentParams[key]) === 'object' ? currentParams[key] : [currentParams[key]];
         currentParams = currentParams[key] = prevValue || (isNaN(keys[j + 1]) ? {} : []);
       } else {
         currentParams = currentParams[key] = value;
@@ -741,26 +745,26 @@
   }
 
   function parseQueryString(queryString) {
-    let queryParams = {};
+    var queryParams = {};
     if (!queryString || typeof queryString !== 'string') {
       return queryParams;
     }
 
-    let query = queryString;
+    var query = queryString;
     if (query.charAt(0) === '?') {
       query = query.substr(1);
     }
 
-    let pairs = query.replace(/\+/g, ' ').split('&');
-    for (let i = 0; i < pairs.length; i++) {
-      let pair = pairs[i].split('=');
-      let key = decodeURIComponent(pair[0]);
+    var pairs = query.replace(/\+/g, ' ').split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i].split('=');
+      var key = decodeURIComponent(pair[0]);
       if (!key) {
         continue;
       }
 
-      let keys = key.split('][');
-      let keysLastIndex = keys.length - 1;
+      var keys = key.split('][');
+      var keysLastIndex = keys.length - 1;
 
       if (/\[/.test(keys[0]) && /\]$/.test(keys[keysLastIndex])) {
         keys[keysLastIndex] = keys[keysLastIndex].replace(/\]$/, '');
@@ -771,7 +775,7 @@
       }
 
       if (pair.length >= 2) {
-        let value = pair[1] ? decodeURIComponent(pair[1]) : '';
+        var value = pair[1] ? decodeURIComponent(pair[1]) : '';
         if (keysLastIndex) {
           parseComplexParam(queryParams, keys, value);
         } else {
@@ -826,7 +830,7 @@
         src = current.getAttribute('from');
 
         if (!src) {
-          throw new Error(`<require> element in ${ address } has no "from" attribute.`);
+          throw new Error(`<require> element in ${address} has no "from" attribute.`);
         }
 
         dependencies[i] = new TemplateDependency(relativeToFile(src, address), current.getAttribute('as'));
@@ -3174,7 +3178,7 @@
     }
 
     toString() {
-      return super.toString();
+      return  super.toString();
     }
   };
 
@@ -7660,10 +7664,10 @@
         }
 
         return Promise.all(elDeps.map(el => el.load(container, el.target))).then(() => {
-          const factory$$1 = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
+          const factory = this.template !== null ? viewCompiler.compile(this.template, viewResources, compileInstruction) : null;
           this.factoryIsReady = true;
-          this.factory = factory$$1;
-          return factory$$1;
+          this.factory = factory;
+          return factory;
         });
       });
     }
@@ -7924,9 +7928,9 @@
         node.auAssignedSlot = this;
 
         let anchor = this._findAnchor(view, node, projectionSource, index);
-        let parent$$1 = anchor.parentNode;
+        let parent = anchor.parentNode;
 
-        parent$$1.insertBefore(node, anchor);
+        parent.insertBefore(node, anchor);
         this.children.push(node);
         this.projections++;
       }
@@ -8023,11 +8027,11 @@
 
     projectFrom(view, projectionSource) {
       let anchor = DOM.createComment('anchor');
-      let parent$$1 = this.anchor.parentNode;
+      let parent = this.anchor.parentNode;
       anchor.auSlotProjectFrom = projectionSource;
       anchor.auOwnerView = view;
       anchor.auProjectionChildren = [];
-      parent$$1.insertBefore(anchor, this.anchor);
+      parent.insertBefore(anchor, this.anchor);
       this.children.push(anchor);
 
       if (this.projectFromAnchors === null) {
@@ -8300,10 +8304,10 @@
       return resource;
     }
 
-    constructor(parent$$1, viewUrl) {
+    constructor(parent, viewUrl) {
       this.bindingLanguage = null;
 
-      this.parent = parent$$1 || null;
+      this.parent = parent || null;
       this.hasParent = this.parent !== null;
       this.viewUrl = viewUrl || '';
       this.lookupFunctions = {
@@ -8411,16 +8415,16 @@
       return this.attributes[attribute] || (this.hasParent ? this.parent.getAttribute(attribute) : null);
     }
 
-    registerValueConverter(name, valueConverter$$1) {
-      register(this.valueConverters, name, valueConverter$$1, 'a ValueConverter');
+    registerValueConverter(name, valueConverter) {
+      register(this.valueConverters, name, valueConverter, 'a ValueConverter');
     }
 
     getValueConverter(name) {
       return this.valueConverters[name] || (this.hasParent ? this.parent.getValueConverter(name) : null);
     }
 
-    registerBindingBehavior(name, bindingBehavior$$1) {
-      register(this.bindingBehaviors, name, bindingBehavior$$1, 'a BindingBehavior');
+    registerBindingBehavior(name, bindingBehavior) {
+      register(this.bindingBehaviors, name, bindingBehavior, 'a BindingBehavior');
     }
 
     getBindingBehavior(name) {
@@ -8603,8 +8607,8 @@
       refNode.parentNode.insertBefore(this.fragment, refNode);
     }
 
-    appendNodesTo(parent$$1) {
-      parent$$1.appendChild(this.fragment);
+    appendNodesTo(parent) {
+      parent.appendChild(this.fragment);
     }
 
     removeNodes() {
@@ -8727,18 +8731,18 @@
     }
 
     transformChildNodesIntoView() {
-      let parent$$1 = this.anchor;
+      let parent = this.anchor;
 
       this.children.push({
-        fragment: parent$$1,
-        firstChild: parent$$1.firstChild,
-        lastChild: parent$$1.lastChild,
+        fragment: parent,
+        firstChild: parent.firstChild,
+        lastChild: parent.lastChild,
         returnToCache() {},
         removeNodes() {
           let last;
 
-          while (last = parent$$1.lastChild) {
-            parent$$1.removeChild(last);
+          while (last = parent.lastChild) {
+            parent.removeChild(last);
           }
         },
         created() {},
@@ -9114,14 +9118,14 @@
         return this.boundViewFactory;
       }
 
-      let factory$$1 = this.instruction.viewFactory;
+      let factory = this.instruction.viewFactory;
       let partReplacements = this.partReplacements;
 
       if (partReplacements) {
-        factory$$1 = partReplacements[factory$$1.part] || factory$$1;
+        factory = partReplacements[factory.part] || factory;
       }
 
-      this.boundViewFactory = new BoundViewFactory(this, factory$$1, partReplacements);
+      this.boundViewFactory = new BoundViewFactory(this, factory, partReplacements);
       return this.boundViewFactory;
     }
 
@@ -9154,8 +9158,8 @@
     return this.superGet(key);
   }
 
-  function createElementContainer(parent$$1, element, instruction, children, partReplacements, resources) {
-    let container = parent$$1.createChild();
+  function createElementContainer(parent, element, instruction, children, partReplacements, resources) {
+    let container = parent.createChild();
     let providers;
     let i;
 
@@ -9577,18 +9581,18 @@
         }
       }
 
-      let factory$$1 = new ViewFactory(content, instructions, resources);
+      let factory = new ViewFactory(content, instructions, resources);
 
-      factory$$1.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
-      factory$$1.part = part;
+      factory.surrogateInstruction = compileInstruction.compileSurrogate ? this._compileSurrogate(source, resources) : null;
+      factory.part = part;
 
       if (cacheSize) {
-        factory$$1.setCacheSize(cacheSize);
+        factory.setCacheSize(cacheSize);
       }
 
-      resources._invokeHook('afterCompile', factory$$1);
+      resources._invokeHook('afterCompile', factory);
 
-      return factory$$1;
+      return factory;
     }
 
     _compileNode(node, resources, instructions, parentNode, parentInjectorId, targetLightDOM) {
@@ -11209,7 +11213,7 @@
     }
   };
 
-  function createChildObserverDecorator(selectorOrConfig, all$$1) {
+  function createChildObserverDecorator(selectorOrConfig, all) {
     return function (target, key, descriptor) {
       let actualTarget = typeof key === 'string' ? target.constructor : target;
       let r = metadata.getOrCreateOwn(metadata.resource, HtmlBehaviorResource, actualTarget);
@@ -11226,7 +11230,7 @@
         descriptor.configurable = true;
       }
 
-      selectorOrConfig.all = all$$1;
+      selectorOrConfig.all = all;
       r.addChildBinding(new ChildObserver(selectorOrConfig));
     };
   }
@@ -11309,7 +11313,7 @@
   }
 
   let ChildObserverBinder = class ChildObserverBinder {
-    constructor(selector, viewHost, property, viewModel, controller, changeHandler, all$$1) {
+    constructor(selector, viewHost, property, viewModel, controller, changeHandler, all) {
       this.selector = selector;
       this.viewHost = viewHost;
       this.property = property;
@@ -11317,7 +11321,7 @@
       this.controller = controller;
       this.changeHandler = changeHandler in viewModel ? changeHandler : null;
       this.usesShadowDOM = controller.behavior.usesShadowDOM;
-      this.all = all$$1;
+      this.all = all;
 
       if (!this.usesShadowDOM && controller.view && controller.view.contentView) {
         this.contentView = controller.view.contentView;
@@ -11882,9 +11886,9 @@
 
       this._viewCompiler._compileNode(instruction.element, resources, compilerInstructions, instruction.element.parentNode, 'root', true);
 
-      let factory$$1 = new ViewFactory(instruction.element, compilerInstructions, resources);
+      let factory = new ViewFactory(instruction.element, compilerInstructions, resources);
       let container = instruction.container || this._container.createChild();
-      let view = factory$$1.create(container, BehaviorInstruction.enhance());
+      let view = factory.create(container, BehaviorInstruction.enhance());
 
       view.bind(instruction.bindingContext || {}, instruction.overrideContext);
 
@@ -12219,25 +12223,25 @@
       assertProcessed(this);
 
       let toAdd = Array.isArray(resources) ? resources : arguments;
-      let resource$$1;
+      let resource;
       let resourcesRelativeTo = this.resourcesRelativeTo || ['', ''];
 
       for (let i = 0, ii = toAdd.length; i < ii; ++i) {
-        resource$$1 = toAdd[i];
-        switch (typeof resource$$1) {
+        resource = toAdd[i];
+        switch (typeof resource) {
           case 'string':
-            let parent$$1 = resourcesRelativeTo[0];
+            let parent = resourcesRelativeTo[0];
             let grandParent = resourcesRelativeTo[1];
-            let name = resource$$1;
+            let name = resource;
 
-            if ((resource$$1.startsWith('./') || resource$$1.startsWith('../')) && parent$$1 !== '') {
-              name = join(parent$$1, resource$$1);
+            if ((resource.startsWith('./') || resource.startsWith('../')) && parent !== '') {
+              name = join(parent, resource);
             }
 
             this.resourcesToLoad[name] = { moduleId: name, relativeTo: grandParent };
             break;
           case 'function':
-            let meta = this.aurelia.resources.autoRegister(this.container, resource$$1);
+            let meta = this.aurelia.resources.autoRegister(this.container, resource);
             if (meta instanceof HtmlBehaviorResource && meta.elementName !== null) {
               if (this.behaviorsToLoad.push(meta) === 1) {
                 this.postTask(() => loadBehaviors(this));
@@ -12245,7 +12249,7 @@
             }
             break;
           default:
-            throw new Error(invalidConfigMsg(resource$$1, 'resource'));
+            throw new Error(invalidConfigMsg(resource, 'resource'));
         }
       }
 
@@ -12319,17 +12323,17 @@
     }
 
     developmentLogging(level) {
-      let logLevel$$1 = level ? logLevel[level] : undefined;
+      let logLevel$1 = level ? logLevel[level] : undefined;
 
-      if (logLevel$$1 === undefined) {
-        logLevel$$1 = logLevel.debug;
+      if (logLevel$1 === undefined) {
+        logLevel$1 = logLevel.debug;
       }
 
       this.preTask(() => {
         return this.aurelia.loader.normalize('aurelia-logging-console', this.bootstrapperName).then(name => {
           return this.aurelia.loader.loadModule(name).then(m => {
             addAppender(new m.ConsoleAppender());
-            setLevel(logLevel$$1);
+            setLevel(logLevel$1);
           });
         });
       });
@@ -12489,9 +12493,9 @@
 
     updateOneTimeBindings() {
       for (let i = 1, ii = this.parts.length; i < ii; i += 2) {
-        let child$$1 = this[`childBinding${i}`];
-        if (child$$1.mode === bindingMode.oneTime) {
-          child$$1.call();
+        let child = this[`childBinding${i}`];
+        if (child.mode === bindingMode.oneTime) {
+          child.call();
         }
       }
     }
@@ -13221,7 +13225,7 @@
       return [DOM.Element, Container, CompositionEngine, ViewSlot, ViewResources, TaskQueue];
     }
 
-    constructor(element, container, compositionEngine, viewSlot, viewResources$$1, taskQueue) {
+    constructor(element, container, compositionEngine, viewSlot, viewResources, taskQueue) {
       _initDefineProp(this, 'model', _descriptor, this);
 
       _initDefineProp(this, 'view', _descriptor2, this);
@@ -13234,7 +13238,7 @@
       this.container = container;
       this.compositionEngine = compositionEngine;
       this.viewSlot = viewSlot;
-      this.viewResources = viewResources$$1;
+      this.viewResources = viewResources;
       this.taskQueue = taskQueue;
       this.currentController = null;
       this.currentViewModel = null;
@@ -14321,7 +14325,7 @@
   }
 
   let Repeat = (_dec$8 = customAttribute('repeat'), _dec2$7 = inject(BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, RepeatStrategyLocator), _dec$8(_class$8 = templateController(_class$8 = _dec2$7(_class$8 = (_class2$6 = class Repeat extends AbstractRepeater {
-    constructor(viewFactory, instruction, viewSlot, viewResources$$1, observerLocator, strategyLocator) {
+    constructor(viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator) {
       super({
         local: 'item',
         viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -14338,7 +14342,7 @@
       this.viewFactory = viewFactory;
       this.instruction = instruction;
       this.viewSlot = viewSlot;
-      this.lookupFunctions = viewResources$$1.lookupFunctions;
+      this.lookupFunctions = viewResources.lookupFunctions;
       this.observerLocator = observerLocator;
       this.key = 'key';
       this.value = 'value';
@@ -14494,15 +14498,15 @@
     }
 
     addView(bindingContext, overrideContext) {
-      let view$$1 = this.viewFactory.create();
-      view$$1.bind(bindingContext, overrideContext);
-      this.viewSlot.add(view$$1);
+      let view = this.viewFactory.create();
+      view.bind(bindingContext, overrideContext);
+      this.viewSlot.add(view);
     }
 
     insertView(index, bindingContext, overrideContext) {
-      let view$$1 = this.viewFactory.create();
-      view$$1.bind(bindingContext, overrideContext);
-      this.viewSlot.insert(index, view$$1);
+      let view = this.viewFactory.create();
+      view.bind(bindingContext, overrideContext);
+      this.viewSlot.insert(index, view);
     }
 
     moveView(sourceIndex, targetIndex) {
@@ -14521,16 +14525,16 @@
       return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
     }
 
-    updateBindings(view$$1) {
-      let j = view$$1.bindings.length;
+    updateBindings(view) {
+      let j = view.bindings.length;
       while (j--) {
-        updateOneTimeBinding(view$$1.bindings[j]);
+        updateOneTimeBinding(view.bindings[j]);
       }
-      j = view$$1.controllers.length;
+      j = view.controllers.length;
       while (j--) {
-        let k = view$$1.controllers[j].boundProperties.length;
+        let k = view.controllers[j].boundProperties.length;
         while (k--) {
-          let binding = view$$1.controllers[j].boundProperties[k].binding;
+          let binding = view.controllers[j].boundProperties[k].binding;
           updateOneTimeBinding(binding);
         }
       }
@@ -15127,17 +15131,17 @@
     viewEngine.addResourcePlugin('.html', {
       'fetch': function (address) {
         return loader.loadTemplate(address).then(registryEntry => {
-          let bindable$$1 = registryEntry.template.getAttribute('bindable');
+          let bindable = registryEntry.template.getAttribute('bindable');
           let elementName = getElementName(address);
 
-          if (bindable$$1) {
-            bindable$$1 = bindable$$1.split(',').map(x => x.trim());
+          if (bindable) {
+            bindable = bindable.split(',').map(x => x.trim());
             registryEntry.template.removeAttribute('bindable');
           } else {
-            bindable$$1 = [];
+            bindable = [];
           }
 
-          return { [elementName]: _createDynamicElement(elementName, address, bindable$$1) };
+          return { [elementName]: _createDynamicElement(elementName, address, bindable) };
         });
       }
     });
@@ -15286,340 +15290,342 @@
   }
 
   function mi$1(name) {
-    throw new Error(`History must implement ${name}().`);
+    throw new Error('History must implement ' + name + '().');
   }
 
-  let History = class History {
-    activate(options) {
+  var History = function () {
+    function History() {
+      
+    }
+
+    History.prototype.activate = function activate(options) {
       mi$1('activate');
-    }
+    };
 
-    deactivate() {
+    History.prototype.deactivate = function deactivate() {
       mi$1('deactivate');
-    }
+    };
 
-    getAbsoluteRoot() {
+    History.prototype.getAbsoluteRoot = function getAbsoluteRoot() {
       mi$1('getAbsoluteRoot');
-    }
+    };
 
-    navigate(fragment, options) {
+    History.prototype.navigate = function navigate(fragment, options) {
       mi$1('navigate');
-    }
+    };
 
-    navigateBack() {
+    History.prototype.navigateBack = function navigateBack() {
       mi$1('navigateBack');
-    }
+    };
 
-    setTitle(title) {
+    History.prototype.setTitle = function setTitle(title) {
       mi$1('setTitle');
-    }
+    };
 
-    setState(key, value) {
+    History.prototype.setState = function setState(key, value) {
       mi$1('setState');
-    }
+    };
 
-    getState(key) {
+    History.prototype.getState = function getState(key) {
       mi$1('getState');
-    }
+    };
 
-    getHistoryIndex() {
+    History.prototype.getHistoryIndex = function getHistoryIndex() {
       mi$1('getHistoryIndex');
-    }
+    };
 
-    go(movement) {
+    History.prototype.go = function go(movement) {
       mi$1('go');
-    }
+    };
+
+    return History;
+  }();
+
+  /*! *****************************************************************************
+  Copyright (c) Microsoft Corporation. All rights reserved.
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+  this file except in compliance with the License. You may obtain a copy of the
+  License at http://www.apache.org/licenses/LICENSE-2.0
+
+  THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+  WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+  MERCHANTABLITY OR NON-INFRINGEMENT.
+
+  See the Apache Version 2.0 License for specific language governing permissions
+  and limitations under the License.
+  ***************************************************************************** */
+  /* global Reflect, Promise */
+
+  var extendStatics = function(d, b) {
+      extendStatics = Object.setPrototypeOf ||
+          ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+          function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+      return extendStatics(d, b);
   };
 
-  var _class$l, _temp$3;
+  function __extends(d, b) {
+      extendStatics(d, b);
+      function __() { this.constructor = d; }
+      d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+  }
 
-  let LinkHandler = class LinkHandler {
-    activate(history) {}
-
-    deactivate() {}
-  };
-
-  let DefaultLinkHandler = class DefaultLinkHandler extends LinkHandler {
-    constructor() {
-      super();
-
-      this.handler = e => {
-        let { shouldHandleEvent, href } = DefaultLinkHandler.getEventInfo(e);
-
-        if (shouldHandleEvent) {
-          e.preventDefault();
-          this.history.navigate(href);
-        }
+  var LinkHandler = (function () {
+      function LinkHandler() {
+      }
+      LinkHandler.prototype.activate = function (history) { };
+      LinkHandler.prototype.deactivate = function () { };
+      return LinkHandler;
+  }());
+  var DefaultLinkHandler = (function (_super) {
+      __extends(DefaultLinkHandler, _super);
+      function DefaultLinkHandler() {
+          var _this = _super.call(this) || this;
+          _this.handler = function (e) {
+              var _a = DefaultLinkHandler.getEventInfo(e), shouldHandleEvent = _a.shouldHandleEvent, href = _a.href;
+              if (shouldHandleEvent) {
+                  e.preventDefault();
+                  _this.history.navigate(href);
+              }
+          };
+          return _this;
+      }
+      DefaultLinkHandler.prototype.activate = function (history) {
+          if (history._hasPushState) {
+              this.history = history;
+              DOM.addEventListener('click', this.handler, true);
+          }
       };
-    }
-
-    activate(history) {
-      if (history._hasPushState) {
-        this.history = history;
-        DOM.addEventListener('click', this.handler, true);
-      }
-    }
-
-    deactivate() {
-      DOM.removeEventListener('click', this.handler);
-    }
-
-    static getEventInfo(event) {
-      let info = {
-        shouldHandleEvent: false,
-        href: null,
-        anchor: null
+      DefaultLinkHandler.prototype.deactivate = function () {
+          DOM.removeEventListener('click', this.handler, true);
       };
+      DefaultLinkHandler.getEventInfo = function (event) {
+          var $event = event;
+          var info = {
+              shouldHandleEvent: false,
+              href: null,
+              anchor: null
+          };
+          var target = DefaultLinkHandler.findClosestAnchor($event.target);
+          if (!target || !DefaultLinkHandler.targetIsThisWindow(target)) {
+              return info;
+          }
+          if (hasAttribute$1(target, 'download')
+              || hasAttribute$1(target, 'router-ignore')
+              || hasAttribute$1(target, 'data-router-ignore')) {
+              return info;
+          }
+          if ($event.altKey || $event.ctrlKey || $event.metaKey || $event.shiftKey) {
+              return info;
+          }
+          var href = target.getAttribute('href');
+          info.anchor = target;
+          info.href = href;
+          var leftButtonClicked = $event.which === 1;
+          var isRelative = href && !(href.charAt(0) === '#' || (/^[a-z]+:/i).test(href));
+          info.shouldHandleEvent = leftButtonClicked && isRelative;
+          return info;
+      };
+      DefaultLinkHandler.findClosestAnchor = function (el) {
+          while (el) {
+              if (el.tagName === 'A') {
+                  return el;
+              }
+              el = el.parentNode;
+          }
+      };
+      DefaultLinkHandler.targetIsThisWindow = function (target) {
+          var targetWindow = target.getAttribute('target');
+          var win = PLATFORM.global;
+          return !targetWindow ||
+              targetWindow === win.name ||
+              targetWindow === '_self';
+      };
+      return DefaultLinkHandler;
+  }(LinkHandler));
+  var hasAttribute$1 = function (el, attr) { return el.hasAttribute(attr); };
 
-      let target = DefaultLinkHandler.findClosestAnchor(event.target);
-      if (!target || !DefaultLinkHandler.targetIsThisWindow(target)) {
-        return info;
+  var BrowserHistory = (function (_super) {
+      __extends(BrowserHistory, _super);
+      function BrowserHistory(linkHandler) {
+          var _this = _super.call(this) || this;
+          _this._isActive = false;
+          _this._checkUrlCallback = _this._checkUrl.bind(_this);
+          _this.location = PLATFORM.location;
+          _this.history = PLATFORM.history;
+          _this.linkHandler = linkHandler;
+          return _this;
       }
-
-      if (target.hasAttribute('download') || target.hasAttribute('router-ignore') || target.hasAttribute('data-router-ignore')) {
-        return info;
+      BrowserHistory.prototype.activate = function (options) {
+          if (this._isActive) {
+              throw new Error('History has already been activated.');
+          }
+          var $history = this.history;
+          var wantsPushState = !!options.pushState;
+          this._isActive = true;
+          var normalizedOptions = this.options = Object.assign({}, { root: '/' }, this.options, options);
+          var rootUrl = this.root = ('/' + normalizedOptions.root + '/').replace(rootStripper, '/');
+          var wantsHashChange = this._wantsHashChange = normalizedOptions.hashChange !== false;
+          var hasPushState = this._hasPushState = !!(normalizedOptions.pushState && $history && $history.pushState);
+          var eventName;
+          if (hasPushState) {
+              eventName = 'popstate';
+          }
+          else if (wantsHashChange) {
+              eventName = 'hashchange';
+          }
+          PLATFORM.addEventListener(eventName, this._checkUrlCallback);
+          if (wantsHashChange && wantsPushState) {
+              var $location = this.location;
+              var atRoot = $location.pathname.replace(/[^\/]$/, '$&/') === rootUrl;
+              if (!hasPushState && !atRoot) {
+                  var fragment = this.fragment = this._getFragment(null, true);
+                  $location.replace(rootUrl + $location.search + '#' + fragment);
+                  return true;
+              }
+              else if (hasPushState && atRoot && $location.hash) {
+                  var fragment = this.fragment = this._getHash().replace(routeStripper, '');
+                  $history.replaceState({}, DOM.title, rootUrl + fragment + $location.search);
+              }
+          }
+          if (!this.fragment) {
+              this.fragment = this._getFragment('');
+          }
+          this.linkHandler.activate(this);
+          if (!normalizedOptions.silent) {
+              return this._loadUrl('');
+          }
+      };
+      BrowserHistory.prototype.deactivate = function () {
+          var handler = this._checkUrlCallback;
+          PLATFORM.removeEventListener('popstate', handler);
+          PLATFORM.removeEventListener('hashchange', handler);
+          this._isActive = false;
+          this.linkHandler.deactivate();
+      };
+      BrowserHistory.prototype.getAbsoluteRoot = function () {
+          var $location = this.location;
+          var origin = createOrigin($location.protocol, $location.hostname, $location.port);
+          return "" + origin + this.root;
+      };
+      BrowserHistory.prototype.navigate = function (fragment, _a) {
+          var _b = _a === void 0 ? {} : _a, _c = _b.trigger, trigger = _c === void 0 ? true : _c, _d = _b.replace, replace = _d === void 0 ? false : _d;
+          var location = this.location;
+          if (fragment && absoluteUrl.test(fragment)) {
+              location.href = fragment;
+              return true;
+          }
+          if (!this._isActive) {
+              return false;
+          }
+          fragment = this._getFragment(fragment || '');
+          if (this.fragment === fragment && !replace) {
+              return false;
+          }
+          this.fragment = fragment;
+          var url = this.root + fragment;
+          if (fragment === '' && url !== '/') {
+              url = url.slice(0, -1);
+          }
+          if (this._hasPushState) {
+              url = url.replace('//', '/');
+              this.history[replace ? 'replaceState' : 'pushState']({}, DOM.title, url);
+          }
+          else if (this._wantsHashChange) {
+              updateHash(location, fragment, replace);
+          }
+          else {
+              location.assign(url);
+          }
+          if (trigger) {
+              return this._loadUrl(fragment);
+          }
+          return true;
+      };
+      BrowserHistory.prototype.navigateBack = function () {
+          this.history.back();
+      };
+      BrowserHistory.prototype.setTitle = function (title) {
+          DOM.title = title;
+      };
+      BrowserHistory.prototype.setState = function (key, value) {
+          var $history = this.history;
+          var state = Object.assign({}, $history.state);
+          var _a = this.location, pathname = _a.pathname, search = _a.search, hash = _a.hash;
+          state[key] = value;
+          $history.replaceState(state, null, "" + pathname + search + hash);
+      };
+      BrowserHistory.prototype.getState = function (key) {
+          var state = Object.assign({}, this.history.state);
+          return state[key];
+      };
+      BrowserHistory.prototype.getHistoryIndex = function () {
+          var historyIndex = this.getState('HistoryIndex');
+          if (historyIndex === undefined) {
+              historyIndex = this.history.length - 1;
+              this.setState('HistoryIndex', historyIndex);
+          }
+          return historyIndex;
+      };
+      BrowserHistory.prototype.go = function (movement) {
+          this.history.go(movement);
+      };
+      BrowserHistory.prototype._getHash = function () {
+          return this.location.hash.substr(1);
+      };
+      BrowserHistory.prototype._getFragment = function (fragment, forcePushState) {
+          var rootUrl;
+          if (!fragment) {
+              if (this._hasPushState || !this._wantsHashChange || forcePushState) {
+                  var location_1 = this.location;
+                  fragment = location_1.pathname + location_1.search;
+                  rootUrl = this.root.replace(trailingSlash, '');
+                  if (!fragment.indexOf(rootUrl)) {
+                      fragment = fragment.substr(rootUrl.length);
+                  }
+              }
+              else {
+                  fragment = this._getHash();
+              }
+          }
+          return '/' + fragment.replace(routeStripper, '');
+      };
+      BrowserHistory.prototype._checkUrl = function () {
+          var current = this._getFragment('');
+          if (current !== this.fragment) {
+              this._loadUrl('');
+          }
+      };
+      BrowserHistory.prototype._loadUrl = function (fragmentOverride) {
+          var fragment = this.fragment = this._getFragment(fragmentOverride);
+          return this.options.routeHandler ?
+              this.options.routeHandler(fragment) :
+              false;
+      };
+      BrowserHistory.inject = [LinkHandler];
+      return BrowserHistory;
+  }(History));
+  var routeStripper = /^#?\/*|\s+$/g;
+  var rootStripper = /^\/+|\/+$/g;
+  var trailingSlash = /\/$/;
+  var absoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
+  function updateHash($location, fragment, replace) {
+      if (replace) {
+          var href = $location.href.replace(/(javascript:|#).*$/, '');
+          $location.replace(href + '#' + fragment);
       }
-
-      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-        return info;
+      else {
+          $location.hash = '#' + fragment;
       }
-
-      let href = target.getAttribute('href');
-      info.anchor = target;
-      info.href = href;
-
-      let leftButtonClicked = event.which === 1;
-      let isRelative = href && !(href.charAt(0) === '#' || /^[a-z]+:/i.test(href));
-
-      info.shouldHandleEvent = leftButtonClicked && isRelative;
-      return info;
-    }
-
-    static findClosestAnchor(el) {
-      while (el) {
-        if (el.tagName === 'A') {
-          return el;
-        }
-
-        el = el.parentNode;
-      }
-    }
-
-    static targetIsThisWindow(target) {
-      let targetWindow = target.getAttribute('target');
-      let win = PLATFORM.global;
-
-      return !targetWindow || targetWindow === win.name || targetWindow === '_self';
-    }
-  };
+  }
+  function createOrigin(protocol, hostname, port) {
+      return protocol + "//" + hostname + (port ? ':' + port : '');
+  }
 
   function configure$4(config) {
-    config.singleton(History, BrowserHistory);
-    config.transient(LinkHandler, DefaultLinkHandler);
-  }
-
-  let BrowserHistory = (_temp$3 = _class$l = class BrowserHistory extends History {
-    constructor(linkHandler) {
-      super();
-
-      this._isActive = false;
-      this._checkUrlCallback = this._checkUrl.bind(this);
-
-      this.location = PLATFORM.location;
-      this.history = PLATFORM.history;
-      this.linkHandler = linkHandler;
-    }
-
-    activate(options) {
-      if (this._isActive) {
-        throw new Error('History has already been activated.');
-      }
-
-      let wantsPushState = !!options.pushState;
-
-      this._isActive = true;
-      this.options = Object.assign({}, { root: '/' }, this.options, options);
-
-      this.root = ('/' + this.options.root + '/').replace(rootStripper, '/');
-
-      this._wantsHashChange = this.options.hashChange !== false;
-      this._hasPushState = !!(this.options.pushState && this.history && this.history.pushState);
-
-      let eventName;
-      if (this._hasPushState) {
-        eventName = 'popstate';
-      } else if (this._wantsHashChange) {
-        eventName = 'hashchange';
-      }
-
-      PLATFORM.addEventListener(eventName, this._checkUrlCallback);
-
-      if (this._wantsHashChange && wantsPushState) {
-        let loc = this.location;
-        let atRoot = loc.pathname.replace(/[^\/]$/, '$&/') === this.root;
-
-        if (!this._hasPushState && !atRoot) {
-          this.fragment = this._getFragment(null, true);
-          this.location.replace(this.root + this.location.search + '#' + this.fragment);
-
-          return true;
-        } else if (this._hasPushState && atRoot && loc.hash) {
-          this.fragment = this._getHash().replace(routeStripper, '');
-          this.history.replaceState({}, DOM.title, this.root + this.fragment + loc.search);
-        }
-      }
-
-      if (!this.fragment) {
-        this.fragment = this._getFragment();
-      }
-
-      this.linkHandler.activate(this);
-
-      if (!this.options.silent) {
-        return this._loadUrl();
-      }
-    }
-
-    deactivate() {
-      PLATFORM.removeEventListener('popstate', this._checkUrlCallback);
-      PLATFORM.removeEventListener('hashchange', this._checkUrlCallback);
-      this._isActive = false;
-      this.linkHandler.deactivate();
-    }
-
-    getAbsoluteRoot() {
-      let origin = createOrigin(this.location.protocol, this.location.hostname, this.location.port);
-      return `${origin}${this.root}`;
-    }
-
-    navigate(fragment, { trigger = true, replace = false } = {}) {
-      if (fragment && absoluteUrl.test(fragment)) {
-        this.location.href = fragment;
-        return true;
-      }
-
-      if (!this._isActive) {
-        return false;
-      }
-
-      fragment = this._getFragment(fragment || '');
-
-      if (this.fragment === fragment && !replace) {
-        return false;
-      }
-
-      this.fragment = fragment;
-
-      let url = this.root + fragment;
-
-      if (fragment === '' && url !== '/') {
-        url = url.slice(0, -1);
-      }
-
-      if (this._hasPushState) {
-        url = url.replace('//', '/');
-        this.history[replace ? 'replaceState' : 'pushState']({}, DOM.title, url);
-      } else if (this._wantsHashChange) {
-        updateHash(this.location, fragment, replace);
-      } else {
-        this.location.assign(url);
-      }
-
-      if (trigger) {
-        return this._loadUrl(fragment);
-      }
-
-      return true;
-    }
-
-    navigateBack() {
-      this.history.back();
-    }
-
-    setTitle(title) {
-      DOM.title = title;
-    }
-
-    setState(key, value) {
-      let state = Object.assign({}, this.history.state);
-      let { pathname, search, hash } = this.location;
-      state[key] = value;
-      this.history.replaceState(state, null, `${pathname}${search}${hash}`);
-    }
-
-    getState(key) {
-      let state = Object.assign({}, this.history.state);
-      return state[key];
-    }
-
-    getHistoryIndex() {
-      let historyIndex = this.getState('HistoryIndex');
-      if (historyIndex === undefined) {
-        historyIndex = this.history.length - 1;
-        this.setState('HistoryIndex', historyIndex);
-      }
-      return historyIndex;
-    }
-
-    go(movement) {
-      this.history.go(movement);
-    }
-
-    _getHash() {
-      return this.location.hash.substr(1);
-    }
-
-    _getFragment(fragment, forcePushState) {
-      let root;
-
-      if (!fragment) {
-        if (this._hasPushState || !this._wantsHashChange || forcePushState) {
-          fragment = this.location.pathname + this.location.search;
-          root = this.root.replace(trailingSlash, '');
-          if (!fragment.indexOf(root)) {
-            fragment = fragment.substr(root.length);
-          }
-        } else {
-          fragment = this._getHash();
-        }
-      }
-
-      return '/' + fragment.replace(routeStripper, '');
-    }
-
-    _checkUrl() {
-      let current = this._getFragment();
-      if (current !== this.fragment) {
-        this._loadUrl();
-      }
-    }
-
-    _loadUrl(fragmentOverride) {
-      let fragment = this.fragment = this._getFragment(fragmentOverride);
-
-      return this.options.routeHandler ? this.options.routeHandler(fragment) : false;
-    }
-  }, _class$l.inject = [LinkHandler], _temp$3);
-
-  const routeStripper = /^#?\/*|\s+$/g;
-
-  const rootStripper = /^\/+|\/+$/g;
-
-  const trailingSlash = /\/$/;
-
-  const absoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
-
-  function updateHash(location, fragment, replace) {
-    if (replace) {
-      let href = location.href.replace(/(javascript:|#).*$/, '');
-      location.replace(href + '#' + fragment);
-    } else {
-      location.hash = '#' + fragment;
-    }
-  }
-
-  function createOrigin(protocol, hostname, port) {
-    return `${protocol}//${hostname}${port ? ':' + port : ''}`;
+      var $config = config;
+      $config.singleton(History, BrowserHistory);
+      $config.transient(LinkHandler, DefaultLinkHandler);
   }
 
   let State = class State {
@@ -16073,2036 +16079,2580 @@
     return [firstState, nextState];
   }
 
-  function _normalizeAbsolutePath(path, hasPushState, absolute = false) {
-    if (!hasPushState && path[0] !== '#') {
-      path = '#' + path;
-    }
-
-    if (hasPushState && absolute) {
-      path = path.substring(1, path.length);
-    }
-
-    return path;
-  }
-
-  function _createRootedPath(fragment, baseUrl, hasPushState, absolute) {
-    if (isAbsoluteUrl.test(fragment)) {
-      return fragment;
-    }
-
-    let path = '';
-
-    if (baseUrl.length && baseUrl[0] !== '/') {
-      path += '/';
-    }
-
-    path += baseUrl;
-
-    if ((!path.length || path[path.length - 1] !== '/') && fragment[0] !== '/') {
-      path += '/';
-    }
-
-    if (path.length && path[path.length - 1] === '/' && fragment[0] === '/') {
-      path = path.substring(0, path.length - 1);
-    }
-
-    return _normalizeAbsolutePath(path + fragment, hasPushState, absolute);
-  }
-
-  function _resolveUrl(fragment, baseUrl, hasPushState) {
-    if (isRootedPath.test(fragment)) {
-      return _normalizeAbsolutePath(fragment, hasPushState);
-    }
-
-    return _createRootedPath(fragment, baseUrl, hasPushState);
-  }
-
-  function _ensureArrayWithSingleRoutePerConfig(config) {
-    let routeConfigs = [];
-
-    if (Array.isArray(config.route)) {
-      for (let i = 0, ii = config.route.length; i < ii; ++i) {
-        let current = Object.assign({}, config);
-        current.route = config.route[i];
-        routeConfigs.push(current);
+  /**
+   * Class used to represent an instruction during a navigation.
+   */
+  class NavigationInstruction {
+      constructor(init) {
+          /**
+           * Current built viewport plan of this nav instruction
+           */
+          this.plan = null;
+          this.options = {};
+          Object.assign(this, init);
+          this.params = this.params || {};
+          this.viewPortInstructions = {};
+          let ancestorParams = [];
+          let current = this;
+          do {
+              let currentParams = Object.assign({}, current.params);
+              if (current.config && current.config.hasChildRouter) {
+                  // remove the param for the injected child route segment
+                  delete currentParams[current.getWildCardName()];
+              }
+              ancestorParams.unshift(currentParams);
+              current = current.parentInstruction;
+          } while (current);
+          let allParams = Object.assign({}, this.queryParams, ...ancestorParams);
+          this.lifecycleArgs = [allParams, this.config, this];
       }
-    } else {
-      routeConfigs.push(Object.assign({}, config));
-    }
+      /**
+       * Gets an array containing this instruction and all child instructions for the current navigation.
+       */
+      getAllInstructions() {
+          let instructions = [this];
+          let viewPortInstructions = this.viewPortInstructions;
+          for (let key in viewPortInstructions) {
+              let childInstruction = viewPortInstructions[key].childNavigationInstruction;
+              if (childInstruction) {
+                  instructions.push(...childInstruction.getAllInstructions());
+              }
+          }
+          return instructions;
+      }
+      /**
+       * Gets an array containing the instruction and all child instructions for the previous navigation.
+       * Previous instructions are no longer available after navigation completes.
+       */
+      getAllPreviousInstructions() {
+          return this.getAllInstructions().map(c => c.previousInstruction).filter(c => c);
+      }
+      addViewPortInstruction(nameOrInitOptions, strategy, moduleId, component) {
+          let viewPortInstruction;
+          let viewPortName = typeof nameOrInitOptions === 'string' ? nameOrInitOptions : nameOrInitOptions.name;
+          const lifecycleArgs = this.lifecycleArgs;
+          const config = Object.assign({}, lifecycleArgs[1], { currentViewPort: viewPortName });
+          if (typeof nameOrInitOptions === 'string') {
+              viewPortInstruction = {
+                  name: nameOrInitOptions,
+                  strategy: strategy,
+                  moduleId: moduleId,
+                  component: component,
+                  childRouter: component.childRouter,
+                  lifecycleArgs: [lifecycleArgs[0], config, lifecycleArgs[2]]
+              };
+          }
+          else {
+              viewPortInstruction = {
+                  name: viewPortName,
+                  strategy: nameOrInitOptions.strategy,
+                  component: nameOrInitOptions.component,
+                  moduleId: nameOrInitOptions.moduleId,
+                  childRouter: nameOrInitOptions.component.childRouter,
+                  lifecycleArgs: [lifecycleArgs[0], config, lifecycleArgs[2]]
+              };
+          }
+          return this.viewPortInstructions[viewPortName] = viewPortInstruction;
+      }
+      /**
+       * Gets the name of the route pattern's wildcard parameter, if applicable.
+       */
+      getWildCardName() {
+          // todo: potential issue, or at least unsafe typings
+          let configRoute = this.config.route;
+          let wildcardIndex = configRoute.lastIndexOf('*');
+          return configRoute.substr(wildcardIndex + 1);
+      }
+      /**
+       * Gets the path and query string created by filling the route
+       * pattern's wildcard parameter with the matching param.
+       */
+      getWildcardPath() {
+          let wildcardName = this.getWildCardName();
+          let path = this.params[wildcardName] || '';
+          let queryString = this.queryString;
+          if (queryString) {
+              path += '?' + queryString;
+          }
+          return path;
+      }
+      /**
+       * Gets the instruction's base URL, accounting for wildcard route parameters.
+       */
+      getBaseUrl() {
+          let $encodeURI = encodeURI;
+          let fragment = decodeURI(this.fragment);
+          if (fragment === '') {
+              let nonEmptyRoute = this.router.routes.find(route => {
+                  return route.name === this.config.name &&
+                      route.route !== '';
+              });
+              if (nonEmptyRoute) {
+                  fragment = nonEmptyRoute.route;
+              }
+          }
+          if (!this.params) {
+              return $encodeURI(fragment);
+          }
+          let wildcardName = this.getWildCardName();
+          let path = this.params[wildcardName] || '';
+          if (!path) {
+              return $encodeURI(fragment);
+          }
+          return $encodeURI(fragment.substr(0, fragment.lastIndexOf(path)));
+      }
+      /**
+       * Finalize a viewport instruction
+       * @internal
+       */
+      _commitChanges(waitToSwap) {
+          let router = this.router;
+          router.currentInstruction = this;
+          const previousInstruction = this.previousInstruction;
+          if (previousInstruction) {
+              previousInstruction.config.navModel.isActive = false;
+          }
+          this.config.navModel.isActive = true;
+          router.refreshNavigation();
+          let loads = [];
+          let delaySwaps = [];
+          let viewPortInstructions = this.viewPortInstructions;
+          for (let viewPortName in viewPortInstructions) {
+              let viewPortInstruction = viewPortInstructions[viewPortName];
+              let viewPort = router.viewPorts[viewPortName];
+              if (!viewPort) {
+                  throw new Error(`There was no router-view found in the view for ${viewPortInstruction.moduleId}.`);
+              }
+              let childNavInstruction = viewPortInstruction.childNavigationInstruction;
+              if (viewPortInstruction.strategy === "replace" /* Replace */) {
+                  if (childNavInstruction && childNavInstruction.parentCatchHandler) {
+                      loads.push(childNavInstruction._commitChanges(waitToSwap));
+                  }
+                  else {
+                      if (waitToSwap) {
+                          delaySwaps.push({ viewPort, viewPortInstruction });
+                      }
+                      loads.push(viewPort
+                          .process(viewPortInstruction, waitToSwap)
+                          .then(() => childNavInstruction
+                          ? childNavInstruction._commitChanges(waitToSwap)
+                          : Promise.resolve()));
+                  }
+              }
+              else {
+                  if (childNavInstruction) {
+                      loads.push(childNavInstruction._commitChanges(waitToSwap));
+                  }
+              }
+          }
+          return Promise
+              .all(loads)
+              .then(() => {
+              delaySwaps.forEach(x => x.viewPort.swap(x.viewPortInstruction));
+              return null;
+          })
+              .then(() => prune(this));
+      }
+      /**@internal */
+      _updateTitle() {
+          let router = this.router;
+          let title = this._buildTitle(router.titleSeparator);
+          if (title) {
+              router.history.setTitle(title);
+          }
+      }
+      /**@internal */
+      _buildTitle(separator = ' | ') {
+          let title = '';
+          let childTitles = [];
+          let navModelTitle = this.config.navModel.title;
+          let instructionRouter = this.router;
+          let viewPortInstructions = this.viewPortInstructions;
+          if (navModelTitle) {
+              title = instructionRouter.transformTitle(navModelTitle);
+          }
+          for (let viewPortName in viewPortInstructions) {
+              let viewPortInstruction = viewPortInstructions[viewPortName];
+              let child_nav_instruction = viewPortInstruction.childNavigationInstruction;
+              if (child_nav_instruction) {
+                  let childTitle = child_nav_instruction._buildTitle(separator);
+                  if (childTitle) {
+                      childTitles.push(childTitle);
+                  }
+              }
+          }
+          if (childTitles.length) {
+              title = childTitles.join(separator) + (title ? separator : '') + title;
+          }
+          if (instructionRouter.title) {
+              title += (title ? separator : '') + instructionRouter.transformTitle(instructionRouter.title);
+          }
+          return title;
+      }
+  }
+  const prune = (instruction) => {
+      instruction.previousInstruction = null;
+      instruction.plan = null;
+  };
 
-    return routeConfigs;
+  /**
+  * Class for storing and interacting with a route's navigation settings.
+  */
+  class NavModel {
+      constructor(router, relativeHref) {
+          /**
+          * True if this nav item is currently active.
+          */
+          this.isActive = false;
+          /**
+          * The title.
+          */
+          this.title = null;
+          /**
+          * This nav item's absolute href.
+          */
+          this.href = null;
+          /**
+          * This nav item's relative href.
+          */
+          this.relativeHref = null;
+          /**
+          * Data attached to the route at configuration time.
+          */
+          this.settings = {};
+          /**
+          * The route config.
+          */
+          this.config = null;
+          this.router = router;
+          this.relativeHref = relativeHref;
+      }
+      /**
+      * Sets the route's title and updates document.title.
+      *  If the a navigation is in progress, the change will be applied
+      *  to document.title when the navigation completes.
+      *
+      * @param title The new title.
+      */
+      setTitle(title) {
+          this.title = title;
+          if (this.isActive) {
+              this.router.updateTitle();
+          }
+      }
   }
 
+  function _normalizeAbsolutePath(path, hasPushState, absolute = false) {
+      if (!hasPushState && path[0] !== '#') {
+          path = '#' + path;
+      }
+      if (hasPushState && absolute) {
+          path = path.substring(1, path.length);
+      }
+      return path;
+  }
+  function _createRootedPath(fragment, baseUrl, hasPushState, absolute) {
+      if (isAbsoluteUrl.test(fragment)) {
+          return fragment;
+      }
+      let path = '';
+      if (baseUrl.length && baseUrl[0] !== '/') {
+          path += '/';
+      }
+      path += baseUrl;
+      if ((!path.length || path[path.length - 1] !== '/') && fragment[0] !== '/') {
+          path += '/';
+      }
+      if (path.length && path[path.length - 1] === '/' && fragment[0] === '/') {
+          path = path.substring(0, path.length - 1);
+      }
+      return _normalizeAbsolutePath(path + fragment, hasPushState, absolute);
+  }
+  function _resolveUrl(fragment, baseUrl, hasPushState) {
+      if (isRootedPath.test(fragment)) {
+          return _normalizeAbsolutePath(fragment, hasPushState);
+      }
+      return _createRootedPath(fragment, baseUrl, hasPushState);
+  }
+  function _ensureArrayWithSingleRoutePerConfig(config) {
+      let routeConfigs = [];
+      if (Array.isArray(config.route)) {
+          for (let i = 0, ii = config.route.length; i < ii; ++i) {
+              let current = Object.assign({}, config);
+              current.route = config.route[i];
+              routeConfigs.push(current);
+          }
+      }
+      else {
+          routeConfigs.push(Object.assign({}, config));
+      }
+      return routeConfigs;
+  }
   const isRootedPath = /^#?\//;
   const isAbsoluteUrl = /^([a-z][a-z0-9+\-.]*:)?\/\//i;
 
-  let CommitChangesStep = class CommitChangesStep {
-    run(navigationInstruction, next) {
-      return navigationInstruction._commitChanges(true).then(() => {
-        navigationInstruction._updateTitle();
-        return next();
-      });
-    }
-  };
-
-  let NavigationInstruction = class NavigationInstruction {
-
-    constructor(init) {
-      this.plan = null;
-      this.options = {};
-
-      Object.assign(this, init);
-
-      this.params = this.params || {};
-      this.viewPortInstructions = {};
-
-      let ancestorParams = [];
-      let current = this;
-      do {
-        let currentParams = Object.assign({}, current.params);
-        if (current.config && current.config.hasChildRouter) {
-          delete currentParams[current.getWildCardName()];
-        }
-
-        ancestorParams.unshift(currentParams);
-        current = current.parentInstruction;
-      } while (current);
-
-      let allParams = Object.assign({}, this.queryParams, ...ancestorParams);
-      this.lifecycleArgs = [allParams, this.config, this];
-    }
-
-    getAllInstructions() {
-      let instructions = [this];
-      for (let key in this.viewPortInstructions) {
-        let childInstruction = this.viewPortInstructions[key].childNavigationInstruction;
-        if (childInstruction) {
-          instructions.push(...childInstruction.getAllInstructions());
-        }
+  /**
+   * Class used to configure a [[Router]] instance.
+   *
+   * @constructor
+   */
+  class RouterConfiguration {
+      constructor() {
+          this.instructions = [];
+          this.options = {};
+          this.pipelineSteps = [];
       }
-
-      return instructions;
-    }
-
-    getAllPreviousInstructions() {
-      return this.getAllInstructions().map(c => c.previousInstruction).filter(c => c);
-    }
-
-    addViewPortInstruction(viewPortName, strategy, moduleId, component) {
-      const config = Object.assign({}, this.lifecycleArgs[1], { currentViewPort: viewPortName });
-      let viewportInstruction = this.viewPortInstructions[viewPortName] = {
-        name: viewPortName,
-        strategy: strategy,
-        moduleId: moduleId,
-        component: component,
-        childRouter: component.childRouter,
-        lifecycleArgs: [].concat(this.lifecycleArgs[0], config, this.lifecycleArgs[2])
-      };
-
-      return viewportInstruction;
-    }
-
-    getWildCardName() {
-      let wildcardIndex = this.config.route.lastIndexOf('*');
-      return this.config.route.substr(wildcardIndex + 1);
-    }
-
-    getWildcardPath() {
-      let wildcardName = this.getWildCardName();
-      let path = this.params[wildcardName] || '';
-
-      if (this.queryString) {
-        path += '?' + this.queryString;
+      /**
+       * Adds a step to be run during the [[Router]]'s navigation pipeline.
+       *
+       * @param name The name of the pipeline slot to insert the step into.
+       * @param step The pipeline step.
+       * @chainable
+       */
+      addPipelineStep(name, step) {
+          if (step === null || step === undefined) {
+              throw new Error('Pipeline step cannot be null or undefined.');
+          }
+          this.pipelineSteps.push({ name, step });
+          return this;
       }
-
-      return path;
-    }
-
-    getBaseUrl() {
-      let fragment = decodeURI(this.fragment);
-
-      if (fragment === '') {
-        let nonEmptyRoute = this.router.routes.find(route => {
-          return route.name === this.config.name && route.route !== '';
-        });
-        if (nonEmptyRoute) {
-          fragment = nonEmptyRoute.route;
-        }
+      /**
+       * Adds a step to be run during the [[Router]]'s authorize pipeline slot.
+       *
+       * @param step The pipeline step.
+       * @chainable
+       */
+      addAuthorizeStep(step) {
+          return this.addPipelineStep("authorize" /* Authorize */, step);
       }
-
-      if (!this.params) {
-        return encodeURI(fragment);
+      /**
+       * Adds a step to be run during the [[Router]]'s preActivate pipeline slot.
+       *
+       * @param step The pipeline step.
+       * @chainable
+       */
+      addPreActivateStep(step) {
+          return this.addPipelineStep("preActivate" /* PreActivate */, step);
       }
-
-      let wildcardName = this.getWildCardName();
-      let path = this.params[wildcardName] || '';
-
-      if (!path) {
-        return encodeURI(fragment);
+      /**
+       * Adds a step to be run during the [[Router]]'s preRender pipeline slot.
+       *
+       * @param step The pipeline step.
+       * @chainable
+       */
+      addPreRenderStep(step) {
+          return this.addPipelineStep("preRender" /* PreRender */, step);
       }
-
-      return encodeURI(fragment.substr(0, fragment.lastIndexOf(path)));
-    }
-
-    _commitChanges(waitToSwap) {
-      let router = this.router;
-      router.currentInstruction = this;
-
-      if (this.previousInstruction) {
-        this.previousInstruction.config.navModel.isActive = false;
+      /**
+       * Adds a step to be run during the [[Router]]'s postRender pipeline slot.
+       *
+       * @param step The pipeline step.
+       * @chainable
+       */
+      addPostRenderStep(step) {
+          return this.addPipelineStep("postRender" /* PostRender */, step);
       }
-
-      this.config.navModel.isActive = true;
-
-      router.refreshNavigation();
-
-      let loads = [];
-      let delaySwaps = [];
-
-      for (let viewPortName in this.viewPortInstructions) {
-        let viewPortInstruction = this.viewPortInstructions[viewPortName];
-        let viewPort = router.viewPorts[viewPortName];
-
-        if (!viewPort) {
-          throw new Error(`There was no router-view found in the view for ${viewPortInstruction.moduleId}.`);
-        }
-
-        if (viewPortInstruction.strategy === activationStrategy.replace) {
-          if (viewPortInstruction.childNavigationInstruction && viewPortInstruction.childNavigationInstruction.parentCatchHandler) {
-            loads.push(viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap));
-          } else {
-            if (waitToSwap) {
-              delaySwaps.push({ viewPort, viewPortInstruction });
-            }
-            loads.push(viewPort.process(viewPortInstruction, waitToSwap).then(x => {
-              if (viewPortInstruction.childNavigationInstruction) {
-                return viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap);
+      /**
+       * Configures a route that will be used if there is no previous location available on navigation cancellation.
+       *
+       * @param fragment The URL fragment to use as the navigation destination.
+       * @chainable
+       */
+      fallbackRoute(fragment) {
+          this._fallbackRoute = fragment;
+          return this;
+      }
+      /**
+       * Maps one or more routes to be registered with the router.
+       *
+       * @param route The [[RouteConfig]] to map, or an array of [[RouteConfig]] to map.
+       * @chainable
+       */
+      map(route) {
+          if (Array.isArray(route)) {
+              route.forEach(r => this.map(r));
+              return this;
+          }
+          return this.mapRoute(route);
+      }
+      /**
+       * Configures defaults to use for any view ports.
+       *
+       * @param viewPortConfig a view port configuration object to use as a
+       *  default, of the form { viewPortName: { moduleId } }.
+       * @chainable
+       */
+      useViewPortDefaults(viewPortConfig) {
+          this.viewPortDefaults = viewPortConfig;
+          return this;
+      }
+      /**
+       * Maps a single route to be registered with the router.
+       *
+       * @param route The [[RouteConfig]] to map.
+       * @chainable
+       */
+      mapRoute(config) {
+          this.instructions.push(router => {
+              let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
+              let navModel;
+              for (let i = 0, ii = routeConfigs.length; i < ii; ++i) {
+                  let routeConfig = routeConfigs[i];
+                  routeConfig.settings = routeConfig.settings || {};
+                  if (!navModel) {
+                      navModel = router.createNavModel(routeConfig);
+                  }
+                  router.addRoute(routeConfig, navModel);
               }
-            }));
+          });
+          return this;
+      }
+      /**
+       * Registers an unknown route handler to be run when the URL fragment doesn't match any registered routes.
+       *
+       * @param config A string containing a moduleId to load, or a [[RouteConfig]], or a function that takes the
+       *  [[NavigationInstruction]] and selects a moduleId to load.
+       * @chainable
+       */
+      mapUnknownRoutes(config) {
+          this.unknownRouteConfig = config;
+          return this;
+      }
+      /**
+       * Applies the current configuration to the specified [[Router]].
+       *
+       * @param router The [[Router]] to apply the configuration to.
+       */
+      exportToRouter(router) {
+          let instructions = this.instructions;
+          for (let i = 0, ii = instructions.length; i < ii; ++i) {
+              instructions[i](router);
           }
-        } else {
-          if (viewPortInstruction.childNavigationInstruction) {
-            loads.push(viewPortInstruction.childNavigationInstruction._commitChanges(waitToSwap));
+          let { title, titleSeparator, unknownRouteConfig, _fallbackRoute, viewPortDefaults } = this;
+          if (title) {
+              router.title = title;
           }
-        }
-      }
-
-      return Promise.all(loads).then(() => {
-        delaySwaps.forEach(x => x.viewPort.swap(x.viewPortInstruction));
-        return null;
-      }).then(() => prune(this));
-    }
-
-    _updateTitle() {
-      let title = this._buildTitle(this.router.titleSeparator);
-      if (title) {
-        this.router.history.setTitle(title);
-      }
-    }
-
-    _buildTitle(separator = ' | ') {
-      let title = '';
-      let childTitles = [];
-
-      if (this.config.navModel.title) {
-        title = this.router.transformTitle(this.config.navModel.title);
-      }
-
-      for (let viewPortName in this.viewPortInstructions) {
-        let viewPortInstruction = this.viewPortInstructions[viewPortName];
-
-        if (viewPortInstruction.childNavigationInstruction) {
-          let childTitle = viewPortInstruction.childNavigationInstruction._buildTitle(separator);
-          if (childTitle) {
-            childTitles.push(childTitle);
+          if (titleSeparator) {
+              router.titleSeparator = titleSeparator;
           }
-        }
+          if (unknownRouteConfig) {
+              router.handleUnknownRoutes(unknownRouteConfig);
+          }
+          if (_fallbackRoute) {
+              router.fallbackRoute = _fallbackRoute;
+          }
+          if (viewPortDefaults) {
+              router.useViewPortDefaults(viewPortDefaults);
+          }
+          Object.assign(router.options, this.options);
+          let pipelineSteps = this.pipelineSteps;
+          let pipelineStepCount = pipelineSteps.length;
+          if (pipelineStepCount) {
+              if (!router.isRoot) {
+                  throw new Error('Pipeline steps can only be added to the root router');
+              }
+              let pipelineProvider = router.pipelineProvider;
+              for (let i = 0, ii = pipelineStepCount; i < ii; ++i) {
+                  let { name, step } = pipelineSteps[i];
+                  pipelineProvider.addStep(name, step);
+              }
+          }
       }
-
-      if (childTitles.length) {
-        title = childTitles.join(separator) + (title ? separator : '') + title;
-      }
-
-      if (this.router.title) {
-        title += (title ? separator : '') + this.router.transformTitle(this.router.title);
-      }
-
-      return title;
-    }
-  };
-
-  function prune(instruction) {
-    instruction.previousInstruction = null;
-    instruction.plan = null;
   }
 
-  let NavModel = class NavModel {
-
-    constructor(router, relativeHref) {
-      this.isActive = false;
-      this.title = null;
-      this.href = null;
-      this.relativeHref = null;
-      this.settings = {};
-      this.config = null;
-
-      this.router = router;
-      this.relativeHref = relativeHref;
-    }
-
-    setTitle(title) {
-      this.title = title;
-
-      if (this.isActive) {
-        this.router.updateTitle();
+  /**
+   * The primary class responsible for handling routing and navigation.
+   */
+  class Router {
+      /**
+       * @param container The [[Container]] to use when child routers.
+       * @param history The [[History]] implementation to delegate navigation requests to.
+       */
+      constructor(container, history) {
+          /**
+           * The parent router, or null if this instance is not a child router.
+           */
+          this.parent = null;
+          this.options = {};
+          /**
+           * The defaults used when a viewport lacks specified content
+           */
+          this.viewPortDefaults = {};
+          /**
+           * Extension point to transform the document title before it is built and displayed.
+           * By default, child routers delegate to the parent router, and the app router
+           * returns the title unchanged.
+           */
+          this.transformTitle = (title) => {
+              if (this.parent) {
+                  return this.parent.transformTitle(title);
+              }
+              return title;
+          };
+          this.container = container;
+          this.history = history;
+          this.reset();
       }
-    }
-  };
-
-  function isNavigationCommand(obj) {
-    return obj && typeof obj.navigate === 'function';
-  }
-
-  let Redirect = class Redirect {
-    constructor(url, options = {}) {
-      this.url = url;
-      this.options = Object.assign({ trigger: true, replace: true }, options);
-      this.shouldContinueProcessing = false;
-    }
-
-    setRouter(router) {
-      this.router = router;
-    }
-
-    navigate(appRouter) {
-      let navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
-      navigatingRouter.navigate(this.url, this.options);
-    }
-  };
-
-  let RedirectToRoute = class RedirectToRoute {
-    constructor(route, params = {}, options = {}) {
-      this.route = route;
-      this.params = params;
-      this.options = Object.assign({ trigger: true, replace: true }, options);
-      this.shouldContinueProcessing = false;
-    }
-
-    setRouter(router) {
-      this.router = router;
-    }
-
-    navigate(appRouter) {
-      let navigatingRouter = this.options.useAppRouter ? appRouter : this.router || appRouter;
-      navigatingRouter.navigateToRoute(this.route, this.params, this.options);
-    }
-  };
-
-  const pipelineStatus = {
-    completed: 'completed',
-    canceled: 'canceled',
-    rejected: 'rejected',
-    running: 'running'
-  };
-
-  let Pipeline = class Pipeline {
-    constructor() {
-      this.steps = [];
-    }
-
-    addStep(step) {
-      let run;
-
-      if (typeof step === 'function') {
-        run = step;
-      } else if (typeof step.getSteps === 'function') {
-        let steps = step.getSteps();
-        for (let i = 0, l = steps.length; i < l; i++) {
-          this.addStep(steps[i]);
-        }
-
-        return this;
-      } else {
-        run = step.run.bind(step);
+      /**
+       * Fully resets the router's internal state. Primarily used internally by the framework when multiple calls to setRoot are made.
+       * Use with caution (actually, avoid using this). Do not use this to simply change your navigation model.
+       */
+      reset() {
+          this.viewPorts = {};
+          this.routes = [];
+          this.baseUrl = '';
+          this.isConfigured = false;
+          this.isNavigating = false;
+          this.isExplicitNavigation = false;
+          this.isExplicitNavigationBack = false;
+          this.isNavigatingFirst = false;
+          this.isNavigatingNew = false;
+          this.isNavigatingRefresh = false;
+          this.isNavigatingForward = false;
+          this.isNavigatingBack = false;
+          this.couldDeactivate = false;
+          this.navigation = [];
+          this.currentInstruction = null;
+          this.viewPortDefaults = {};
+          this._fallbackOrder = 100;
+          this._recognizer = new RouteRecognizer();
+          this._childRecognizer = new RouteRecognizer();
+          this._configuredPromise = new Promise(resolve => {
+              this._resolveConfiguredPromise = resolve;
+          });
       }
-
-      this.steps.push(run);
-
-      return this;
-    }
-
-    run(instruction) {
-      let index = -1;
-      let steps = this.steps;
-
-      function next() {
-        index++;
-
-        if (index < steps.length) {
-          let currentStep = steps[index];
-
-          try {
-            return currentStep(instruction, next);
-          } catch (e) {
-            return next.reject(e);
+      /**
+       * Gets a value indicating whether or not this [[Router]] is the root in the router tree. I.e., it has no parent.
+       */
+      get isRoot() {
+          return !this.parent;
+      }
+      /**
+       * Registers a viewPort to be used as a rendering target for activated routes.
+       *
+       * @param viewPort The viewPort.
+       * @param name The name of the viewPort. 'default' if unspecified.
+       */
+      registerViewPort(viewPort, name) {
+          name = name || 'default';
+          this.viewPorts[name] = viewPort;
+      }
+      /**
+       * Returns a Promise that resolves when the router is configured.
+       */
+      ensureConfigured() {
+          return this._configuredPromise;
+      }
+      /**
+       * Configures the router.
+       *
+       * @param callbackOrConfig The [[RouterConfiguration]] or a callback that takes a [[RouterConfiguration]].
+       */
+      configure(callbackOrConfig) {
+          this.isConfigured = true;
+          let result = callbackOrConfig;
+          let config;
+          if (typeof callbackOrConfig === 'function') {
+              config = new RouterConfiguration();
+              result = callbackOrConfig(config);
           }
-        } else {
-          return next.complete();
-        }
+          return Promise
+              .resolve(result)
+              .then((c) => {
+              if (c && c.exportToRouter) {
+                  config = c;
+              }
+              config.exportToRouter(this);
+              this.isConfigured = true;
+              this._resolveConfiguredPromise();
+          });
       }
-
-      next.complete = createCompletionHandler(next, pipelineStatus.completed);
-      next.cancel = createCompletionHandler(next, pipelineStatus.canceled);
-      next.reject = createCompletionHandler(next, pipelineStatus.rejected);
-
-      return next();
-    }
-  };
-
-  function createCompletionHandler(next, status) {
-    return output => {
-      return Promise.resolve({ status, output, completed: status === pipelineStatus.completed });
-    };
-  }
-
-  let RouterConfiguration = class RouterConfiguration {
-    constructor() {
-      this.instructions = [];
-      this.options = {};
-      this.pipelineSteps = [];
-    }
-
-    addPipelineStep(name, step) {
-      if (step === null || step === undefined) {
-        throw new Error('Pipeline step cannot be null or undefined.');
+      /**
+       * Navigates to a new location.
+       *
+       * @param fragment The URL fragment to use as the navigation destination.
+       * @param options The navigation options.
+       */
+      navigate(fragment, options) {
+          if (!this.isConfigured && this.parent) {
+              return this.parent.navigate(fragment, options);
+          }
+          this.isExplicitNavigation = true;
+          return this.history.navigate(_resolveUrl(fragment, this.baseUrl, this.history._hasPushState), options);
       }
-      this.pipelineSteps.push({ name, step });
-      return this;
-    }
-
-    addAuthorizeStep(step) {
-      return this.addPipelineStep('authorize', step);
-    }
-
-    addPreActivateStep(step) {
-      return this.addPipelineStep('preActivate', step);
-    }
-
-    addPreRenderStep(step) {
-      return this.addPipelineStep('preRender', step);
-    }
-
-    addPostRenderStep(step) {
-      return this.addPipelineStep('postRender', step);
-    }
-
-    fallbackRoute(fragment) {
-      this._fallbackRoute = fragment;
-      return this;
-    }
-
-    map(route) {
-      if (Array.isArray(route)) {
-        route.forEach(this.map.bind(this));
-        return this;
+      /**
+       * Navigates to a new location corresponding to the route and params specified. Equivallent to [[Router.generate]] followed
+       * by [[Router.navigate]].
+       *
+       * @param route The name of the route to use when generating the navigation location.
+       * @param params The route parameters to be used when populating the route pattern.
+       * @param options The navigation options.
+       */
+      navigateToRoute(route, params, options) {
+          let path = this.generate(route, params);
+          return this.navigate(path, options);
       }
-
-      return this.mapRoute(route);
-    }
-
-    useViewPortDefaults(viewPortConfig) {
-      this.viewPortDefaults = viewPortConfig;
-      return this;
-    }
-
-    mapRoute(config) {
-      this.instructions.push(router => {
-        let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
-
-        let navModel;
-        for (let i = 0, ii = routeConfigs.length; i < ii; ++i) {
-          let routeConfig = routeConfigs[i];
-          routeConfig.settings = routeConfig.settings || {};
+      /**
+       * Navigates back to the most recent location in history.
+       */
+      navigateBack() {
+          this.isExplicitNavigationBack = true;
+          this.history.navigateBack();
+      }
+      /**
+       * Creates a child router of the current router.
+       *
+       * @param container The [[Container]] to provide to the child router. Uses the current [[Router]]'s [[Container]] if unspecified.
+       * @returns {Router} The new child Router.
+       */
+      createChild(container) {
+          let childRouter = new Router(container || this.container.createChild(), this.history);
+          childRouter.parent = this;
+          return childRouter;
+      }
+      /**
+       * Generates a URL fragment matching the specified route pattern.
+       *
+       * @param name The name of the route whose pattern should be used to generate the fragment.
+       * @param params The route params to be used to populate the route pattern.
+       * @param options If options.absolute = true, then absolute url will be generated; otherwise, it will be relative url.
+       * @returns {string} A string containing the generated URL fragment.
+       */
+      generate(nameOrRoute, params = {}, options = {}) {
+          // A child recognizer generates routes for potential child routes. Any potential child route is added
+          // to the childRoute property of params for the childRouter to recognize. When generating routes, we
+          // use the childRecognizer when childRoute params are available to generate a child router enabled route.
+          let recognizer = 'childRoute' in params ? this._childRecognizer : this._recognizer;
+          let hasRoute = recognizer.hasRoute(nameOrRoute);
+          if (!hasRoute) {
+              if (this.parent) {
+                  return this.parent.generate(nameOrRoute, params, options);
+              }
+              throw new Error(`A route with name '${nameOrRoute}' could not be found. Check that \`name: '${nameOrRoute}'\` was specified in the route's config.`);
+          }
+          let path = recognizer.generate(nameOrRoute, params);
+          let rootedPath = _createRootedPath(path, this.baseUrl, this.history._hasPushState, options.absolute);
+          return options.absolute ? `${this.history.getAbsoluteRoot()}${rootedPath}` : rootedPath;
+      }
+      /**
+       * Creates a [[NavModel]] for the specified route config.
+       *
+       * @param config The route config.
+       */
+      createNavModel(config) {
+          let navModel = new NavModel(this, 'href' in config
+              ? config.href
+              // potential error when config.route is a string[] ?
+              : config.route);
+          navModel.title = config.title;
+          navModel.order = config.nav;
+          navModel.href = config.href;
+          navModel.settings = config.settings;
+          navModel.config = config;
+          return navModel;
+      }
+      /**
+       * Registers a new route with the router.
+       *
+       * @param config The [[RouteConfig]].
+       * @param navModel The [[NavModel]] to use for the route. May be omitted for single-pattern routes.
+       */
+      addRoute(config, navModel) {
+          if (Array.isArray(config.route)) {
+              let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
+              // the following is wrong. todo: fix this after TS refactoring release
+              routeConfigs.forEach(this.addRoute.bind(this));
+              return;
+          }
+          validateRouteConfig(config);
+          if (!('viewPorts' in config) && !config.navigationStrategy) {
+              config.viewPorts = {
+                  'default': {
+                      moduleId: config.moduleId,
+                      view: config.view
+                  }
+              };
+          }
           if (!navModel) {
-            navModel = router.createNavModel(routeConfig);
+              navModel = this.createNavModel(config);
           }
-
-          router.addRoute(routeConfig, navModel);
-        }
-      });
-
-      return this;
-    }
-
-    mapUnknownRoutes(config) {
-      this.unknownRouteConfig = config;
-      return this;
-    }
-
-    exportToRouter(router) {
-      let instructions = this.instructions;
-      for (let i = 0, ii = instructions.length; i < ii; ++i) {
-        instructions[i](router);
-      }
-
-      if (this.title) {
-        router.title = this.title;
-      }
-
-      if (this.titleSeparator) {
-        router.titleSeparator = this.titleSeparator;
-      }
-
-      if (this.unknownRouteConfig) {
-        router.handleUnknownRoutes(this.unknownRouteConfig);
-      }
-
-      if (this._fallbackRoute) {
-        router.fallbackRoute = this._fallbackRoute;
-      }
-
-      if (this.viewPortDefaults) {
-        router.useViewPortDefaults(this.viewPortDefaults);
-      }
-
-      Object.assign(router.options, this.options);
-
-      let pipelineSteps = this.pipelineSteps;
-      if (pipelineSteps.length) {
-        if (!router.isRoot) {
-          throw new Error('Pipeline steps can only be added to the root router');
-        }
-
-        let pipelineProvider = router.pipelineProvider;
-        for (let i = 0, ii = pipelineSteps.length; i < ii; ++i) {
-          let { name, step } = pipelineSteps[i];
-          pipelineProvider.addStep(name, step);
-        }
-      }
-    }
-  };
-
-  const activationStrategy = {
-    noChange: 'no-change',
-    invokeLifecycle: 'invoke-lifecycle',
-    replace: 'replace'
-  };
-
-  let BuildNavigationPlanStep = class BuildNavigationPlanStep {
-    run(navigationInstruction, next) {
-      return _buildNavigationPlan(navigationInstruction).then(plan => {
-        if (plan instanceof Redirect) {
-          return next.cancel(plan);
-        }
-        navigationInstruction.plan = plan;
-        return next();
-      }).catch(next.cancel);
-    }
-  };
-
-  function _buildNavigationPlan(instruction, forceLifecycleMinimum) {
-    let config = instruction.config;
-
-    if ('redirect' in config) {
-      let router = instruction.router;
-      return router._createNavigationInstruction(config.redirect).then(newInstruction => {
-        let params = {};
-        for (let key in newInstruction.params) {
-          let val = newInstruction.params[key];
-          if (typeof val === 'string' && val[0] === ':') {
-            val = val.slice(1);
-
-            if (val in instruction.params) {
-              params[key] = instruction.params[val];
-            }
-          } else {
-            params[key] = newInstruction.params[key];
+          this.routes.push(config);
+          let path = config.route;
+          if (path.charAt(0) === '/') {
+              path = path.substr(1);
           }
-        }
-        let redirectLocation = router.generate(newInstruction.config.name, params, instruction.options);
-
-        if (instruction.queryString) {
-          redirectLocation += '?' + instruction.queryString;
-        }
-
-        return Promise.resolve(new Redirect(redirectLocation));
-      });
-    }
-
-    let prev = instruction.previousInstruction;
-    let plan = {};
-    let defaults = instruction.router.viewPortDefaults;
-
-    if (prev) {
-      let newParams = hasDifferentParameterValues(prev, instruction);
-      let pending = [];
-
-      for (let viewPortName in prev.viewPortInstructions) {
-        let prevViewPortInstruction = prev.viewPortInstructions[viewPortName];
-        let nextViewPortConfig = viewPortName in config.viewPorts ? config.viewPorts[viewPortName] : prevViewPortInstruction;
-        if (nextViewPortConfig.moduleId === null && viewPortName in instruction.router.viewPortDefaults) {
-          nextViewPortConfig = defaults[viewPortName];
-        }
-
-        let viewPortPlan = plan[viewPortName] = {
-          name: viewPortName,
-          config: nextViewPortConfig,
-          prevComponent: prevViewPortInstruction.component,
-          prevModuleId: prevViewPortInstruction.moduleId
-        };
-
-        if (prevViewPortInstruction.moduleId !== nextViewPortConfig.moduleId) {
-          viewPortPlan.strategy = activationStrategy.replace;
-        } else if ('determineActivationStrategy' in prevViewPortInstruction.component.viewModel) {
-          viewPortPlan.strategy = prevViewPortInstruction.component.viewModel.determineActivationStrategy(...instruction.lifecycleArgs);
-        } else if (config.activationStrategy) {
-          viewPortPlan.strategy = config.activationStrategy;
-        } else if (newParams || forceLifecycleMinimum) {
-          viewPortPlan.strategy = activationStrategy.invokeLifecycle;
-        } else {
-          viewPortPlan.strategy = activationStrategy.noChange;
-        }
-
-        if (viewPortPlan.strategy !== activationStrategy.replace && prevViewPortInstruction.childRouter) {
-          let path = instruction.getWildcardPath();
-          let task = prevViewPortInstruction.childRouter._createNavigationInstruction(path, instruction).then(childInstruction => {
-            viewPortPlan.childNavigationInstruction = childInstruction;
-
-            return _buildNavigationPlan(childInstruction, viewPortPlan.strategy === activationStrategy.invokeLifecycle).then(childPlan => {
-              if (childPlan instanceof Redirect) {
-                return Promise.reject(childPlan);
+          let caseSensitive = config.caseSensitive === true;
+          let state = this._recognizer.add({
+              path: path,
+              handler: config,
+              caseSensitive: caseSensitive
+          });
+          if (path) {
+              let settings = config.settings;
+              delete config.settings;
+              let withChild = JSON.parse(JSON.stringify(config));
+              config.settings = settings;
+              withChild.route = `${path}/*childRoute`;
+              withChild.hasChildRouter = true;
+              this._childRecognizer.add({
+                  path: withChild.route,
+                  handler: withChild,
+                  caseSensitive: caseSensitive
+              });
+              withChild.navModel = navModel;
+              withChild.settings = config.settings;
+              withChild.navigationStrategy = config.navigationStrategy;
+          }
+          config.navModel = navModel;
+          let navigation = this.navigation;
+          if ((navModel.order || navModel.order === 0) && navigation.indexOf(navModel) === -1) {
+              if ((!navModel.href && navModel.href !== '') && (state.types.dynamics || state.types.stars)) {
+                  throw new Error('Invalid route config for "' + config.route + '" : dynamic routes must specify an "href:" to be included in the navigation model.');
               }
-              childInstruction.plan = childPlan;
-            });
-          });
-
-          pending.push(task);
-        }
-      }
-
-      return Promise.all(pending).then(() => plan);
-    }
-
-    for (let viewPortName in config.viewPorts) {
-      let viewPortConfig = config.viewPorts[viewPortName];
-      if (viewPortConfig.moduleId === null && viewPortName in instruction.router.viewPortDefaults) {
-        viewPortConfig = defaults[viewPortName];
-      }
-      plan[viewPortName] = {
-        name: viewPortName,
-        strategy: activationStrategy.replace,
-        config: viewPortConfig
-      };
-    }
-
-    return Promise.resolve(plan);
-  }
-
-  function hasDifferentParameterValues(prev, next) {
-    let prevParams = prev.params;
-    let nextParams = next.params;
-    let nextWildCardName = next.config.hasChildRouter ? next.getWildCardName() : null;
-
-    for (let key in nextParams) {
-      if (key === nextWildCardName) {
-        continue;
-      }
-
-      if (prevParams[key] !== nextParams[key]) {
-        return true;
-      }
-    }
-
-    for (let key in prevParams) {
-      if (key === nextWildCardName) {
-        continue;
-      }
-
-      if (prevParams[key] !== nextParams[key]) {
-        return true;
-      }
-    }
-
-    if (!next.options.compareQueryParams) {
-      return false;
-    }
-
-    let prevQueryParams = prev.queryParams;
-    let nextQueryParams = next.queryParams;
-    for (let key in nextQueryParams) {
-      if (prevQueryParams[key] !== nextQueryParams[key]) {
-        return true;
-      }
-    }
-
-    for (let key in prevQueryParams) {
-      if (prevQueryParams[key] !== nextQueryParams[key]) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  let Router = class Router {
-    constructor(container, history) {
-      this.parent = null;
-      this.options = {};
-      this.viewPortDefaults = {};
-
-      this.transformTitle = title => {
-        if (this.parent) {
-          return this.parent.transformTitle(title);
-        }
-        return title;
-      };
-
-      this.container = container;
-      this.history = history;
-      this.reset();
-    }
-
-    reset() {
-      this.viewPorts = {};
-      this.routes = [];
-      this.baseUrl = '';
-      this.isConfigured = false;
-      this.isNavigating = false;
-      this.isExplicitNavigation = false;
-      this.isExplicitNavigationBack = false;
-      this.isNavigatingFirst = false;
-      this.isNavigatingNew = false;
-      this.isNavigatingRefresh = false;
-      this.isNavigatingForward = false;
-      this.isNavigatingBack = false;
-      this.couldDeactivate = false;
-      this.navigation = [];
-      this.currentInstruction = null;
-      this.viewPortDefaults = {};
-      this._fallbackOrder = 100;
-      this._recognizer = new RouteRecognizer();
-      this._childRecognizer = new RouteRecognizer();
-      this._configuredPromise = new Promise(resolve => {
-        this._resolveConfiguredPromise = resolve;
-      });
-    }
-
-    get isRoot() {
-      return !this.parent;
-    }
-
-    registerViewPort(viewPort, name) {
-      name = name || 'default';
-      this.viewPorts[name] = viewPort;
-    }
-
-    ensureConfigured() {
-      return this._configuredPromise;
-    }
-
-    configure(callbackOrConfig) {
-      this.isConfigured = true;
-
-      let result = callbackOrConfig;
-      let config;
-      if (typeof callbackOrConfig === 'function') {
-        config = new RouterConfiguration();
-        result = callbackOrConfig(config);
-      }
-
-      return Promise.resolve(result).then(c => {
-        if (c && c.exportToRouter) {
-          config = c;
-        }
-
-        config.exportToRouter(this);
-        this.isConfigured = true;
-        this._resolveConfiguredPromise();
-      });
-    }
-
-    navigate(fragment, options) {
-      if (!this.isConfigured && this.parent) {
-        return this.parent.navigate(fragment, options);
-      }
-
-      this.isExplicitNavigation = true;
-      return this.history.navigate(_resolveUrl(fragment, this.baseUrl, this.history._hasPushState), options);
-    }
-
-    navigateToRoute(route, params, options) {
-      let path = this.generate(route, params);
-      return this.navigate(path, options);
-    }
-
-    navigateBack() {
-      this.isExplicitNavigationBack = true;
-      this.history.navigateBack();
-    }
-
-    createChild(container) {
-      let childRouter = new Router(container || this.container.createChild(), this.history);
-      childRouter.parent = this;
-      return childRouter;
-    }
-
-    generate(name, params, options = {}) {
-      let hasRoute = this._recognizer.hasRoute(name);
-      if ((!this.isConfigured || !hasRoute) && this.parent) {
-        return this.parent.generate(name, params, options);
-      }
-
-      if (!hasRoute) {
-        throw new Error(`A route with name '${name}' could not be found. Check that \`name: '${name}'\` was specified in the route's config.`);
-      }
-
-      let path = this._recognizer.generate(name, params);
-      let rootedPath = _createRootedPath(path, this.baseUrl, this.history._hasPushState, options.absolute);
-      return options.absolute ? `${this.history.getAbsoluteRoot()}${rootedPath}` : rootedPath;
-    }
-
-    createNavModel(config) {
-      let navModel = new NavModel(this, 'href' in config ? config.href : config.route);
-      navModel.title = config.title;
-      navModel.order = config.nav;
-      navModel.href = config.href;
-      navModel.settings = config.settings;
-      navModel.config = config;
-
-      return navModel;
-    }
-
-    addRoute(config, navModel) {
-      if (Array.isArray(config.route)) {
-        let routeConfigs = _ensureArrayWithSingleRoutePerConfig(config);
-        routeConfigs.forEach(this.addRoute.bind(this));
-        return;
-      }
-
-      validateRouteConfig(config, this.routes);
-
-      if (!('viewPorts' in config) && !config.navigationStrategy) {
-        config.viewPorts = {
-          'default': {
-            moduleId: config.moduleId,
-            view: config.view
+              if (typeof navModel.order !== 'number') {
+                  navModel.order = ++this._fallbackOrder;
+              }
+              navigation.push(navModel);
+              // this is a potential error / inconsistency between browsers
+              //
+              // MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+              // If compareFunction(a, b) returns 0, leave a and b unchanged with respect to each other,
+              // but sorted with respect to all different elements.
+              // Note: the ECMAscript standard does not guarantee this behaviour,
+              // and thus not all browsers (e.g. Mozilla versions dating back to at least 2003) respect this.
+              navigation.sort((a, b) => a.order - b.order);
           }
-        };
       }
-
-      if (!navModel) {
-        navModel = this.createNavModel(config);
+      /**
+       * Gets a value indicating whether or not this [[Router]] or one of its ancestors has a route registered with the specified name.
+       *
+       * @param name The name of the route to check.
+       */
+      hasRoute(name) {
+          return !!(this._recognizer.hasRoute(name) || this.parent && this.parent.hasRoute(name));
       }
-
-      this.routes.push(config);
-
-      let path = config.route;
-      if (path.charAt(0) === '/') {
-        path = path.substr(1);
+      /**
+       * Gets a value indicating whether or not this [[Router]] has a route registered with the specified name.
+       *
+       * @param name The name of the route to check.
+       */
+      hasOwnRoute(name) {
+          return this._recognizer.hasRoute(name);
       }
-      let caseSensitive = config.caseSensitive === true;
-      let state = this._recognizer.add({ path: path, handler: config, caseSensitive: caseSensitive });
-
-      if (path) {
-        let settings = config.settings;
-        delete config.settings;
-        let withChild = JSON.parse(JSON.stringify(config));
-        config.settings = settings;
-        withChild.route = `${path}/*childRoute`;
-        withChild.hasChildRouter = true;
-        this._childRecognizer.add({
-          path: withChild.route,
-          handler: withChild,
-          caseSensitive: caseSensitive
-        });
-
-        withChild.navModel = navModel;
-        withChild.settings = config.settings;
-        withChild.navigationStrategy = config.navigationStrategy;
+      /**
+       * Register a handler to use when the incoming URL fragment doesn't match any registered routes.
+       *
+       * @param config The moduleId, or a function that selects the moduleId, or a [[RouteConfig]].
+       */
+      handleUnknownRoutes(config) {
+          if (!config) {
+              throw new Error('Invalid unknown route handler');
+          }
+          this.catchAllHandler = instruction => {
+              return this
+                  ._createRouteConfig(config, instruction)
+                  .then(c => {
+                  instruction.config = c;
+                  return instruction;
+              });
+          };
       }
-
-      config.navModel = navModel;
-
-      if ((navModel.order || navModel.order === 0) && this.navigation.indexOf(navModel) === -1) {
-        if (!navModel.href && navModel.href !== '' && (state.types.dynamics || state.types.stars)) {
-          throw new Error('Invalid route config for "' + config.route + '" : dynamic routes must specify an "href:" to be included in the navigation model.');
-        }
-
-        if (typeof navModel.order !== 'number') {
-          navModel.order = ++this._fallbackOrder;
-        }
-
-        this.navigation.push(navModel);
-        this.navigation = this.navigation.sort((a, b) => a.order - b.order);
+      /**
+       * Updates the document title using the current navigation instruction.
+       */
+      updateTitle() {
+          let parentRouter = this.parent;
+          if (parentRouter) {
+              return parentRouter.updateTitle();
+          }
+          let currentInstruction = this.currentInstruction;
+          if (currentInstruction) {
+              currentInstruction._updateTitle();
+          }
+          return undefined;
       }
-    }
-
-    hasRoute(name) {
-      return !!(this._recognizer.hasRoute(name) || this.parent && this.parent.hasRoute(name));
-    }
-
-    hasOwnRoute(name) {
-      return this._recognizer.hasRoute(name);
-    }
-
-    handleUnknownRoutes(config) {
-      if (!config) {
-        throw new Error('Invalid unknown route handler');
+      /**
+       * Updates the navigation routes with hrefs relative to the current location.
+       * Note: This method will likely move to a plugin in a future release.
+       */
+      refreshNavigation() {
+          let nav = this.navigation;
+          for (let i = 0, length = nav.length; i < length; i++) {
+              let current = nav[i];
+              if (!current.config.href) {
+                  current.href = _createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
+              }
+              else {
+                  current.href = _normalizeAbsolutePath(current.config.href, this.history._hasPushState);
+              }
+          }
       }
-
-      this.catchAllHandler = instruction => {
-        return this._createRouteConfig(config, instruction).then(c => {
-          instruction.config = c;
+      /**
+       * Sets the default configuration for the view ports. This specifies how to
+       *  populate a view port for which no module is specified. The default is
+       *  an empty view/view-model pair.
+       */
+      useViewPortDefaults($viewPortDefaults) {
+          // a workaround to have strong typings while not requiring to expose interface ViewPortInstruction
+          let viewPortDefaults = $viewPortDefaults;
+          for (let viewPortName in viewPortDefaults) {
+              let viewPortConfig = viewPortDefaults[viewPortName];
+              this.viewPortDefaults[viewPortName] = {
+                  moduleId: viewPortConfig.moduleId
+              };
+          }
+      }
+      /**@internal */
+      _refreshBaseUrl() {
+          let parentRouter = this.parent;
+          if (parentRouter) {
+              this.baseUrl = generateBaseUrl(parentRouter, parentRouter.currentInstruction);
+          }
+      }
+      /**@internal */
+      _createNavigationInstruction(url = '', parentInstruction = null) {
+          let fragment = url;
+          let queryString = '';
+          let queryIndex = url.indexOf('?');
+          if (queryIndex !== -1) {
+              fragment = url.substr(0, queryIndex);
+              queryString = url.substr(queryIndex + 1);
+          }
+          let urlRecognizationResults = this._recognizer.recognize(url);
+          if (!urlRecognizationResults || !urlRecognizationResults.length) {
+              urlRecognizationResults = this._childRecognizer.recognize(url);
+          }
+          let instructionInit = {
+              fragment,
+              queryString,
+              config: null,
+              parentInstruction,
+              previousInstruction: this.currentInstruction,
+              router: this,
+              options: {
+                  compareQueryParams: this.options.compareQueryParams
+              }
+          };
+          let result;
+          if (urlRecognizationResults && urlRecognizationResults.length) {
+              let first = urlRecognizationResults[0];
+              let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+                  params: first.params,
+                  queryParams: first.queryParams || urlRecognizationResults.queryParams,
+                  config: first.config || first.handler
+              }));
+              if (typeof first.handler === 'function') {
+                  result = evaluateNavigationStrategy(instruction, first.handler, first);
+              }
+              else if (first.handler && typeof first.handler.navigationStrategy === 'function') {
+                  result = evaluateNavigationStrategy(instruction, first.handler.navigationStrategy, first.handler);
+              }
+              else {
+                  result = Promise.resolve(instruction);
+              }
+          }
+          else if (this.catchAllHandler) {
+              let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+                  params: { path: fragment },
+                  queryParams: urlRecognizationResults ? urlRecognizationResults.queryParams : {},
+                  config: null // config will be created by the catchAllHandler
+              }));
+              result = evaluateNavigationStrategy(instruction, this.catchAllHandler);
+          }
+          else if (this.parent) {
+              let router = this._parentCatchAllHandler(this.parent);
+              if (router) {
+                  let newParentInstruction = this._findParentInstructionFromRouter(router, parentInstruction);
+                  let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
+                      params: { path: fragment },
+                      queryParams: urlRecognizationResults ? urlRecognizationResults.queryParams : {},
+                      router: router,
+                      parentInstruction: newParentInstruction,
+                      parentCatchHandler: true,
+                      config: null // config will be created by the chained parent catchAllHandler
+                  }));
+                  result = evaluateNavigationStrategy(instruction, router.catchAllHandler);
+              }
+          }
+          if (result && parentInstruction) {
+              this.baseUrl = generateBaseUrl(this.parent, parentInstruction);
+          }
+          return result || Promise.reject(new Error(`Route not found: ${url}`));
+      }
+      /**@internal */
+      _findParentInstructionFromRouter(router, instruction) {
+          if (instruction.router === router) {
+              instruction.fragment = router.baseUrl; // need to change the fragment in case of a redirect instead of moduleId
+              return instruction;
+          }
+          else if (instruction.parentInstruction) {
+              return this._findParentInstructionFromRouter(router, instruction.parentInstruction);
+          }
+          return undefined;
+      }
+      /**@internal */
+      _parentCatchAllHandler(router) {
+          if (router.catchAllHandler) {
+              return router;
+          }
+          else if (router.parent) {
+              return this._parentCatchAllHandler(router.parent);
+          }
+          return false;
+      }
+      /**
+       * @internal
+       */
+      _createRouteConfig(config, instruction) {
+          return Promise
+              .resolve(config)
+              .then((c) => {
+              if (typeof c === 'string') {
+                  return { moduleId: c };
+              }
+              else if (typeof c === 'function') {
+                  return c(instruction);
+              }
+              return c;
+          })
+              // typing here could be either RouteConfig or RedirectConfig
+              // but temporarily treat both as RouteConfig
+              // todo: improve typings precision
+              .then((c) => typeof c === 'string' ? { moduleId: c } : c)
+              .then((c) => {
+              c.route = instruction.params.path;
+              validateRouteConfig(c);
+              if (!c.navModel) {
+                  c.navModel = this.createNavModel(c);
+              }
+              return c;
+          });
+      }
+  }
+  /* @internal exported for unit testing */
+  const generateBaseUrl = (router, instruction) => {
+      return `${router.baseUrl || ''}${instruction.getBaseUrl() || ''}`;
+  };
+  /* @internal exported for unit testing */
+  const validateRouteConfig = (config) => {
+      if (typeof config !== 'object') {
+          throw new Error('Invalid Route Config');
+      }
+      if (typeof config.route !== 'string') {
+          let name = config.name || '(no name)';
+          throw new Error('Invalid Route Config for "' + name + '": You must specify a "route:" pattern.');
+      }
+      if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
+          throw new Error('Invalid Route Config for "' + config.route + '": You must specify a "moduleId:", "redirect:", "navigationStrategy:", or "viewPorts:".');
+      }
+  };
+  /* @internal exported for unit testing */
+  const evaluateNavigationStrategy = (instruction, evaluator, context) => {
+      return Promise
+          .resolve(evaluator.call(context, instruction))
+          .then(() => {
+          if (!('viewPorts' in instruction.config)) {
+              instruction.config.viewPorts = {
+                  'default': {
+                      moduleId: instruction.config.moduleId
+                  }
+              };
+          }
           return instruction;
-        });
-      };
-    }
-
-    updateTitle() {
-      if (this.parent) {
-        return this.parent.updateTitle();
-      }
-
-      if (this.currentInstruction) {
-        this.currentInstruction._updateTitle();
-      }
-      return undefined;
-    }
-
-    refreshNavigation() {
-      let nav = this.navigation;
-
-      for (let i = 0, length = nav.length; i < length; i++) {
-        let current = nav[i];
-        if (!current.config.href) {
-          current.href = _createRootedPath(current.relativeHref, this.baseUrl, this.history._hasPushState);
-        } else {
-          current.href = _normalizeAbsolutePath(current.config.href, this.history._hasPushState);
-        }
-      }
-    }
-
-    useViewPortDefaults(viewPortDefaults) {
-      for (let viewPortName in viewPortDefaults) {
-        let viewPortConfig = viewPortDefaults[viewPortName];
-        this.viewPortDefaults[viewPortName] = {
-          moduleId: viewPortConfig.moduleId
-        };
-      }
-    }
-
-    _refreshBaseUrl() {
-      if (this.parent) {
-        this.baseUrl = generateBaseUrl(this.parent, this.parent.currentInstruction);
-      }
-    }
-
-    _createNavigationInstruction(url = '', parentInstruction = null) {
-      let fragment = url;
-      let queryString = '';
-
-      let queryIndex = url.indexOf('?');
-      if (queryIndex !== -1) {
-        fragment = url.substr(0, queryIndex);
-        queryString = url.substr(queryIndex + 1);
-      }
-
-      let results = this._recognizer.recognize(url);
-      if (!results || !results.length) {
-        results = this._childRecognizer.recognize(url);
-      }
-
-      let instructionInit = {
-        fragment,
-        queryString,
-        config: null,
-        parentInstruction,
-        previousInstruction: this.currentInstruction,
-        router: this,
-        options: {
-          compareQueryParams: this.options.compareQueryParams
-        }
-      };
-
-      let result;
-
-      if (results && results.length) {
-        let first = results[0];
-        let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
-          params: first.params,
-          queryParams: first.queryParams || results.queryParams,
-          config: first.config || first.handler
-        }));
-
-        if (typeof first.handler === 'function') {
-          result = evaluateNavigationStrategy(instruction, first.handler, first);
-        } else if (first.handler && typeof first.handler.navigationStrategy === 'function') {
-          result = evaluateNavigationStrategy(instruction, first.handler.navigationStrategy, first.handler);
-        } else {
-          result = Promise.resolve(instruction);
-        }
-      } else if (this.catchAllHandler) {
-        let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
-          params: { path: fragment },
-          queryParams: results ? results.queryParams : {},
-          config: null }));
-
-        result = evaluateNavigationStrategy(instruction, this.catchAllHandler);
-      } else if (this.parent) {
-        let router = this._parentCatchAllHandler(this.parent);
-
-        if (router) {
-          let newParentInstruction = this._findParentInstructionFromRouter(router, parentInstruction);
-
-          let instruction = new NavigationInstruction(Object.assign({}, instructionInit, {
-            params: { path: fragment },
-            queryParams: results ? results.queryParams : {},
-            router: router,
-            parentInstruction: newParentInstruction,
-            parentCatchHandler: true,
-            config: null }));
-
-          result = evaluateNavigationStrategy(instruction, router.catchAllHandler);
-        }
-      }
-
-      if (result && parentInstruction) {
-        this.baseUrl = generateBaseUrl(this.parent, parentInstruction);
-      }
-
-      return result || Promise.reject(new Error(`Route not found: ${url}`));
-    }
-
-    _findParentInstructionFromRouter(router, instruction) {
-      if (instruction.router === router) {
-        instruction.fragment = router.baseUrl;
-        return instruction;
-      } else if (instruction.parentInstruction) {
-        return this._findParentInstructionFromRouter(router, instruction.parentInstruction);
-      }
-      return undefined;
-    }
-
-    _parentCatchAllHandler(router) {
-      if (router.catchAllHandler) {
-        return router;
-      } else if (router.parent) {
-        return this._parentCatchAllHandler(router.parent);
-      }
-      return false;
-    }
-
-    _createRouteConfig(config, instruction) {
-      return Promise.resolve(config).then(c => {
-        if (typeof c === 'string') {
-          return { moduleId: c };
-        } else if (typeof c === 'function') {
-          return c(instruction);
-        }
-
-        return c;
-      }).then(c => typeof c === 'string' ? { moduleId: c } : c).then(c => {
-        c.route = instruction.params.path;
-        validateRouteConfig(c, this.routes);
-
-        if (!c.navModel) {
-          c.navModel = this.createNavModel(c);
-        }
-
-        return c;
       });
-    }
   };
 
-  function generateBaseUrl(router, instruction) {
-    return `${router.baseUrl || ''}${instruction.getBaseUrl() || ''}`;
-  }
-
-  function validateRouteConfig(config, routes) {
-    if (typeof config !== 'object') {
-      throw new Error('Invalid Route Config');
-    }
-
-    if (typeof config.route !== 'string') {
-      let name = config.name || '(no name)';
-      throw new Error('Invalid Route Config for "' + name + '": You must specify a "route:" pattern.');
-    }
-
-    if (!('redirect' in config || config.moduleId || config.navigationStrategy || config.viewPorts)) {
-      throw new Error('Invalid Route Config for "' + config.route + '": You must specify a "moduleId:", "redirect:", "navigationStrategy:", or "viewPorts:".');
-    }
-  }
-
-  function evaluateNavigationStrategy(instruction, evaluator, context) {
-    return Promise.resolve(evaluator.call(context, instruction)).then(() => {
-      if (!('viewPorts' in instruction.config)) {
-        instruction.config.viewPorts = {
-          'default': {
-            moduleId: instruction.config.moduleId
+  /**@internal exported for unit testing */
+  const createNextFn = (instruction, steps) => {
+      let index = -1;
+      const next = function () {
+          index++;
+          if (index < steps.length) {
+              let currentStep = steps[index];
+              try {
+                  return currentStep(instruction, next);
+              }
+              catch (e) {
+                  return next.reject(e);
+              }
           }
-        };
-      }
-
-      return instruction;
-    });
-  }
-
-  let CanDeactivatePreviousStep = class CanDeactivatePreviousStep {
-    run(navigationInstruction, next) {
-      return processDeactivatable(navigationInstruction, 'canDeactivate', next);
-    }
+          else {
+              return next.complete();
+          }
+      };
+      next.complete = createCompletionHandler(next, "completed" /* Completed */);
+      next.cancel = createCompletionHandler(next, "canceled" /* Canceled */);
+      next.reject = createCompletionHandler(next, "rejected" /* Rejected */);
+      return next;
+  };
+  /**@internal exported for unit testing */
+  const createCompletionHandler = (next, status) => {
+      return (output) => Promise
+          .resolve({
+          status,
+          output,
+          completed: status === "completed" /* Completed */
+      });
   };
 
-  let CanActivateNextStep = class CanActivateNextStep {
-    run(navigationInstruction, next) {
-      return processActivatable(navigationInstruction, 'canActivate', next);
-    }
+  /**
+   * The class responsible for managing and processing the navigation pipeline.
+   */
+  class Pipeline {
+      constructor() {
+          /**
+           * The pipeline steps. And steps added via addStep will be converted to a function
+           * The actualy running functions with correct step contexts of this pipeline
+           */
+          this.steps = [];
+      }
+      /**
+       * Adds a step to the pipeline.
+       *
+       * @param step The pipeline step.
+       */
+      addStep(step) {
+          let run;
+          if (typeof step === 'function') {
+              run = step;
+          }
+          else if (typeof step.getSteps === 'function') {
+              // getSteps is to enable support open slots
+              // where devs can add multiple steps into the same slot name
+              let steps = step.getSteps();
+              for (let i = 0, l = steps.length; i < l; i++) {
+                  this.addStep(steps[i]);
+              }
+              return this;
+          }
+          else {
+              run = step.run.bind(step);
+          }
+          this.steps.push(run);
+          return this;
+      }
+      /**
+       * Runs the pipeline.
+       *
+       * @param instruction The navigation instruction to process.
+       */
+      run(instruction) {
+          const nextFn = createNextFn(instruction, this.steps);
+          return nextFn();
+      }
+  }
+
+  /**
+  * Determines if the provided object is a navigation command.
+  * A navigation command is anything with a navigate method.
+  *
+  * @param obj The object to check.
+  */
+  function isNavigationCommand(obj) {
+      return obj && typeof obj.navigate === 'function';
+  }
+  /**
+  * Used during the activation lifecycle to cause a redirect.
+  */
+  class Redirect {
+      /**
+       * @param url The URL fragment to use as the navigation destination.
+       * @param options The navigation options.
+       */
+      constructor(url, options = {}) {
+          this.url = url;
+          this.options = Object.assign({ trigger: true, replace: true }, options);
+          this.shouldContinueProcessing = false;
+      }
+      /**
+       * Called by the activation system to set the child router.
+       *
+       * @param router The router.
+       */
+      setRouter(router) {
+          this.router = router;
+      }
+      /**
+       * Called by the navigation pipeline to navigate.
+       *
+       * @param appRouter The router to be redirected.
+       */
+      navigate(appRouter) {
+          let navigatingRouter = this.options.useAppRouter ? appRouter : (this.router || appRouter);
+          navigatingRouter.navigate(this.url, this.options);
+      }
+  }
+  /**
+   * Used during the activation lifecycle to cause a redirect to a named route.
+   */
+  class RedirectToRoute {
+      /**
+       * @param route The name of the route.
+       * @param params The parameters to be sent to the activation method.
+       * @param options The options to use for navigation.
+       */
+      constructor(route, params = {}, options = {}) {
+          this.route = route;
+          this.params = params;
+          this.options = Object.assign({ trigger: true, replace: true }, options);
+          this.shouldContinueProcessing = false;
+      }
+      /**
+       * Called by the activation system to set the child router.
+       *
+       * @param router The router.
+       */
+      setRouter(router) {
+          this.router = router;
+      }
+      /**
+       * Called by the navigation pipeline to navigate.
+       *
+       * @param appRouter The router to be redirected.
+       */
+      navigate(appRouter) {
+          let navigatingRouter = this.options.useAppRouter ? appRouter : (this.router || appRouter);
+          navigatingRouter.navigateToRoute(this.route, this.params, this.options);
+      }
+  }
+
+  /**
+   * @internal exported for unit testing
+   */
+  function _buildNavigationPlan(instruction, forceLifecycleMinimum) {
+      let config = instruction.config;
+      if ('redirect' in config) {
+          return buildRedirectPlan(instruction);
+      }
+      const prevInstruction = instruction.previousInstruction;
+      const defaultViewPortConfigs = instruction.router.viewPortDefaults;
+      if (prevInstruction) {
+          return buildTransitionPlans(instruction, prevInstruction, defaultViewPortConfigs, forceLifecycleMinimum);
+      }
+      // first navigation, only need to prepare a few information for each viewport plan
+      const viewPortPlans = {};
+      let viewPortConfigs = config.viewPorts;
+      for (let viewPortName in viewPortConfigs) {
+          let viewPortConfig = viewPortConfigs[viewPortName];
+          if (viewPortConfig.moduleId === null && viewPortName in defaultViewPortConfigs) {
+              viewPortConfig = defaultViewPortConfigs[viewPortName];
+          }
+          viewPortPlans[viewPortName] = {
+              name: viewPortName,
+              strategy: "replace" /* Replace */,
+              config: viewPortConfig
+          };
+      }
+      return Promise.resolve(viewPortPlans);
+  }
+  /**
+   * Build redirect plan based on config of a navigation instruction
+   * @internal exported for unit testing
+   */
+  const buildRedirectPlan = (instruction) => {
+      const config = instruction.config;
+      const router = instruction.router;
+      return router
+          ._createNavigationInstruction(config.redirect)
+          .then(redirectInstruction => {
+          const params = {};
+          const originalInstructionParams = instruction.params;
+          const redirectInstructionParams = redirectInstruction.params;
+          for (let key in redirectInstructionParams) {
+              // If the param on the redirect points to another param, e.g. { route: first/:this, redirect: second/:this }
+              let val = redirectInstructionParams[key];
+              if (typeof val === 'string' && val[0] === ':') {
+                  val = val.slice(1);
+                  // And if that param is found on the original instruction then use it
+                  if (val in originalInstructionParams) {
+                      params[key] = originalInstructionParams[val];
+                  }
+              }
+              else {
+                  params[key] = redirectInstructionParams[key];
+              }
+          }
+          let redirectLocation = router.generate(redirectInstruction.config, params, instruction.options);
+          // Special handling for child routes
+          for (let key in originalInstructionParams) {
+              redirectLocation = redirectLocation.replace(`:${key}`, originalInstructionParams[key]);
+          }
+          let queryString = instruction.queryString;
+          if (queryString) {
+              redirectLocation += '?' + queryString;
+          }
+          return Promise.resolve(new Redirect(redirectLocation));
+      });
   };
-
-  let DeactivatePreviousStep = class DeactivatePreviousStep {
-    run(navigationInstruction, next) {
-      return processDeactivatable(navigationInstruction, 'deactivate', next, true);
-    }
+  /**
+   * @param viewPortPlans the Plan record that holds information about built plans
+   * @internal exported for unit testing
+   */
+  const buildTransitionPlans = (currentInstruction, previousInstruction, defaultViewPortConfigs, forceLifecycleMinimum) => {
+      let viewPortPlans = {};
+      let newInstructionConfig = currentInstruction.config;
+      let hasNewParams = hasDifferentParameterValues(previousInstruction, currentInstruction);
+      let pending = [];
+      let previousViewPortInstructions = previousInstruction.viewPortInstructions;
+      for (let viewPortName in previousViewPortInstructions) {
+          const prevViewPortInstruction = previousViewPortInstructions[viewPortName];
+          const prevViewPortComponent = prevViewPortInstruction.component;
+          const newInstructionViewPortConfigs = newInstructionConfig.viewPorts;
+          // if this is invoked on a viewport without any changes, based on new url,
+          // newViewPortConfig will be the existing viewport instruction
+          let nextViewPortConfig = viewPortName in newInstructionViewPortConfigs
+              ? newInstructionViewPortConfigs[viewPortName]
+              : prevViewPortInstruction;
+          if (nextViewPortConfig.moduleId === null && viewPortName in defaultViewPortConfigs) {
+              nextViewPortConfig = defaultViewPortConfigs[viewPortName];
+          }
+          const viewPortActivationStrategy = determineActivationStrategy(currentInstruction, prevViewPortInstruction, nextViewPortConfig, hasNewParams, forceLifecycleMinimum);
+          const viewPortPlan = viewPortPlans[viewPortName] = {
+              name: viewPortName,
+              // ViewPortInstruction can quack like a RouteConfig
+              config: nextViewPortConfig,
+              prevComponent: prevViewPortComponent,
+              prevModuleId: prevViewPortInstruction.moduleId,
+              strategy: viewPortActivationStrategy
+          };
+          // recursively build nav plans for all existing child routers/viewports of this viewport
+          // this is possible because existing child viewports and routers already have necessary information
+          // to process the wildcard path from parent instruction
+          if (viewPortActivationStrategy !== "replace" /* Replace */ && prevViewPortInstruction.childRouter) {
+              const path = currentInstruction.getWildcardPath();
+              const task = prevViewPortInstruction
+                  .childRouter
+                  ._createNavigationInstruction(path, currentInstruction)
+                  .then((childInstruction) => {
+                  viewPortPlan.childNavigationInstruction = childInstruction;
+                  return _buildNavigationPlan(childInstruction, 
+                  // is it safe to assume viewPortPlan has not been changed from previous assignment?
+                  // if so, can just use local variable viewPortPlanStrategy
+                  // there could be user code modifying viewport plan during _createNavigationInstruction?
+                  viewPortPlan.strategy === "invoke-lifecycle" /* InvokeLifecycle */)
+                      .then(childPlan => {
+                      if (childPlan instanceof Redirect) {
+                          return Promise.reject(childPlan);
+                      }
+                      childInstruction.plan = childPlan;
+                      // for bluebird ?
+                      return null;
+                  });
+              });
+              pending.push(task);
+          }
+      }
+      return Promise.all(pending).then(() => viewPortPlans);
   };
-
-  let ActivateNextStep = class ActivateNextStep {
-    run(navigationInstruction, next) {
-      return processActivatable(navigationInstruction, 'activate', next, true);
-    }
+  /**
+   * @param newViewPortConfig if this is invoked on a viewport without any changes, based on new url, newViewPortConfig will be the existing viewport instruction
+   * @internal exported for unit testing
+   */
+  const determineActivationStrategy = (currentNavInstruction, prevViewPortInstruction, newViewPortConfig, 
+  // indicates whether there is difference between old and new url params
+  hasNewParams, forceLifecycleMinimum) => {
+      let newInstructionConfig = currentNavInstruction.config;
+      let prevViewPortViewModel = prevViewPortInstruction.component.viewModel;
+      let viewPortPlanStrategy;
+      if (prevViewPortInstruction.moduleId !== newViewPortConfig.moduleId) {
+          viewPortPlanStrategy = "replace" /* Replace */;
+      }
+      else if ('determineActivationStrategy' in prevViewPortViewModel) {
+          viewPortPlanStrategy = prevViewPortViewModel.determineActivationStrategy(...currentNavInstruction.lifecycleArgs);
+      }
+      else if (newInstructionConfig.activationStrategy) {
+          viewPortPlanStrategy = newInstructionConfig.activationStrategy;
+      }
+      else if (hasNewParams || forceLifecycleMinimum) {
+          viewPortPlanStrategy = "invoke-lifecycle" /* InvokeLifecycle */;
+      }
+      else {
+          viewPortPlanStrategy = "no-change" /* NoChange */;
+      }
+      return viewPortPlanStrategy;
   };
-
-  function processDeactivatable(navigationInstruction, callbackName, next, ignoreResult) {
-    const plan = navigationInstruction.plan;
-    let infos = findDeactivatable(plan, callbackName);
-    let i = infos.length;
-
-    function inspect(val) {
-      if (ignoreResult || shouldContinue(val)) {
-        return iterate();
+  /**@internal exported for unit testing */
+  const hasDifferentParameterValues = (prev, next) => {
+      let prevParams = prev.params;
+      let nextParams = next.params;
+      let nextWildCardName = next.config.hasChildRouter ? next.getWildCardName() : null;
+      for (let key in nextParams) {
+          if (key === nextWildCardName) {
+              continue;
+          }
+          if (prevParams[key] !== nextParams[key]) {
+              return true;
+          }
       }
-
-      return next.cancel(val);
-    }
-
-    function iterate() {
-      if (i--) {
-        try {
-          let viewModel = infos[i];
-          let result = viewModel[callbackName](navigationInstruction);
-          return processPotential(result, inspect, next.cancel);
-        } catch (error) {
-          return next.cancel(error);
-        }
+      for (let key in prevParams) {
+          if (key === nextWildCardName) {
+              continue;
+          }
+          if (prevParams[key] !== nextParams[key]) {
+              return true;
+          }
       }
-
-      navigationInstruction.router.couldDeactivate = true;
-
-      return next();
-    }
-
-    return iterate();
-  }
-
-  function findDeactivatable(plan, callbackName, list = []) {
-    for (let viewPortName in plan) {
-      let viewPortPlan = plan[viewPortName];
-      let prevComponent = viewPortPlan.prevComponent;
-
-      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && prevComponent) {
-        let viewModel = prevComponent.viewModel;
-
-        if (callbackName in viewModel) {
-          list.push(viewModel);
-        }
+      if (!next.options.compareQueryParams) {
+          return false;
       }
-
-      if (viewPortPlan.strategy === activationStrategy.replace && prevComponent) {
-        addPreviousDeactivatable(prevComponent, callbackName, list);
-      } else if (viewPortPlan.childNavigationInstruction) {
-        findDeactivatable(viewPortPlan.childNavigationInstruction.plan, callbackName, list);
+      let prevQueryParams = prev.queryParams;
+      let nextQueryParams = next.queryParams;
+      for (let key in nextQueryParams) {
+          if (prevQueryParams[key] !== nextQueryParams[key]) {
+              return true;
+          }
       }
-    }
-
-    return list;
-  }
-
-  function addPreviousDeactivatable(component, callbackName, list) {
-    let childRouter = component.childRouter;
-
-    if (childRouter && childRouter.currentInstruction) {
-      let viewPortInstructions = childRouter.currentInstruction.viewPortInstructions;
-
-      for (let viewPortName in viewPortInstructions) {
-        let viewPortInstruction = viewPortInstructions[viewPortName];
-        let prevComponent = viewPortInstruction.component;
-        let prevViewModel = prevComponent.viewModel;
-
-        if (callbackName in prevViewModel) {
-          list.push(prevViewModel);
-        }
-
-        addPreviousDeactivatable(prevComponent, callbackName, list);
+      for (let key in prevQueryParams) {
+          if (prevQueryParams[key] !== nextQueryParams[key]) {
+              return true;
+          }
       }
-    }
-  }
-
-  function processActivatable(navigationInstruction, callbackName, next, ignoreResult) {
-    let infos = findActivatable(navigationInstruction, callbackName);
-    let length = infos.length;
-    let i = -1;
-
-    function inspect(val, router) {
-      if (ignoreResult || shouldContinue(val, router)) {
-        return iterate();
-      }
-
-      return next.cancel(val);
-    }
-
-    function iterate() {
-      i++;
-
-      if (i < length) {
-        try {
-          let current = infos[i];
-          let result = current.viewModel[callbackName](...current.lifecycleArgs);
-          return processPotential(result, val => inspect(val, current.router), next.cancel);
-        } catch (error) {
-          return next.cancel(error);
-        }
-      }
-
-      return next();
-    }
-
-    return iterate();
-  }
-
-  function findActivatable(navigationInstruction, callbackName, list = [], router) {
-    let plan = navigationInstruction.plan;
-
-    Object.keys(plan).filter(viewPortName => {
-      let viewPortPlan = plan[viewPortName];
-      let viewPortInstruction = navigationInstruction.viewPortInstructions[viewPortName];
-      let viewModel = viewPortInstruction.component.viewModel;
-
-      if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace) && callbackName in viewModel) {
-        list.push({
-          viewModel,
-          lifecycleArgs: viewPortInstruction.lifecycleArgs,
-          router
-        });
-      }
-
-      if (viewPortPlan.childNavigationInstruction) {
-        findActivatable(viewPortPlan.childNavigationInstruction, callbackName, list, viewPortInstruction.component.childRouter || router);
-      }
-    });
-
-    return list;
-  }
-
-  function shouldContinue(output, router) {
-    if (output instanceof Error) {
       return false;
-    }
+  };
 
-    if (isNavigationCommand(output)) {
-      if (typeof output.setRouter === 'function') {
-        output.setRouter(router);
+  /**
+   * Transform a navigation instruction into viewport plan record object,
+   * or a redirect request if user viewmodel demands
+   */
+  class BuildNavigationPlanStep {
+      run(navigationInstruction, next) {
+          return _buildNavigationPlan(navigationInstruction)
+              .then(plan => {
+              if (plan instanceof Redirect) {
+                  return next.cancel(plan);
+              }
+              navigationInstruction.plan = plan;
+              return next();
+          })
+              .catch(next.cancel);
       }
-
-      return !!output.shouldContinueProcessing;
-    }
-
-    if (output === undefined) {
-      return true;
-    }
-
-    return output;
   }
 
-  let SafeSubscription = class SafeSubscription {
-    constructor(subscriptionFunc) {
-      this._subscribed = true;
-      this._subscription = subscriptionFunc(this);
-
-      if (!this._subscribed) this.unsubscribe();
-    }
-
-    get subscribed() {
-      return this._subscribed;
-    }
-
-    unsubscribe() {
-      if (this._subscribed && this._subscription) this._subscription.unsubscribe();
-
-      this._subscribed = false;
-    }
+  /**
+   * @internal Exported for unit testing
+   */
+  const loadNewRoute = (routeLoader, navigationInstruction) => {
+      let loadingPlans = determineLoadingPlans(navigationInstruction);
+      let loadPromises = loadingPlans.map((loadingPlan) => loadRoute(routeLoader, loadingPlan.navigationInstruction, loadingPlan.viewPortPlan));
+      return Promise.all(loadPromises);
   };
-
-
-  function processPotential(obj, resolve, reject) {
-    if (obj && typeof obj.then === 'function') {
-      return Promise.resolve(obj).then(resolve).catch(reject);
-    }
-
-    if (obj && typeof obj.subscribe === 'function') {
-      let obs = obj;
-      return new SafeSubscription(sub => obs.subscribe({
-        next() {
-          if (sub.subscribed) {
-            sub.unsubscribe();
-            resolve(obj);
+  /**
+   * @internal Exported for unit testing
+   */
+  const determineLoadingPlans = (navigationInstruction, loadingPlans = []) => {
+      let viewPortPlans = navigationInstruction.plan;
+      for (let viewPortName in viewPortPlans) {
+          let viewPortPlan = viewPortPlans[viewPortName];
+          let childNavInstruction = viewPortPlan.childNavigationInstruction;
+          if (viewPortPlan.strategy === "replace" /* Replace */) {
+              loadingPlans.push({ viewPortPlan, navigationInstruction });
+              if (childNavInstruction) {
+                  determineLoadingPlans(childNavInstruction, loadingPlans);
+              }
           }
-        },
-        error(error) {
-          if (sub.subscribed) {
-            sub.unsubscribe();
-            reject(error);
+          else {
+              let viewPortInstruction = navigationInstruction.addViewPortInstruction({
+                  name: viewPortName,
+                  strategy: viewPortPlan.strategy,
+                  moduleId: viewPortPlan.prevModuleId,
+                  component: viewPortPlan.prevComponent
+              });
+              if (childNavInstruction) {
+                  viewPortInstruction.childNavigationInstruction = childNavInstruction;
+                  determineLoadingPlans(childNavInstruction, loadingPlans);
+              }
           }
-        },
-        complete() {
-          if (sub.subscribed) {
-            sub.unsubscribe();
-            resolve(obj);
-          }
-        }
-      }));
-    }
-
-    try {
-      return resolve(obj);
-    } catch (error) {
-      return reject(error);
-    }
-  }
-
-  let RouteLoader = class RouteLoader {
-    loadRoute(router, config, navigationInstruction) {
-      throw Error('Route loaders must implement "loadRoute(router, config, navigationInstruction)".');
-    }
-  };
-
-  let LoadRouteStep = class LoadRouteStep {
-    static inject() {
-      return [RouteLoader];
-    }
-
-    constructor(routeLoader) {
-      this.routeLoader = routeLoader;
-    }
-
-    run(navigationInstruction, next) {
-      return loadNewRoute(this.routeLoader, navigationInstruction).then(next).catch(next.cancel);
-    }
-  };
-
-  function loadNewRoute(routeLoader, navigationInstruction) {
-    let toLoad = determineWhatToLoad(navigationInstruction);
-    let loadPromises = toLoad.map(current => loadRoute(routeLoader, current.navigationInstruction, current.viewPortPlan));
-
-    return Promise.all(loadPromises);
-  }
-
-  function determineWhatToLoad(navigationInstruction, toLoad = []) {
-    let plan = navigationInstruction.plan;
-
-    for (let viewPortName in plan) {
-      let viewPortPlan = plan[viewPortName];
-
-      if (viewPortPlan.strategy === activationStrategy.replace) {
-        toLoad.push({ viewPortPlan, navigationInstruction });
-
-        if (viewPortPlan.childNavigationInstruction) {
-          determineWhatToLoad(viewPortPlan.childNavigationInstruction, toLoad);
-        }
-      } else {
-        let viewPortInstruction = navigationInstruction.addViewPortInstruction(viewPortName, viewPortPlan.strategy, viewPortPlan.prevModuleId, viewPortPlan.prevComponent);
-
-        if (viewPortPlan.childNavigationInstruction) {
-          viewPortInstruction.childNavigationInstruction = viewPortPlan.childNavigationInstruction;
-          determineWhatToLoad(viewPortPlan.childNavigationInstruction, toLoad);
-        }
       }
-    }
-
-    return toLoad;
-  }
-
-  function loadRoute(routeLoader, navigationInstruction, viewPortPlan) {
-    let moduleId = viewPortPlan.config ? viewPortPlan.config.moduleId : null;
-
-    return loadComponent(routeLoader, navigationInstruction, viewPortPlan.config).then(component => {
-      let viewPortInstruction = navigationInstruction.addViewPortInstruction(viewPortPlan.name, viewPortPlan.strategy, moduleId, component);
-
-      let childRouter = component.childRouter;
-      if (childRouter) {
-        let path = navigationInstruction.getWildcardPath();
-
-        return childRouter._createNavigationInstruction(path, navigationInstruction).then(childInstruction => {
-          viewPortPlan.childNavigationInstruction = childInstruction;
-
-          return _buildNavigationPlan(childInstruction).then(childPlan => {
-            if (childPlan instanceof Redirect) {
-              return Promise.reject(childPlan);
-            }
-            childInstruction.plan = childPlan;
-            viewPortInstruction.childNavigationInstruction = childInstruction;
-
-            return loadNewRoute(routeLoader, childInstruction);
+      return loadingPlans;
+  };
+  /**
+   * @internal Exported for unit testing
+   */
+  const loadRoute = (routeLoader, navigationInstruction, viewPortPlan) => {
+      let planConfig = viewPortPlan.config;
+      let moduleId = planConfig ? planConfig.moduleId : null;
+      return loadComponent(routeLoader, navigationInstruction, planConfig)
+          .then((component) => {
+          let viewPortInstruction = navigationInstruction.addViewPortInstruction({
+              name: viewPortPlan.name,
+              strategy: viewPortPlan.strategy,
+              moduleId: moduleId,
+              component: component
           });
-        });
-      }
-
-      return undefined;
-    });
-  }
-
-  function loadComponent(routeLoader, navigationInstruction, config) {
-    let router = navigationInstruction.router;
-    let lifecycleArgs = navigationInstruction.lifecycleArgs;
-
-    return routeLoader.loadRoute(router, config, navigationInstruction).then(component => {
-      let { viewModel, childContainer } = component;
-      component.router = router;
-      component.config = config;
-
-      if ('configureRouter' in viewModel) {
-        let childRouter = childContainer.getChildRouter();
-        component.childRouter = childRouter;
-
-        return childRouter.configure(c => viewModel.configureRouter(c, childRouter, ...lifecycleArgs)).then(() => component);
-      }
-
-      return component;
-    });
-  }
-
-  let PipelineSlot = class PipelineSlot {
-
-    constructor(container, name, alias) {
-      this.steps = [];
-
-      this.container = container;
-      this.slotName = name;
-      this.slotAlias = alias;
-    }
-
-    getSteps() {
-      return this.steps.map(x => this.container.get(x));
-    }
+          let childRouter = component.childRouter;
+          if (childRouter) {
+              let path = navigationInstruction.getWildcardPath();
+              return childRouter
+                  ._createNavigationInstruction(path, navigationInstruction)
+                  .then((childInstruction) => {
+                  viewPortPlan.childNavigationInstruction = childInstruction;
+                  return _buildNavigationPlan(childInstruction)
+                      .then((childPlan) => {
+                      if (childPlan instanceof Redirect) {
+                          return Promise.reject(childPlan);
+                      }
+                      childInstruction.plan = childPlan;
+                      viewPortInstruction.childNavigationInstruction = childInstruction;
+                      return loadNewRoute(routeLoader, childInstruction);
+                  });
+              });
+          }
+          // ts complains without this, though they are same
+          return void 0;
+      });
+  };
+  /**
+   * Load a routed-component based on navigation instruction and route config
+   * @internal exported for unit testing only
+   */
+  const loadComponent = (routeLoader, navigationInstruction, config) => {
+      let router = navigationInstruction.router;
+      let lifecycleArgs = navigationInstruction.lifecycleArgs;
+      return Promise.resolve()
+          .then(() => routeLoader.loadRoute(router, config, navigationInstruction))
+          .then(
+      /**
+       * @param component an object carrying information about loaded route
+       * typically contains information about view model, childContainer, view and router
+       */
+      (component) => {
+          let { viewModel, childContainer } = component;
+          component.router = router;
+          component.config = config;
+          if ('configureRouter' in viewModel) {
+              let childRouter = childContainer.getChildRouter();
+              component.childRouter = childRouter;
+              return childRouter
+                  .configure(c => viewModel.configureRouter(c, childRouter, lifecycleArgs[0], lifecycleArgs[1], lifecycleArgs[2]))
+                  .then(() => component);
+          }
+          return component;
+      });
   };
 
-  let PipelineProvider = class PipelineProvider {
-    static inject() {
-      return [Container];
-    }
+  /**
+   * Abstract class that is responsible for loading view / view model from a route config
+   * The default implementation can be found in `aurelia-templating-router`
+   */
+  class RouteLoader {
+      /**
+       * Load a route config based on its viewmodel / view configuration
+       */
+      // return typing: return typings used to be never
+      // as it was a throw. Changing it to Promise<any> should not cause any issues
+      loadRoute(router, config, navigationInstruction) {
+          throw new Error('Route loaders must implement "loadRoute(router, config, navigationInstruction)".');
+      }
+  }
 
-    constructor(container) {
-      this.container = container;
-      this.steps = [BuildNavigationPlanStep, CanDeactivatePreviousStep, LoadRouteStep, this._createPipelineSlot('authorize'), CanActivateNextStep, this._createPipelineSlot('preActivate', 'modelbind'), DeactivatePreviousStep, ActivateNextStep, this._createPipelineSlot('preRender', 'precommit'), CommitChangesStep, this._createPipelineSlot('postRender', 'postcomplete')];
-    }
+  /**
+   * A pipeline step responsible for loading a route config of a navigation instruction
+   */
+  class LoadRouteStep {
+      /**@internal */
+      static inject() { return [RouteLoader]; }
+      constructor(routeLoader) {
+          this.routeLoader = routeLoader;
+      }
+      /**
+       * Run the internal to load route config of a navigation instruction to prepare for next steps in the pipeline
+       */
+      run(navigationInstruction, next) {
+          return loadNewRoute(this.routeLoader, navigationInstruction)
+              .then(next, next.cancel);
+      }
+  }
 
-    createPipeline(useCanDeactivateStep = true) {
-      let pipeline = new Pipeline();
-      this.steps.forEach(step => {
-        if (useCanDeactivateStep || step !== CanDeactivatePreviousStep) {
-          pipeline.addStep(this.container.get(step));
-        }
+  /**
+   * A pipeline step for instructing a piepline to commit changes on a navigation instruction
+   */
+  class CommitChangesStep {
+      run(navigationInstruction, next) {
+          return navigationInstruction
+              ._commitChanges(/*wait to swap?*/ true)
+              .then(() => {
+              navigationInstruction._updateTitle();
+              return next();
+          });
+      }
+  }
+
+  /**
+   * An optional interface describing the available activation strategies.
+   * @internal Used internally.
+   */
+  var InternalActivationStrategy;
+  (function (InternalActivationStrategy) {
+      /**
+       * Reuse the existing view model, without invoking Router lifecycle hooks.
+       */
+      InternalActivationStrategy["NoChange"] = "no-change";
+      /**
+       * Reuse the existing view model, invoking Router lifecycle hooks.
+       */
+      InternalActivationStrategy["InvokeLifecycle"] = "invoke-lifecycle";
+      /**
+       * Replace the existing view model, invoking Router lifecycle hooks.
+       */
+      InternalActivationStrategy["Replace"] = "replace";
+  })(InternalActivationStrategy || (InternalActivationStrategy = {}));
+  /**
+   * The strategy to use when activating modules during navigation.
+   */
+  // kept for compat reason
+  const activationStrategy = {
+      noChange: "no-change" /* NoChange */,
+      invokeLifecycle: "invoke-lifecycle" /* InvokeLifecycle */,
+      replace: "replace" /* Replace */
+  };
+
+  /**
+   * Recursively find list of deactivate-able view models
+   * and invoke the either 'canDeactivate' or 'deactivate' on each
+   * @internal exported for unit testing
+   */
+  const processDeactivatable = (navigationInstruction, callbackName, next, ignoreResult) => {
+      let plan = navigationInstruction.plan;
+      let infos = findDeactivatable(plan, callbackName);
+      let i = infos.length; // query from inside out
+      function inspect(val) {
+          if (ignoreResult || shouldContinue(val)) {
+              return iterate();
+          }
+          return next.cancel(val);
+      }
+      function iterate() {
+          if (i--) {
+              try {
+                  let viewModel = infos[i];
+                  let result = viewModel[callbackName](navigationInstruction);
+                  return processPotential(result, inspect, next.cancel);
+              }
+              catch (error) {
+                  return next.cancel(error);
+              }
+          }
+          navigationInstruction.router.couldDeactivate = true;
+          return next();
+      }
+      return iterate();
+  };
+  /**
+   * Recursively find and returns a list of deactivate-able view models
+   * @internal exported for unit testing
+   */
+  const findDeactivatable = (plan, callbackName, list = []) => {
+      for (let viewPortName in plan) {
+          let viewPortPlan = plan[viewPortName];
+          let prevComponent = viewPortPlan.prevComponent;
+          if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle || viewPortPlan.strategy === activationStrategy.replace)
+              && prevComponent) {
+              let viewModel = prevComponent.viewModel;
+              if (callbackName in viewModel) {
+                  list.push(viewModel);
+              }
+          }
+          if (viewPortPlan.strategy === activationStrategy.replace && prevComponent) {
+              addPreviousDeactivatable(prevComponent, callbackName, list);
+          }
+          else if (viewPortPlan.childNavigationInstruction) {
+              findDeactivatable(viewPortPlan.childNavigationInstruction.plan, callbackName, list);
+          }
+      }
+      return list;
+  };
+  /**
+   * @internal exported for unit testing
+   */
+  const addPreviousDeactivatable = (component, callbackName, list) => {
+      let childRouter = component.childRouter;
+      if (childRouter && childRouter.currentInstruction) {
+          let viewPortInstructions = childRouter.currentInstruction.viewPortInstructions;
+          for (let viewPortName in viewPortInstructions) {
+              let viewPortInstruction = viewPortInstructions[viewPortName];
+              let prevComponent = viewPortInstruction.component;
+              let prevViewModel = prevComponent.viewModel;
+              if (callbackName in prevViewModel) {
+                  list.push(prevViewModel);
+              }
+              addPreviousDeactivatable(prevComponent, callbackName, list);
+          }
+      }
+  };
+  /**
+   * @internal exported for unit testing
+   */
+  const processActivatable = (navigationInstruction, callbackName, next, ignoreResult) => {
+      let infos = findActivatable(navigationInstruction, callbackName);
+      let length = infos.length;
+      let i = -1; // query from top down
+      function inspect(val, router) {
+          if (ignoreResult || shouldContinue(val, router)) {
+              return iterate();
+          }
+          return next.cancel(val);
+      }
+      function iterate() {
+          i++;
+          if (i < length) {
+              try {
+                  let current = infos[i];
+                  let result = current.viewModel[callbackName](...current.lifecycleArgs);
+                  return processPotential(result, (val) => inspect(val, current.router), next.cancel);
+              }
+              catch (error) {
+                  return next.cancel(error);
+              }
+          }
+          return next();
+      }
+      return iterate();
+  };
+  /**
+   * Find list of activatable view model and add to list (3rd parameter)
+   * @internal exported for unit testing
+   */
+  const findActivatable = (navigationInstruction, callbackName, list = [], router) => {
+      let plan = navigationInstruction.plan;
+      Object
+          .keys(plan)
+          .forEach((viewPortName) => {
+          let viewPortPlan = plan[viewPortName];
+          let viewPortInstruction = navigationInstruction.viewPortInstructions[viewPortName];
+          let viewPortComponent = viewPortInstruction.component;
+          let viewModel = viewPortComponent.viewModel;
+          if ((viewPortPlan.strategy === activationStrategy.invokeLifecycle
+              || viewPortPlan.strategy === activationStrategy.replace)
+              && callbackName in viewModel) {
+              list.push({
+                  viewModel,
+                  lifecycleArgs: viewPortInstruction.lifecycleArgs,
+                  router
+              });
+          }
+          let childNavInstruction = viewPortPlan.childNavigationInstruction;
+          if (childNavInstruction) {
+              findActivatable(childNavInstruction, callbackName, list, viewPortComponent.childRouter || router);
+          }
       });
-      return pipeline;
-    }
-
-    _findStep(name) {
-      return this.steps.find(x => x.slotName === name || x.slotAlias === name);
-    }
-
-    addStep(name, step) {
-      let found = this._findStep(name);
-      if (found) {
-        if (!found.steps.includes(step)) {
-          found.steps.push(step);
-        }
-      } else {
-        throw new Error(`Invalid pipeline slot name: ${name}.`);
+      return list;
+  };
+  const shouldContinue = (output, router) => {
+      if (output instanceof Error) {
+          return false;
       }
-    }
-
-    removeStep(name, step) {
-      let slot = this._findStep(name);
-      if (slot) {
-        slot.steps.splice(slot.steps.indexOf(step), 1);
+      if (isNavigationCommand(output)) {
+          if (typeof output.setRouter === 'function') {
+              output.setRouter(router);
+          }
+          return !!output.shouldContinueProcessing;
       }
-    }
-
-    _clearSteps(name = '') {
-      let slot = this._findStep(name);
-      if (slot) {
-        slot.steps = [];
+      if (output === undefined) {
+          return true;
       }
-    }
+      return output;
+  };
+  /**
+   * wraps a subscription, allowing unsubscribe calls even if
+   * the first value comes synchronously
+   */
+  class SafeSubscription {
+      constructor(subscriptionFunc) {
+          this._subscribed = true;
+          this._subscription = subscriptionFunc(this);
+          if (!this._subscribed) {
+              this.unsubscribe();
+          }
+      }
+      get subscribed() {
+          return this._subscribed;
+      }
+      unsubscribe() {
+          if (this._subscribed && this._subscription) {
+              this._subscription.unsubscribe();
+          }
+          this._subscribed = false;
+      }
+  }
+  /**
+   * A function to process return value from `activate`/`canActivate` steps
+   * Supports observable/promise
+   *
+   * For observable, resolve at first next() or on complete()
+   */
+  const processPotential = (obj, resolve, reject) => {
+      // if promise like
+      if (obj && typeof obj.then === 'function') {
+          return Promise.resolve(obj).then(resolve).catch(reject);
+      }
+      // if observable
+      if (obj && typeof obj.subscribe === 'function') {
+          let obs = obj;
+          return new SafeSubscription(sub => obs.subscribe({
+              next() {
+                  if (sub.subscribed) {
+                      sub.unsubscribe();
+                      resolve(obj);
+                  }
+              },
+              error(error) {
+                  if (sub.subscribed) {
+                      sub.unsubscribe();
+                      reject(error);
+                  }
+              },
+              complete() {
+                  if (sub.subscribed) {
+                      sub.unsubscribe();
+                      resolve(obj);
+                  }
+              }
+          }));
+      }
+      // else just resolve
+      try {
+          return resolve(obj);
+      }
+      catch (error) {
+          return reject(error);
+      }
+  };
 
-    reset() {
-      this._clearSteps('authorize');
-      this._clearSteps('preActivate');
-      this._clearSteps('preRender');
-      this._clearSteps('postRender');
-    }
+  /**
+   * A pipeline step responsible for finding and activating method `canDeactivate` on a view model of a route
+   */
+  class CanDeactivatePreviousStep {
+      run(navigationInstruction, next) {
+          return processDeactivatable(navigationInstruction, 'canDeactivate', next);
+      }
+  }
+  /**
+   * A pipeline step responsible for finding and activating method `canActivate` on a view model of a route
+   */
+  class CanActivateNextStep {
+      run(navigationInstruction, next) {
+          return processActivatable(navigationInstruction, 'canActivate', next);
+      }
+  }
+  /**
+   * A pipeline step responsible for finding and activating method `deactivate` on a view model of a route
+   */
+  class DeactivatePreviousStep {
+      run(navigationInstruction, next) {
+          return processDeactivatable(navigationInstruction, 'deactivate', next, true);
+      }
+  }
+  /**
+   * A pipeline step responsible for finding and activating method `activate` on a view model of a route
+   */
+  class ActivateNextStep {
+      run(navigationInstruction, next) {
+          return processActivatable(navigationInstruction, 'activate', next, true);
+      }
+  }
 
-    _createPipelineSlot(name, alias) {
-      return new PipelineSlot(this.container, name, alias);
-    }
+  /**
+   * A multi-slots Pipeline Placeholder Step for hooking into a pipeline execution
+   */
+  class PipelineSlot {
+      constructor(container, name, alias) {
+          this.steps = [];
+          this.container = container;
+          this.slotName = name;
+          this.slotAlias = alias;
+      }
+      getSteps() {
+          return this.steps.map(x => this.container.get(x));
+      }
+  }
+  /**
+   * Class responsible for creating the navigation pipeline.
+   */
+  class PipelineProvider {
+      /**@internal */
+      static inject() { return [Container]; }
+      constructor(container) {
+          this.container = container;
+          this.steps = [
+              BuildNavigationPlanStep,
+              CanDeactivatePreviousStep,
+              LoadRouteStep,
+              createPipelineSlot(container, "authorize" /* Authorize */),
+              CanActivateNextStep,
+              createPipelineSlot(container, "preActivate" /* PreActivate */, 'modelbind'),
+              // NOTE: app state changes start below - point of no return
+              DeactivatePreviousStep,
+              ActivateNextStep,
+              createPipelineSlot(container, "preRender" /* PreRender */, 'precommit'),
+              CommitChangesStep,
+              createPipelineSlot(container, "postRender" /* PostRender */, 'postcomplete')
+          ];
+      }
+      /**
+       * Create the navigation pipeline.
+       */
+      createPipeline(useCanDeactivateStep = true) {
+          let pipeline = new Pipeline();
+          this.steps.forEach(step => {
+              if (useCanDeactivateStep || step !== CanDeactivatePreviousStep) {
+                  pipeline.addStep(this.container.get(step));
+              }
+          });
+          return pipeline;
+      }
+      /**@internal */
+      _findStep(name) {
+          // Steps that are not PipelineSlots are constructor functions, and they will automatically fail. Probably.
+          return this.steps.find(x => x.slotName === name || x.slotAlias === name);
+      }
+      /**
+       * Adds a step into the pipeline at a known slot location.
+       */
+      addStep(name, step) {
+          let found = this._findStep(name);
+          if (found) {
+              let slotSteps = found.steps;
+              // prevent duplicates
+              if (!slotSteps.includes(step)) {
+                  slotSteps.push(step);
+              }
+          }
+          else {
+              throw new Error(`Invalid pipeline slot name: ${name}.`);
+          }
+      }
+      /**
+       * Removes a step from a slot in the pipeline
+       */
+      removeStep(name, step) {
+          let slot = this._findStep(name);
+          if (slot) {
+              let slotSteps = slot.steps;
+              slotSteps.splice(slotSteps.indexOf(step), 1);
+          }
+      }
+      /**
+       * Clears all steps from a slot in the pipeline
+       * @internal
+       */
+      _clearSteps(name = '') {
+          let slot = this._findStep(name);
+          if (slot) {
+              slot.steps = [];
+          }
+      }
+      /**
+       * Resets all pipeline slots
+       */
+      reset() {
+          this._clearSteps("authorize" /* Authorize */);
+          this._clearSteps("preActivate" /* PreActivate */);
+          this._clearSteps("preRender" /* PreRender */);
+          this._clearSteps("postRender" /* PostRender */);
+      }
+  }
+  /**@internal */
+  const createPipelineSlot = (container, name, alias) => {
+      return new PipelineSlot(container, name, alias);
   };
 
   const logger$4 = getLogger('app-router');
-
-  let AppRouter = class AppRouter extends Router {
-    static inject() {
-      return [Container, History, PipelineProvider, EventAggregator];
-    }
-
-    constructor(container, history, pipelineProvider, events) {
-      super(container, history);
-      this.pipelineProvider = pipelineProvider;
-      this.events = events;
-    }
-
-    reset() {
-      super.reset();
-      this.maxInstructionCount = 10;
-      if (!this._queue) {
-        this._queue = [];
-      } else {
-        this._queue.length = 0;
+  /**
+   * The main application router.
+   */
+  class AppRouter extends Router {
+      /**@internal */
+      static inject() { return [Container, History, PipelineProvider, EventAggregator]; }
+      constructor(container, history, pipelineProvider, events) {
+          super(container, history); // Note the super will call reset internally.
+          this.pipelineProvider = pipelineProvider;
+          this.events = events;
       }
-    }
-
-    loadUrl(url) {
-      return this._createNavigationInstruction(url).then(instruction => this._queueInstruction(instruction)).catch(error => {
-        logger$4.error(error);
-        restorePreviousLocation(this);
-      });
-    }
-
-    registerViewPort(viewPort, name) {
-      super.registerViewPort(viewPort, name);
-
-      if (!this.isActive) {
-        let viewModel = this._findViewModel(viewPort);
-        if ('configureRouter' in viewModel) {
-          if (!this.isConfigured) {
-            let resolveConfiguredPromise = this._resolveConfiguredPromise;
-            this._resolveConfiguredPromise = () => {};
-            return this.configure(config => viewModel.configureRouter(config, this)).then(() => {
-              this.activate();
-              resolveConfiguredPromise();
-            });
+      /**
+       * Fully resets the router's internal state. Primarily used internally by the framework when multiple calls to setRoot are made.
+       * Use with caution (actually, avoid using this). Do not use this to simply change your navigation model.
+       */
+      reset() {
+          super.reset();
+          this.maxInstructionCount = 10;
+          if (!this._queue) {
+              this._queue = [];
           }
-        } else {
-          this.activate();
-        }
-      } else {
-        this._dequeueInstruction();
-      }
-
-      return Promise.resolve();
-    }
-
-    activate(options) {
-      if (this.isActive) {
-        return;
-      }
-
-      this.isActive = true;
-      this.options = Object.assign({ routeHandler: this.loadUrl.bind(this) }, this.options, options);
-      this.history.activate(this.options);
-      this._dequeueInstruction();
-    }
-
-    deactivate() {
-      this.isActive = false;
-      this.history.deactivate();
-    }
-
-    _queueInstruction(instruction) {
-      return new Promise(resolve => {
-        instruction.resolve = resolve;
-        this._queue.unshift(instruction);
-        this._dequeueInstruction();
-      });
-    }
-
-    _dequeueInstruction(instructionCount = 0) {
-      return Promise.resolve().then(() => {
-        if (this.isNavigating && !instructionCount) {
-          return undefined;
-        }
-
-        let instruction = this._queue.shift();
-        this._queue.length = 0;
-
-        if (!instruction) {
-          return undefined;
-        }
-
-        this.isNavigating = true;
-
-        let navtracker = this.history.getState('NavigationTracker');
-        if (!navtracker && !this.currentNavigationTracker) {
-          this.isNavigatingFirst = true;
-          this.isNavigatingNew = true;
-        } else if (!navtracker) {
-          this.isNavigatingNew = true;
-        } else if (!this.currentNavigationTracker) {
-          this.isNavigatingRefresh = true;
-        } else if (this.currentNavigationTracker < navtracker) {
-          this.isNavigatingForward = true;
-        } else if (this.currentNavigationTracker > navtracker) {
-          this.isNavigatingBack = true;
-        }if (!navtracker) {
-          navtracker = Date.now();
-          this.history.setState('NavigationTracker', navtracker);
-        }
-        this.currentNavigationTracker = navtracker;
-
-        instruction.previousInstruction = this.currentInstruction;
-
-        if (!instructionCount) {
-          this.events.publish('router:navigation:processing', { instruction });
-        } else if (instructionCount === this.maxInstructionCount - 1) {
-          logger$4.error(`${instructionCount + 1} navigation instructions have been attempted without success. Restoring last known good location.`);
-          restorePreviousLocation(this);
-          return this._dequeueInstruction(instructionCount + 1);
-        } else if (instructionCount > this.maxInstructionCount) {
-          throw new Error('Maximum navigation attempts exceeded. Giving up.');
-        }
-
-        let pipeline = this.pipelineProvider.createPipeline(!this.couldDeactivate);
-
-        return pipeline.run(instruction).then(result => processResult(instruction, result, instructionCount, this)).catch(error => {
-          return { output: error instanceof Error ? error : new Error(error) };
-        }).then(result => resolveInstruction(instruction, result, !!instructionCount, this));
-      });
-    }
-
-    _findViewModel(viewPort) {
-      if (this.container.viewModel) {
-        return this.container.viewModel;
-      }
-
-      if (viewPort.container) {
-        let container = viewPort.container;
-
-        while (container) {
-          if (container.viewModel) {
-            this.container.viewModel = container.viewModel;
-            return container.viewModel;
+          else {
+              this._queue.length = 0;
           }
-
-          container = container.parent;
-        }
       }
-
-      return undefined;
-    }
-  };
-
-  function processResult(instruction, result, instructionCount, router) {
-    if (!(result && 'completed' in result && 'output' in result)) {
-      result = result || {};
-      result.output = new Error(`Expected router pipeline to return a navigation result, but got [${JSON.stringify(result)}] instead.`);
-    }
-
-    let finalResult = null;
-    let navigationCommandResult = null;
-    if (isNavigationCommand(result.output)) {
-      navigationCommandResult = result.output.navigate(router);
-    } else {
-      finalResult = result;
-
-      if (!result.completed) {
-        if (result.output instanceof Error) {
-          logger$4.error(result.output);
-        }
-
-        restorePreviousLocation(router);
-      }
-    }
-
-    return Promise.resolve(navigationCommandResult).then(_ => router._dequeueInstruction(instructionCount + 1)).then(innerResult => finalResult || innerResult || result);
-  }
-
-  function resolveInstruction(instruction, result, isInnerInstruction, router) {
-    instruction.resolve(result);
-
-    let eventArgs = { instruction, result };
-    if (!isInnerInstruction) {
-      router.isNavigating = false;
-      router.isExplicitNavigation = false;
-      router.isExplicitNavigationBack = false;
-      router.isNavigatingFirst = false;
-      router.isNavigatingNew = false;
-      router.isNavigatingRefresh = false;
-      router.isNavigatingForward = false;
-      router.isNavigatingBack = false;
-      router.couldDeactivate = false;
-
-      let eventName;
-
-      if (result.output instanceof Error) {
-        eventName = 'error';
-      } else if (!result.completed) {
-        eventName = 'canceled';
-      } else {
-        let queryString = instruction.queryString ? '?' + instruction.queryString : '';
-        router.history.previousLocation = instruction.fragment + queryString;
-        eventName = 'success';
-      }
-
-      router.events.publish(`router:navigation:${eventName}`, eventArgs);
-      router.events.publish('router:navigation:complete', eventArgs);
-    } else {
-      router.events.publish('router:navigation:child:complete', eventArgs);
-    }
-
-    return result;
-  }
-
-  function restorePreviousLocation(router) {
-    let previousLocation = router.history.previousLocation;
-    if (previousLocation) {
-      router.navigate(router.history.previousLocation, { trigger: false, replace: true });
-    } else if (router.fallbackRoute) {
-      router.navigate(router.fallbackRoute, { trigger: true, replace: true });
-    } else {
-      logger$4.error('Router navigation failed, and no previous location or fallbackRoute could be restored.');
-    }
-  }
-
-  var _dec$l, _class$m, _class2$8, _descriptor$3, _descriptor2$3, _descriptor3$2, _descriptor4$2;
-
-  function _initDefineProp$3(target, property, descriptor, context) {
-    if (!descriptor) return;
-    Object.defineProperty(target, property, {
-      enumerable: descriptor.enumerable,
-      configurable: descriptor.configurable,
-      writable: descriptor.writable,
-      value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
-    });
-  }
-
-  function _applyDecoratedDescriptor$3(target, property, decorators$$1, descriptor, context) {
-    var desc = {};
-    Object['ke' + 'ys'](descriptor).forEach(function (key) {
-      desc[key] = descriptor[key];
-    });
-    desc.enumerable = !!desc.enumerable;
-    desc.configurable = !!desc.configurable;
-
-    if ('value' in desc || desc.initializer) {
-      desc.writable = true;
-    }
-
-    desc = decorators$$1.slice().reverse().reduce(function (desc, decorator) {
-      return decorator(target, property, desc) || desc;
-    }, desc);
-
-    if (context && desc.initializer !== void 0) {
-      desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
-      desc.initializer = undefined;
-    }
-
-    if (desc.initializer === void 0) {
-      Object['define' + 'Property'](target, property, desc);
-      desc = null;
-    }
-
-    return desc;
-  }
-
-  let RouterView = (_dec$l = customElement('router-view'), _dec$l(_class$m = noView(_class$m = (_class2$8 = class RouterView {
-
-    static inject() {
-      return [DOM.Element, Container, ViewSlot, Router, ViewLocator, CompositionTransaction, CompositionEngine];
-    }
-
-    constructor(element, container, viewSlot, router, viewLocator, compositionTransaction, compositionEngine) {
-      _initDefineProp$3(this, 'swapOrder', _descriptor$3, this);
-
-      _initDefineProp$3(this, 'layoutView', _descriptor2$3, this);
-
-      _initDefineProp$3(this, 'layoutViewModel', _descriptor3$2, this);
-
-      _initDefineProp$3(this, 'layoutModel', _descriptor4$2, this);
-
-      this.element = element;
-      this.container = container;
-      this.viewSlot = viewSlot;
-      this.router = router;
-      this.viewLocator = viewLocator;
-      this.compositionTransaction = compositionTransaction;
-      this.compositionEngine = compositionEngine;
-      this.router.registerViewPort(this, this.element.getAttribute('name'));
-
-      if (!('initialComposition' in compositionTransaction)) {
-        compositionTransaction.initialComposition = true;
-        this.compositionTransactionNotifier = compositionTransaction.enlist();
-      }
-    }
-
-    created(owningView) {
-      this.owningView = owningView;
-    }
-
-    bind(bindingContext, overrideContext) {
-      this.container.viewModel = bindingContext;
-      this.overrideContext = overrideContext;
-    }
-
-    process(viewPortInstruction, waitToSwap) {
-      let component = viewPortInstruction.component;
-      let childContainer = component.childContainer;
-      let viewModel = component.viewModel;
-      let viewModelResource = component.viewModelResource;
-      let metadata$$1 = viewModelResource.metadata;
-      let config = component.router.currentInstruction.config;
-      let viewPort = config.viewPorts ? config.viewPorts[viewPortInstruction.name] || {} : {};
-
-      childContainer.get(RouterViewLocator)._notify(this);
-
-      let layoutInstruction = {
-        viewModel: viewPort.layoutViewModel || config.layoutViewModel || this.layoutViewModel,
-        view: viewPort.layoutView || config.layoutView || this.layoutView,
-        model: viewPort.layoutModel || config.layoutModel || this.layoutModel,
-        router: viewPortInstruction.component.router,
-        childContainer: childContainer,
-        viewSlot: this.viewSlot
-      };
-
-      let viewStrategy$$1 = this.viewLocator.getViewStrategy(component.view || viewModel);
-      if (viewStrategy$$1 && component.view) {
-        viewStrategy$$1.makeRelativeTo(Origin.get(component.router.container.viewModel.constructor).moduleId);
-      }
-
-      return metadata$$1.load(childContainer, viewModelResource.value, null, viewStrategy$$1, true).then(viewFactory => {
-        if (!this.compositionTransactionNotifier) {
-          this.compositionTransactionOwnershipToken = this.compositionTransaction.tryCapture();
-        }
-
-        if (layoutInstruction.viewModel || layoutInstruction.view) {
-          viewPortInstruction.layoutInstruction = layoutInstruction;
-        }
-
-        viewPortInstruction.controller = metadata$$1.create(childContainer, BehaviorInstruction.dynamic(this.element, viewModel, viewFactory));
-
-        if (waitToSwap) {
-          return null;
-        }
-
-        this.swap(viewPortInstruction);
-      });
-    }
-
-    swap(viewPortInstruction) {
-      let layoutInstruction = viewPortInstruction.layoutInstruction;
-      let previousView = this.view;
-
-      let work = () => {
-        let swapStrategy = SwapStrategies[this.swapOrder] || SwapStrategies.after;
-        let viewSlot = this.viewSlot;
-
-        swapStrategy(viewSlot, previousView, () => {
-          return Promise.resolve(viewSlot.add(this.view));
-        }).then(() => {
-          this._notify();
-        });
-      };
-
-      let ready = owningView => {
-        viewPortInstruction.controller.automate(this.overrideContext, owningView);
-        if (this.compositionTransactionOwnershipToken) {
-          return this.compositionTransactionOwnershipToken.waitForCompositionComplete().then(() => {
-            this.compositionTransactionOwnershipToken = null;
-            return work();
+      /**
+       * Loads the specified URL.
+       *
+       * @param url The URL fragment to load.
+       */
+      loadUrl(url) {
+          return this
+              ._createNavigationInstruction(url)
+              .then(instruction => this._queueInstruction(instruction))
+              .catch(error => {
+              logger$4.error(error);
+              restorePreviousLocation(this);
           });
-        }
-
-        return work();
-      };
-
-      if (layoutInstruction) {
-        if (!layoutInstruction.viewModel) {
-          layoutInstruction.viewModel = {};
-        }
-
-        return this.compositionEngine.createController(layoutInstruction).then(controller => {
-          ShadowDOM.distributeView(viewPortInstruction.controller.view, controller.slots || controller.view.slots);
-          controller.automate(createOverrideContext(layoutInstruction.viewModel), this.owningView);
-          controller.view.children.push(viewPortInstruction.controller.view);
-          return controller.view || controller;
-        }).then(newView => {
-          this.view = newView;
-          return ready(newView);
-        });
       }
-
-      this.view = viewPortInstruction.controller.view;
-
-      return ready(this.owningView);
-    }
-
-    _notify() {
-      if (this.compositionTransactionNotifier) {
-        this.compositionTransactionNotifier.done();
-        this.compositionTransactionNotifier = null;
+      /**
+       * Registers a viewPort to be used as a rendering target for activated routes.
+       *
+       * @param viewPort The viewPort. This is typically a <router-view/> element in Aurelia default impl
+       * @param name The name of the viewPort. 'default' if unspecified.
+       */
+      registerViewPort(viewPort, name) {
+          // having strong typing without changing public API
+          const $viewPort = viewPort;
+          super.registerViewPort($viewPort, name);
+          // beside adding viewport to the registry of this instance
+          // AppRouter also configure routing/history to start routing functionality
+          // There are situation where there are more than 1 <router-view/> element at root view
+          // in that case, still only activate once via the following guard
+          if (!this.isActive) {
+              const viewModel = this._findViewModel($viewPort);
+              if ('configureRouter' in viewModel) {
+                  // If there are more than one <router-view/> element at root view
+                  // use this flag to guard against configure method being invoked multiple times
+                  // this flag is set inside method configure
+                  if (!this.isConfigured) {
+                      // replace the real resolve with a noop to guarantee that any action in base class Router
+                      // won't resolve the configurePromise prematurely
+                      const resolveConfiguredPromise = this._resolveConfiguredPromise;
+                      this._resolveConfiguredPromise = () => { };
+                      return this
+                          .configure(config => Promise
+                          .resolve(viewModel.configureRouter(config, this))
+                          // an issue with configure interface. Should be fixed there
+                          // todo: fix this via configure interface in router
+                          .then(() => config))
+                          .then(() => {
+                          this.activate();
+                          resolveConfiguredPromise();
+                      });
+                  }
+              }
+              else {
+                  this.activate();
+              }
+          }
+          // when a viewport is added dynamically to a root view that is already activated
+          // just process the navigation instruction
+          else {
+              this._dequeueInstruction();
+          }
+          return Promise.resolve();
       }
-    }
-  }, (_descriptor$3 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'swapOrder', [bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor2$3 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutView', [bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor3$2 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutViewModel', [bindable], {
-    enumerable: true,
-    initializer: null
-  }), _descriptor4$2 = _applyDecoratedDescriptor$3(_class2$8.prototype, 'layoutModel', [bindable], {
-    enumerable: true,
-    initializer: null
-  })), _class2$8)) || _class$m) || _class$m);
-
-  let RouterViewLocator = class RouterViewLocator {
-    constructor() {
-      this.promise = new Promise(resolve => this.resolve = resolve);
-    }
-
-    findNearest() {
-      return this.promise;
-    }
-
-    _notify(routerView) {
-      this.resolve(routerView);
-    }
+      /**
+       * Activates the router. This instructs the router to begin listening for history changes and processing instructions.
+       *
+       * @params options The set of options to activate the router with.
+       */
+      activate(options) {
+          if (this.isActive) {
+              return;
+          }
+          this.isActive = true;
+          // route handler property is responsible for handling url change
+          // the interface of aurelia-history isn't clear on this perspective
+          this.options = Object.assign({ routeHandler: this.loadUrl.bind(this) }, this.options, options);
+          this.history.activate(this.options);
+          this._dequeueInstruction();
+      }
+      /**
+       * Deactivates the router.
+       */
+      deactivate() {
+          this.isActive = false;
+          this.history.deactivate();
+      }
+      /**@internal */
+      _queueInstruction(instruction) {
+          return new Promise((resolve) => {
+              instruction.resolve = resolve;
+              this._queue.unshift(instruction);
+              this._dequeueInstruction();
+          });
+      }
+      /**@internal */
+      _dequeueInstruction(instructionCount = 0) {
+          return Promise.resolve().then(() => {
+              if (this.isNavigating && !instructionCount) {
+                  // ts complains about inconsistent returns without void 0
+                  return void 0;
+              }
+              let instruction = this._queue.shift();
+              this._queue.length = 0;
+              if (!instruction) {
+                  // ts complains about inconsistent returns without void 0
+                  return void 0;
+              }
+              this.isNavigating = true;
+              let navtracker = this.history.getState('NavigationTracker');
+              let currentNavTracker = this.currentNavigationTracker;
+              if (!navtracker && !currentNavTracker) {
+                  this.isNavigatingFirst = true;
+                  this.isNavigatingNew = true;
+              }
+              else if (!navtracker) {
+                  this.isNavigatingNew = true;
+              }
+              else if (!currentNavTracker) {
+                  this.isNavigatingRefresh = true;
+              }
+              else if (currentNavTracker < navtracker) {
+                  this.isNavigatingForward = true;
+              }
+              else if (currentNavTracker > navtracker) {
+                  this.isNavigatingBack = true;
+              }
+              if (!navtracker) {
+                  navtracker = Date.now();
+                  this.history.setState('NavigationTracker', navtracker);
+              }
+              this.currentNavigationTracker = navtracker;
+              instruction.previousInstruction = this.currentInstruction;
+              let maxInstructionCount = this.maxInstructionCount;
+              if (!instructionCount) {
+                  this.events.publish("router:navigation:processing" /* Processing */, { instruction });
+              }
+              else if (instructionCount === maxInstructionCount - 1) {
+                  logger$4.error(`${instructionCount + 1} navigation instructions have been attempted without success. Restoring last known good location.`);
+                  restorePreviousLocation(this);
+                  return this._dequeueInstruction(instructionCount + 1);
+              }
+              else if (instructionCount > maxInstructionCount) {
+                  throw new Error('Maximum navigation attempts exceeded. Giving up.');
+              }
+              let pipeline = this.pipelineProvider.createPipeline(!this.couldDeactivate);
+              return pipeline
+                  .run(instruction)
+                  .then(result => processResult(instruction, result, instructionCount, this))
+                  .catch(error => {
+                  return { output: error instanceof Error ? error : new Error(error) };
+              })
+                  .then(result => resolveInstruction(instruction, result, !!instructionCount, this));
+          });
+      }
+      /**@internal */
+      _findViewModel(viewPort) {
+          if (this.container.viewModel) {
+              return this.container.viewModel;
+          }
+          if (viewPort.container) {
+              let container = viewPort.container;
+              while (container) {
+                  if (container.viewModel) {
+                      this.container.viewModel = container.viewModel;
+                      return container.viewModel;
+                  }
+                  container = container.parent;
+              }
+          }
+          return undefined;
+      }
+  }
+  const processResult = (instruction, result, instructionCount, router) => {
+      if (!(result && 'completed' in result && 'output' in result)) {
+          result = result || {};
+          result.output = new Error(`Expected router pipeline to return a navigation result, but got [${JSON.stringify(result)}] instead.`);
+      }
+      let finalResult = null;
+      let navigationCommandResult = null;
+      if (isNavigationCommand(result.output)) {
+          navigationCommandResult = result.output.navigate(router);
+      }
+      else {
+          finalResult = result;
+          if (!result.completed) {
+              if (result.output instanceof Error) {
+                  logger$4.error(result.output.toString());
+              }
+              restorePreviousLocation(router);
+          }
+      }
+      return Promise.resolve(navigationCommandResult)
+          .then(_ => router._dequeueInstruction(instructionCount + 1))
+          .then(innerResult => finalResult || innerResult || result);
+  };
+  const resolveInstruction = (instruction, result, isInnerInstruction, router) => {
+      instruction.resolve(result);
+      let eventAggregator = router.events;
+      let eventArgs = { instruction, result };
+      if (!isInnerInstruction) {
+          router.isNavigating = false;
+          router.isExplicitNavigation = false;
+          router.isExplicitNavigationBack = false;
+          router.isNavigatingFirst = false;
+          router.isNavigatingNew = false;
+          router.isNavigatingRefresh = false;
+          router.isNavigatingForward = false;
+          router.isNavigatingBack = false;
+          router.couldDeactivate = false;
+          let eventName;
+          if (result.output instanceof Error) {
+              eventName = "router:navigation:error" /* Error */;
+          }
+          else if (!result.completed) {
+              eventName = "router:navigation:canceled" /* Canceled */;
+          }
+          else {
+              let queryString = instruction.queryString ? ('?' + instruction.queryString) : '';
+              router.history.previousLocation = instruction.fragment + queryString;
+              eventName = "router:navigation:success" /* Success */;
+          }
+          eventAggregator.publish(eventName, eventArgs);
+          eventAggregator.publish("router:navigation:complete" /* Complete */, eventArgs);
+      }
+      else {
+          eventAggregator.publish("router:navigation:child:complete" /* ChildComplete */, eventArgs);
+      }
+      return result;
+  };
+  const restorePreviousLocation = (router) => {
+      let previousLocation = router.history.previousLocation;
+      if (previousLocation) {
+          router.navigate(previousLocation, { trigger: false, replace: true });
+      }
+      else if (router.fallbackRoute) {
+          router.navigate(router.fallbackRoute, { trigger: true, replace: true });
+      }
+      else {
+          logger$4.error('Router navigation failed, and no previous location or fallbackRoute could be restored.');
+      }
   };
 
-  var _dec$m, _class$n, _dec2$b, _class2$9;
+  /**
+  * The status of a Pipeline.
+  */
 
-  let EmptyClass = (_dec$m = inlineView('<template></template>'), _dec$m(_class$n = class EmptyClass {}) || _class$n);
+  (function (PipelineStatus) {
+      PipelineStatus["Completed"] = "completed";
+      PipelineStatus["Canceled"] = "canceled";
+      PipelineStatus["Rejected"] = "rejected";
+      PipelineStatus["Running"] = "running";
+  })(exports.PipelineStatus || (exports.PipelineStatus = {}));
 
-  let TemplatingRouteLoader = (_dec2$b = inject(CompositionEngine), _dec2$b(_class2$9 = class TemplatingRouteLoader extends RouteLoader {
-    constructor(compositionEngine) {
-      super();
-      this.compositionEngine = compositionEngine;
-    }
+  /**
+   * A list of known router events used by the Aurelia router
+   * to signal the pipeline has come to a certain state
+   */
+  // const enum is preserved in tsconfig
+  var RouterEvent;
+  (function (RouterEvent) {
+      RouterEvent["Processing"] = "router:navigation:processing";
+      RouterEvent["Error"] = "router:navigation:error";
+      RouterEvent["Canceled"] = "router:navigation:canceled";
+      RouterEvent["Complete"] = "router:navigation:complete";
+      RouterEvent["Success"] = "router:navigation:success";
+      RouterEvent["ChildComplete"] = "router:navigation:child:complete";
+  })(RouterEvent || (RouterEvent = {}));
 
-    loadRoute(router, config) {
-      let childContainer = router.container.createChild();
+  /**
+   * Available pipeline slot names to insert interceptor into router pipeline
+   */
+  // const enum is preserved in tsconfig
+  var PipelineSlotName;
+  (function (PipelineSlotName) {
+      /**
+       * Authorization slot. Invoked early in the pipeline,
+       * before `canActivate` hook of incoming route
+       */
+      PipelineSlotName["Authorize"] = "authorize";
+      /**
+       * Pre-activation slot. Invoked early in the pipeline,
+       * Invoked timing:
+       *   - after Authorization slot
+       *   - after canActivate hook on new view model
+       *   - before deactivate hook on old view model
+       *   - before activate hook on new view model
+       */
+      PipelineSlotName["PreActivate"] = "preActivate";
+      /**
+       * Pre-render slot. Invoked later in the pipeline
+       * Invokcation timing:
+       *   - after activate hook on new view model
+       *   - before commit step on new navigation instruction
+       */
+      PipelineSlotName["PreRender"] = "preRender";
+      /**
+       * Post-render slot. Invoked last in the pipeline
+       */
+      PipelineSlotName["PostRender"] = "postRender";
+  })(PipelineSlotName || (PipelineSlotName = {}));
 
-      let viewModel;
-      if (config.moduleId === null) {
-        viewModel = EmptyClass;
-      } else if (/\.html/i.test(config.moduleId)) {
-        viewModel = createDynamicClass(config.moduleId);
-      } else {
-        viewModel = relativeToFile(config.moduleId, Origin.get(router.container.viewModel.constructor).moduleId);
+  class EmptyLayoutViewModel {
+  }
+  /**
+   * Implementation of Aurelia Router ViewPort. Responsible for loading route, composing and swapping routes views
+   */
+  class RouterView {
+      constructor(element, container, viewSlot, router, viewLocator, compositionTransaction, compositionEngine) {
+          this.element = element;
+          this.container = container;
+          this.viewSlot = viewSlot;
+          this.router = router;
+          this.viewLocator = viewLocator;
+          this.compositionTransaction = compositionTransaction;
+          this.compositionEngine = compositionEngine;
+          // add this <router-view/> to router view ports lookup based on name attribute
+          // when this router is the root router-view
+          // also trigger AppRouter registerViewPort extra flow
+          this.router.registerViewPort(this, this.element.getAttribute('name'));
+          // Each <router-view/> process its instruction as a composition transaction
+          // there are differences between intial composition and subsequent compositions
+          // also there are differences between root composition and child <router-view/> composition
+          // mark the first composition transaction with a property initialComposition to distinguish it
+          // when the root <router-view/> gets new instruction for the first time
+          if (!('initialComposition' in compositionTransaction)) {
+              compositionTransaction.initialComposition = true;
+              this.compositionTransactionNotifier = compositionTransaction.enlist();
+          }
       }
-
-      let instruction = {
-        viewModel: viewModel,
-        childContainer: childContainer,
-        view: config.view || config.viewStrategy,
-        router: router
-      };
-
-      childContainer.registerSingleton(RouterViewLocator);
-
-      childContainer.getChildRouter = function () {
-        let childRouter;
-
-        childContainer.registerHandler(Router, c => {
-          return childRouter || (childRouter = router.createChild(childContainer));
-        });
-
-        return childContainer.get(Router);
-      };
-
-      return this.compositionEngine.ensureViewModel(instruction);
-    }
-  }) || _class2$9);
-
-  function createDynamicClass(moduleId) {
-    var _dec3, _dec4, _class3;
-
-    let name = /([^\/^\?]+)\.html/i.exec(moduleId)[1];
-
-    let DynamicClass = (_dec3 = customElement(name), _dec4 = useView(moduleId), _dec3(_class3 = _dec4(_class3 = class DynamicClass {
-      bind(bindingContext) {
-        this.$parent = bindingContext;
+      /**@internal */
+      static inject() {
+          return [DOM.Element, Container, ViewSlot, Router, ViewLocator, CompositionTransaction, CompositionEngine];
       }
-    }) || _class3) || _class3);
-
-
-    return DynamicClass;
+      created(owningView) {
+          this.owningView = owningView;
+      }
+      bind(bindingContext, overrideContext) {
+          // router needs to get access to view model of current route parent
+          // doing it in generic way via viewModel property on container
+          this.container.viewModel = bindingContext;
+          this.overrideContext = overrideContext;
+      }
+      /**
+       * Implementation of `aurelia-router` ViewPort interface, responsible for templating related part in routing Pipeline
+       */
+      process($viewPortInstruction, waitToSwap) {
+          // have strong typings without exposing it in public typings, this is to ensure maximum backward compat
+          const viewPortInstruction = $viewPortInstruction;
+          const component = viewPortInstruction.component;
+          const childContainer = component.childContainer;
+          const viewModel = component.viewModel;
+          const viewModelResource = component.viewModelResource;
+          const metadata = viewModelResource.metadata;
+          const config = component.router.currentInstruction.config;
+          const viewPortConfig = config.viewPorts ? (config.viewPorts[viewPortInstruction.name] || {}) : {};
+          childContainer.get(RouterViewLocator)._notify(this);
+          // layoutInstruction is our layout viewModel
+          const layoutInstruction = {
+              viewModel: viewPortConfig.layoutViewModel || config.layoutViewModel || this.layoutViewModel,
+              view: viewPortConfig.layoutView || config.layoutView || this.layoutView,
+              model: viewPortConfig.layoutModel || config.layoutModel || this.layoutModel,
+              router: viewPortInstruction.component.router,
+              childContainer: childContainer,
+              viewSlot: this.viewSlot
+          };
+          // viewport will be a thin wrapper around composition engine
+          // to process instruction/configuration from users
+          // preparing all information related to a composition process
+          // first by getting view strategy of a ViewPortComponent View
+          const viewStrategy = this.viewLocator.getViewStrategy(component.view || viewModel);
+          if (viewStrategy && component.view) {
+              viewStrategy.makeRelativeTo(Origin.get(component.router.container.viewModel.constructor).moduleId);
+          }
+          // using metadata of a custom element view model to load appropriate view-factory instance
+          return metadata
+              .load(childContainer, viewModelResource.value, null, viewStrategy, true)
+              // for custom element, viewFactory typing is always ViewFactory
+              // for custom attribute, it will be HtmlBehaviorResource
+              .then((viewFactory) => {
+              // if this is not the first time that this <router-view/> is composing its instruction
+              // try to capture ownership of the composition transaction
+              // child <router-view/> will not be able to capture, since root <router-view/> typically captures
+              // the ownership token
+              if (!this.compositionTransactionNotifier) {
+                  this.compositionTransactionOwnershipToken = this.compositionTransaction.tryCapture();
+              }
+              if (layoutInstruction.viewModel || layoutInstruction.view) {
+                  viewPortInstruction.layoutInstruction = layoutInstruction;
+              }
+              const viewPortComponentBehaviorInstruction = BehaviorInstruction.dynamic(this.element, viewModel, viewFactory);
+              viewPortInstruction.controller = metadata.create(childContainer, viewPortComponentBehaviorInstruction);
+              if (waitToSwap) {
+                  return null;
+              }
+              this.swap(viewPortInstruction);
+          });
+      }
+      swap($viewPortInstruction) {
+          // have strong typings without exposing it in public typings, this is to ensure maximum backward compat
+          const viewPortInstruction = $viewPortInstruction;
+          const viewPortController = viewPortInstruction.controller;
+          const layoutInstruction = viewPortInstruction.layoutInstruction;
+          const previousView = this.view;
+          // Final step of swapping a <router-view/> ViewPortComponent
+          const work = () => {
+              const swapStrategy = SwapStrategies[this.swapOrder] || SwapStrategies.after;
+              const viewSlot = this.viewSlot;
+              swapStrategy(viewSlot, previousView, () => Promise.resolve(viewSlot.add(this.view))).then(() => {
+                  this._notify();
+              });
+          };
+          // Ensure all users setups have been completed
+          const ready = (owningView_or_layoutView) => {
+              viewPortController.automate(this.overrideContext, owningView_or_layoutView);
+              const transactionOwnerShipToken = this.compositionTransactionOwnershipToken;
+              // if this router-view is the root <router-view/> of a normal startup via aurelia.setRoot
+              // attemp to take control of the transaction
+              // if ownership can be taken
+              // wait for transaction to complete before swapping
+              if (transactionOwnerShipToken) {
+                  return transactionOwnerShipToken
+                      .waitForCompositionComplete()
+                      .then(() => {
+                      this.compositionTransactionOwnershipToken = null;
+                      return work();
+                  });
+              }
+              // otherwise, just swap
+              return work();
+          };
+          // If there is layout instruction, new to compose layout before processing ViewPortComponent
+          // layout controller/view/view-model is composed using composition engine APIs
+          if (layoutInstruction) {
+              if (!layoutInstruction.viewModel) {
+                  // createController chokes if there's no viewmodel, so create a dummy one
+                  // but avoid using a POJO as it creates unwanted metadata in Object constructor
+                  layoutInstruction.viewModel = new EmptyLayoutViewModel();
+              }
+              // using composition engine to create compose layout
+              return this.compositionEngine
+                  // first create controller from layoutInstruction
+                  // and treat it as CompositionContext
+                  // then emulate slot projection with ViewPortComponent view
+                  .createController(layoutInstruction)
+                  .then((layoutController) => {
+                  const layoutView = layoutController.view;
+                  ShadowDOM.distributeView(viewPortController.view, layoutController.slots || layoutView.slots);
+                  // when there is a layout
+                  // view hierarchy is: <router-view/> owner view -> layout view -> ViewPortComponent view
+                  layoutController.automate(createOverrideContext(layoutInstruction.viewModel), this.owningView);
+                  layoutView.children.push(viewPortController.view);
+                  return layoutView || layoutController;
+              })
+                  .then((newView) => {
+                  this.view = newView;
+                  return ready(newView);
+              });
+          }
+          // if there is no layout, then get ViewPortComponent view ready as view property
+          // and process controller/swapping
+          // when there is no layout
+          // view hierarchy is: <router-view/> owner view -> ViewPortComponent view
+          this.view = viewPortController.view;
+          return ready(this.owningView);
+      }
+      /**
+       * Notify composition transaction that this router has finished processing
+       * Happens when this <router-view/> is the root router-view
+       * @internal
+       */
+      _notify() {
+          const notifier = this.compositionTransactionNotifier;
+          if (notifier) {
+              notifier.done();
+              this.compositionTransactionNotifier = null;
+          }
+      }
+  }
+  /**
+   * @internal Actively avoid using decorator to reduce the amount of code generated
+   *
+   * There is no view to compose by default in a router view
+   * This custom element is responsible for composing its own view, based on current config
+   */
+  RouterView.$view = null;
+  /**
+   * @internal Actively avoid using decorator to reduce the amount of code generated
+   */
+  RouterView.$resource = {
+      name: 'router-view',
+      bindables: ['swapOrder', 'layoutView', 'layoutViewModel', 'layoutModel', 'inherit-binding-context']
+  };
+  /**
+  * Locator which finds the nearest RouterView, relative to the current dependency injection container.
+  */
+  class RouterViewLocator {
+      /**
+      * Creates an instance of the RouterViewLocator class.
+      */
+      constructor() {
+          this.promise = new Promise((resolve) => this.resolve = resolve);
+      }
+      /**
+      * Finds the nearest RouterView instance.
+      * @returns A promise that will be resolved with the located RouterView instance.
+      */
+      findNearest() {
+          return this.promise;
+      }
+      /**@internal */
+      _notify(routerView) {
+          this.resolve(routerView);
+      }
   }
 
-  var _dec$n, _dec2$c, _dec3$5, _dec4$4, _class$o;
+  /**@internal exported for unit testing */
+  class EmptyClass {
+  }
+  inlineView('<template></template>')(EmptyClass);
+  /**
+   * Default implementation of `RouteLoader` used for loading component based on a route config
+   */
+  class TemplatingRouteLoader extends RouteLoader {
+      constructor(compositionEngine) {
+          super();
+          this.compositionEngine = compositionEngine;
+      }
+      /**
+       * Resolve a view model from a RouteConfig
+       * Throws when there is neither "moduleId" nor "viewModel" property
+       * @internal
+       */
+      resolveViewModel(router, config) {
+          return new Promise((resolve, reject) => {
+              let viewModel;
+              if ('moduleId' in config) {
+                  let moduleId = config.moduleId;
+                  if (moduleId === null) {
+                      viewModel = EmptyClass;
+                  }
+                  else {
+                      // this requires container of router has passes a certain point
+                      // where a view model has been setup on the container
+                      // it will fail in enhance scenario because no viewport has been registered
+                      moduleId = relativeToFile(moduleId, Origin.get(router.container.viewModel.constructor).moduleId);
+                      if (/\.html/i.test(moduleId)) {
+                          viewModel = createDynamicClass(moduleId);
+                      }
+                      else {
+                          viewModel = moduleId;
+                      }
+                  }
+                  return resolve(viewModel);
+              }
+              // todo: add if ('viewModel' in config) to support static view model resolution
+              reject(new Error('Invalid route config. No "moduleId" found.'));
+          });
+      }
+      /**
+       * Create child container based on a router container
+       * Also ensures that child router are properly constructed in the newly created child container
+       * @internal
+       */
+      createChildContainer(router) {
+          const childContainer = router.container.createChild();
+          childContainer.registerSingleton(RouterViewLocator);
+          childContainer.getChildRouter = function () {
+              let childRouter;
+              childContainer.registerHandler(Router, () => childRouter || (childRouter = router.createChild(childContainer)));
+              return childContainer.get(Router);
+          };
+          return childContainer;
+      }
+      /**
+       * Load corresponding component of a route config of a navigation instruction
+       */
+      loadRoute(router, config, _navInstruction) {
+          return this
+              .resolveViewModel(router, config)
+              .then(viewModel => this.compositionEngine.ensureViewModel({
+              viewModel: viewModel,
+              childContainer: this.createChildContainer(router),
+              view: config.view || config.viewStrategy,
+              router: router
+          }));
+      }
+  }
+  /**@internal */
+  TemplatingRouteLoader.inject = [CompositionEngine];
+  /**@internal exported for unit testing */
+  function createDynamicClass(moduleId) {
+      const name = /([^\/^\?]+)\.html/i.exec(moduleId)[1];
+      class DynamicClass {
+          bind(bindingContext) {
+              this.$parent = bindingContext;
+          }
+      }
+      customElement(name)(DynamicClass);
+      useView(moduleId)(DynamicClass);
+      return DynamicClass;
+  }
 
   const logger$5 = getLogger('route-href');
-
-  let RouteHref = (_dec$n = customAttribute('route-href'), _dec2$c = bindable({ name: 'route', changeHandler: 'processChange', primaryProperty: true }), _dec3$5 = bindable({ name: 'params', changeHandler: 'processChange' }), _dec4$4 = bindable({ name: 'attribute', defaultValue: 'href' }), _dec$n(_class$o = _dec2$c(_class$o = _dec3$5(_class$o = _dec4$4(_class$o = class RouteHref {
-
-    static inject() {
-      return [Router, DOM.Element];
-    }
-
-    constructor(router, element) {
-      this.router = router;
-      this.element = element;
-    }
-
-    bind() {
-      this.isActive = true;
-      this.processChange();
-    }
-
-    unbind() {
-      this.isActive = false;
-    }
-
-    attributeChanged(value, previous) {
-      if (previous) {
-        this.element.removeAttribute(previous);
+  /**
+   * Helper custom attribute to help associate an element with a route by name
+   */
+  class RouteHref {
+      constructor(router, element) {
+          this.router = router;
+          this.element = element;
+          this.attribute = 'href';
       }
-
-      this.processChange();
-    }
-
-    processChange() {
-      return this.router.ensureConfigured().then(() => {
-        if (!this.isActive) {
-          return null;
-        }
-
-        let href = this.router.generate(this.route, this.params);
-
-        if (this.element.au.controller) {
-          this.element.au.controller.viewModel[this.attribute] = href;
-        } else {
-          this.element.setAttribute(this.attribute, href);
-        }
-
-        return null;
-      }).catch(reason => {
-        logger$5.error(reason);
-      });
-    }
-  }) || _class$o) || _class$o) || _class$o) || _class$o);
+      /*@internal */
+      static inject() {
+          return [Router, DOM.Element];
+      }
+      bind() {
+          this.isActive = true;
+          this.processChange();
+      }
+      unbind() {
+          this.isActive = false;
+      }
+      attributeChanged(value, previous) {
+          if (previous) {
+              this.element.removeAttribute(previous);
+          }
+          return this.processChange();
+      }
+      processChange() {
+          return this.router
+              .ensureConfigured()
+              .then(() => {
+              if (!this.isActive) {
+                  // returning null to avoid Bluebird warning
+                  return null;
+              }
+              const element = this.element;
+              const href = this.router.generate(this.route, this.params);
+              if (element.au.controller) {
+                  element.au.controller.viewModel[this.attribute] = href;
+              }
+              else {
+                  element.setAttribute(this.attribute, href);
+              }
+              // returning null to avoid Bluebird warning
+              return null;
+          })
+              .catch((reason) => {
+              logger$5.error(reason);
+          });
+      }
+  }
+  /**
+   * @internal Actively avoid using decorator to reduce the amount of code generated
+   */
+  RouteHref.$resource = {
+      type: 'attribute',
+      name: 'route-href',
+      bindables: [
+          { name: 'route', changeHandler: 'processChange', primaryProperty: true },
+          { name: 'params', changeHandler: 'processChange' },
+          'attribute'
+      ] // type definition of Aurelia templating is wrong
+  };
 
   function configure$5(config) {
-    config.singleton(RouteLoader, TemplatingRouteLoader).singleton(Router, AppRouter).globalResources(RouterView, RouteHref);
-
-    config.container.registerAlias(Router, AppRouter);
+      config
+          .singleton(RouteLoader, TemplatingRouteLoader)
+          .singleton(Router, AppRouter)
+          .globalResources(RouterView, RouteHref);
+      config.container.registerAlias(Router, AppRouter);
   }
 
   let ConsoleAppender = class ConsoleAppender {
@@ -18226,273 +18776,272 @@
     };
   })(FrameworkConfiguration.prototype);
 
-  exports.start = start;
-  exports.enhance = enhance;
-  exports.EventAggregator = EventAggregator;
-  exports.includeEventsIn = includeEventsIn;
-  exports.If = If;
-  exports.Else = Else;
-  exports.Repeat = Repeat;
-  exports.Compose = Compose;
-  exports.Show = Show;
-  exports.Hide = Hide;
-  exports.Focus = Focus;
-  exports.With = With;
-  exports.Replaceable = Replaceable;
   exports.AbstractRepeater = AbstractRepeater;
+  exports.AccessKeyed = AccessKeyed;
+  exports.AccessMember = AccessMember;
+  exports.AccessScope = AccessScope;
+  exports.AccessThis = AccessThis;
+  exports.ActivateNextStep = ActivateNextStep;
+  exports.AggregateError = AggregateError;
+  exports.All = All;
+  exports.Animator = Animator;
+  exports.AppRouter = AppRouter;
   exports.ArrayRepeatStrategy = ArrayRepeatStrategy;
+  exports.Assign = Assign;
   exports.AttrBindingBehavior = AttrBindingBehavior;
+  exports.Aurelia = Aurelia;
+  exports.BehaviorInstruction = BehaviorInstruction;
+  exports.BehaviorPropertyObserver = BehaviorPropertyObserver;
+  exports.Binary = Binary;
+  exports.BindableProperty = BindableProperty;
+  exports.Binding = Binding;
+  exports.BindingBehavior = BindingBehavior;
+  exports.BindingBehaviorResource = BindingBehaviorResource;
+  exports.BindingEngine = BindingEngine;
+  exports.BindingExpression = BindingExpression;
+  exports.BindingLanguage = BindingLanguage;
   exports.BindingSignaler = BindingSignaler;
+  exports.BoundViewFactory = BoundViewFactory;
+  exports.BuildNavigationPlanStep = BuildNavigationPlanStep;
+  exports.Call = Call;
+  exports.CallExpression = CallExpression;
+  exports.CallFunction = CallFunction;
+  exports.CallMember = CallMember;
+  exports.CallScope = CallScope;
+  exports.CanActivateNextStep = CanActivateNextStep;
+  exports.CanDeactivatePreviousStep = CanDeactivatePreviousStep;
+  exports.CheckedObserver = CheckedObserver;
+  exports.ClassObserver = ClassObserver;
+  exports.CollectionLengthObserver = CollectionLengthObserver;
+  exports.CommitChangesStep = CommitChangesStep;
+  exports.Compose = Compose;
+  exports.CompositionEngine = CompositionEngine;
+  exports.CompositionTransaction = CompositionTransaction;
+  exports.CompositionTransactionNotifier = CompositionTransactionNotifier;
+  exports.CompositionTransactionOwnershipToken = CompositionTransactionOwnershipToken;
+  exports.ComputedExpression = ComputedExpression;
+  exports.Conditional = Conditional;
+  exports.Container = Container;
+  exports.Controller = Controller;
+  exports.ConventionalViewStrategy = ConventionalViewStrategy;
+  exports.DOM = DOM;
+  exports.DataAttributeObserver = DataAttributeObserver;
+  exports.DeactivatePreviousStep = DeactivatePreviousStep;
   exports.DebounceBindingBehavior = DebounceBindingBehavior;
+  exports.DirtyCheckProperty = DirtyCheckProperty;
+  exports.DirtyChecker = DirtyChecker;
+  exports.ElementConfigResource = ElementConfigResource;
+  exports.ElementEvents = ElementEvents;
+  exports.Else = Else;
+  exports.EventAggregator = EventAggregator;
+  exports.EventManager = EventManager;
+  exports.EventSubscriber = EventSubscriber;
+  exports.Expression = Expression;
+  exports.ExpressionCloner = ExpressionCloner;
+  exports.ExpressionObserver = ExpressionObserver;
+  exports.FEATURE = FEATURE;
+  exports.Factory = Factory;
+  exports.FactoryInvoker = FactoryInvoker;
+  exports.Focus = Focus;
+  exports.FrameworkConfiguration = FrameworkConfiguration;
   exports.FromViewBindingBehavior = FromViewBindingBehavior;
   exports.HTMLSanitizer = HTMLSanitizer;
-  exports.MapRepeatStrategy = MapRepeatStrategy;
-  exports.NullRepeatStrategy = NullRepeatStrategy;
-  exports.NumberRepeatStrategy = NumberRepeatStrategy;
-  exports.OneTimeBindingBehavior = OneTimeBindingBehavior;
-  exports.OneWayBindingBehavior = OneWayBindingBehavior;
-  exports.RepeatStrategyLocator = RepeatStrategyLocator;
-  exports.SanitizeHTMLValueConverter = SanitizeHTMLValueConverter;
-  exports.SelfBindingBehavior = SelfBindingBehavior;
-  exports.SetRepeatStrategy = SetRepeatStrategy;
-  exports.SignalBindingBehavior = SignalBindingBehavior;
-  exports.ThrottleBindingBehavior = ThrottleBindingBehavior;
-  exports.ToViewBindingBehavior = ToViewBindingBehavior;
-  exports.TwoWayBindingBehavior = TwoWayBindingBehavior;
-  exports.UpdateTriggerBindingBehavior = UpdateTriggerBindingBehavior;
-  exports.createFullOverrideContext = createFullOverrideContext;
-  exports.updateOneTimeBinding = updateOneTimeBinding;
-  exports.updateOverrideContext = updateOverrideContext;
-  exports.isOneTime = isOneTime;
-  exports.viewsRequireLifecycle = viewsRequireLifecycle;
-  exports.unwrapExpression = unwrapExpression;
-  exports.getItemsSourceExpression = getItemsSourceExpression;
-  exports.CommitChangesStep = CommitChangesStep;
-  exports.NavigationInstruction = NavigationInstruction;
-  exports.NavModel = NavModel;
-  exports.isNavigationCommand = isNavigationCommand;
-  exports.Redirect = Redirect;
-  exports.RedirectToRoute = RedirectToRoute;
-  exports.pipelineStatus = pipelineStatus;
-  exports.Pipeline = Pipeline;
-  exports.RouterConfiguration = RouterConfiguration;
-  exports.activationStrategy = activationStrategy;
-  exports.BuildNavigationPlanStep = BuildNavigationPlanStep;
-  exports.Router = Router;
-  exports.CanDeactivatePreviousStep = CanDeactivatePreviousStep;
-  exports.CanActivateNextStep = CanActivateNextStep;
-  exports.DeactivatePreviousStep = DeactivatePreviousStep;
-  exports.ActivateNextStep = ActivateNextStep;
-  exports.RouteLoader = RouteLoader;
-  exports.LoadRouteStep = LoadRouteStep;
-  exports.PipelineProvider = PipelineProvider;
-  exports.AppRouter = AppRouter;
-  exports.Aurelia = Aurelia;
-  exports.FrameworkConfiguration = FrameworkConfiguration;
-  exports.LogManager = LogManager;
-  exports.resolver = resolver;
-  exports.StrategyResolver = StrategyResolver;
-  exports.Lazy = Lazy;
-  exports.All = All;
-  exports.Optional = Optional;
-  exports.Parent = Parent;
-  exports.Factory = Factory;
-  exports.NewInstance = NewInstance;
-  exports.getDecoratorDependencies = getDecoratorDependencies;
-  exports.lazy = lazy;
-  exports.all = all;
-  exports.optional = optional;
-  exports.parent = parent;
-  exports.factory = factory;
-  exports.newInstance = newInstance;
-  exports.invoker = invoker;
-  exports.invokeAsFactory = invokeAsFactory;
-  exports.FactoryInvoker = FactoryInvoker;
-  exports.registration = registration;
-  exports.transient = transient;
-  exports.singleton = singleton;
-  exports.TransientRegistration = TransientRegistration;
-  exports.SingletonRegistration = SingletonRegistration;
-  exports._emptyParameters = _emptyParameters;
+  exports.Hide = Hide;
+  exports.HtmlBehaviorResource = HtmlBehaviorResource;
+  exports.If = If;
+  exports.InlineViewStrategy = InlineViewStrategy;
   exports.InvocationHandler = InvocationHandler;
-  exports.Container = Container;
-  exports.autoinject = autoinject;
-  exports.inject = inject;
-  exports.targetContext = targetContext;
-  exports.sourceContext = sourceContext;
-  exports.camelCase = camelCase;
-  exports.createOverrideContext = createOverrideContext;
-  exports.getContextFor = getContextFor;
-  exports.createScopeForTest = createScopeForTest;
-  exports.connectable = connectable;
-  exports.enqueueBindingConnect = enqueueBindingConnect;
-  exports.setConnectQueueThreshold = setConnectQueueThreshold;
-  exports.enableConnectQueue = enableConnectQueue;
-  exports.disableConnectQueue = disableConnectQueue;
-  exports.getConnectQueueSize = getConnectQueueSize;
-  exports.subscriberCollection = subscriberCollection;
-  exports.ExpressionObserver = ExpressionObserver;
-  exports.calcSplices = calcSplices;
-  exports.mergeSplice = mergeSplice;
-  exports.projectArraySplices = projectArraySplices;
-  exports.getChangeRecords = getChangeRecords;
-  exports.ModifyCollectionObserver = ModifyCollectionObserver;
-  exports.CollectionLengthObserver = CollectionLengthObserver;
-  exports.getArrayObserver = getArrayObserver;
-  exports.Expression = Expression;
-  exports.BindingBehavior = BindingBehavior;
-  exports.ValueConverter = ValueConverter;
-  exports.Assign = Assign;
-  exports.Conditional = Conditional;
-  exports.AccessThis = AccessThis;
-  exports.AccessScope = AccessScope;
-  exports.AccessMember = AccessMember;
-  exports.AccessKeyed = AccessKeyed;
-  exports.CallScope = CallScope;
-  exports.CallMember = CallMember;
-  exports.CallFunction = CallFunction;
-  exports.Binary = Binary;
-  exports.Unary = Unary;
+  exports.Lazy = Lazy;
+  exports.Listener = Listener;
+  exports.ListenerExpression = ListenerExpression;
+  exports.LiteralArray = LiteralArray;
+  exports.LiteralObject = LiteralObject;
   exports.LiteralPrimitive = LiteralPrimitive;
   exports.LiteralString = LiteralString;
   exports.LiteralTemplate = LiteralTemplate;
-  exports.LiteralArray = LiteralArray;
-  exports.LiteralObject = LiteralObject;
-  exports.ExpressionCloner = ExpressionCloner;
-  exports.cloneExpression = cloneExpression;
-  exports.bindingMode = bindingMode;
+  exports.LoadRouteStep = LoadRouteStep;
+  exports.Loader = Loader;
+  exports.LogManager = LogManager;
+  exports.MapRepeatStrategy = MapRepeatStrategy;
+  exports.ModifyCollectionObserver = ModifyCollectionObserver;
+  exports.ModuleAnalyzer = ModuleAnalyzer;
+  exports.NameExpression = NameExpression;
+  exports.NavModel = NavModel;
+  exports.NavigationInstruction = NavigationInstruction;
+  exports.NewInstance = NewInstance;
+  exports.NoViewStrategy = NoViewStrategy;
+  exports.NullRepeatStrategy = NullRepeatStrategy;
+  exports.NumberRepeatStrategy = NumberRepeatStrategy;
+  exports.ObjectObservationAdapter = ObjectObservationAdapter;
+  exports.ObserverLocator = ObserverLocator;
+  exports.OneTimeBindingBehavior = OneTimeBindingBehavior;
+  exports.OneWayBindingBehavior = OneWayBindingBehavior;
+  exports.Optional = Optional;
+  exports.Origin = Origin;
+  exports.PLATFORM = PLATFORM;
+  exports.Parent = Parent;
   exports.Parser = Parser;
   exports.ParserImplementation = ParserImplementation;
-  exports.getMapObserver = getMapObserver;
-  exports.delegationStrategy = delegationStrategy;
-  exports.EventManager = EventManager;
-  exports.EventSubscriber = EventSubscriber;
-  exports.DirtyChecker = DirtyChecker;
-  exports.DirtyCheckProperty = DirtyCheckProperty;
-  exports.propertyAccessor = propertyAccessor;
-  exports.PrimitiveObserver = PrimitiveObserver;
-  exports.SetterObserver = SetterObserver;
-  exports.XLinkAttributeObserver = XLinkAttributeObserver;
-  exports.dataAttributeAccessor = dataAttributeAccessor;
-  exports.DataAttributeObserver = DataAttributeObserver;
-  exports.StyleObserver = StyleObserver;
-  exports.ValueAttributeObserver = ValueAttributeObserver;
-  exports.CheckedObserver = CheckedObserver;
-  exports.SelectValueObserver = SelectValueObserver;
-  exports.ClassObserver = ClassObserver;
-  exports.hasDeclaredDependencies = hasDeclaredDependencies;
-  exports.declarePropertyDependencies = declarePropertyDependencies;
-  exports.computedFrom = computedFrom;
-  exports.ComputedExpression = ComputedExpression;
-  exports.createComputedObserver = createComputedObserver;
-  exports.elements = elements;
-  exports.presentationElements = presentationElements;
-  exports.presentationAttributes = presentationAttributes;
-  exports.SVGAnalyzer = SVGAnalyzer;
-  exports.ObserverLocator = ObserverLocator;
-  exports.ObjectObservationAdapter = ObjectObservationAdapter;
-  exports.BindingExpression = BindingExpression;
-  exports.Binding = Binding;
-  exports.CallExpression = CallExpression;
-  exports.Call = Call;
-  exports.ValueConverterResource = ValueConverterResource;
-  exports.valueConverter = valueConverter;
-  exports.BindingBehaviorResource = BindingBehaviorResource;
-  exports.bindingBehavior = bindingBehavior;
-  exports.ListenerExpression = ListenerExpression;
-  exports.Listener = Listener;
-  exports.NameExpression = NameExpression;
-  exports.BindingEngine = BindingEngine;
-  exports.getSetObserver = getSetObserver;
-  exports.observable = observable;
-  exports.connectBindingToSignal = connectBindingToSignal;
-  exports.signalBindings = signalBindings;
-  exports.metadata = metadata;
-  exports.Origin = Origin;
-  exports.decorators = decorators;
-  exports.deprecated = deprecated;
-  exports.mixin = mixin;
-  exports.protocol = protocol;
-  exports.animationEvent = animationEvent;
-  exports.Animator = Animator;
-  exports.CompositionTransactionNotifier = CompositionTransactionNotifier;
-  exports.CompositionTransactionOwnershipToken = CompositionTransactionOwnershipToken;
-  exports.CompositionTransaction = CompositionTransaction;
-  exports._hyphenate = _hyphenate;
-  exports._isAllWhitespace = _isAllWhitespace;
-  exports.ViewEngineHooksResource = ViewEngineHooksResource;
-  exports.viewEngineHooks = viewEngineHooks;
-  exports.ElementEvents = ElementEvents;
-  exports.ResourceLoadContext = ResourceLoadContext;
-  exports.ViewCompileInstruction = ViewCompileInstruction;
-  exports.BehaviorInstruction = BehaviorInstruction;
-  exports.TargetInstruction = TargetInstruction;
-  exports.viewStrategy = viewStrategy;
-  exports.RelativeViewStrategy = RelativeViewStrategy;
-  exports.ConventionalViewStrategy = ConventionalViewStrategy;
-  exports.NoViewStrategy = NoViewStrategy;
-  exports.TemplateRegistryViewStrategy = TemplateRegistryViewStrategy;
-  exports.InlineViewStrategy = InlineViewStrategy;
-  exports.StaticViewStrategy = StaticViewStrategy;
-  exports.ViewLocator = ViewLocator;
-  exports.BindingLanguage = BindingLanguage;
-  exports.SlotCustomAttribute = SlotCustomAttribute;
   exports.PassThroughSlot = PassThroughSlot;
-  exports.ShadowSlot = ShadowSlot;
-  exports.ShadowDOM = ShadowDOM;
-  exports.validateBehaviorName = validateBehaviorName;
-  exports.ViewResources = ViewResources;
-  exports.View = View;
-  exports.ViewSlot = ViewSlot;
-  exports.BoundViewFactory = BoundViewFactory;
-  exports.ViewFactory = ViewFactory;
-  exports.ViewCompiler = ViewCompiler;
-  exports.ResourceModule = ResourceModule;
+  exports.Pipeline = Pipeline;
+  exports.PipelineProvider = PipelineProvider;
+  exports.PrimitiveObserver = PrimitiveObserver;
+  exports.Redirect = Redirect;
+  exports.RedirectToRoute = RedirectToRoute;
+  exports.RelativeViewStrategy = RelativeViewStrategy;
+  exports.Repeat = Repeat;
+  exports.RepeatStrategyLocator = RepeatStrategyLocator;
+  exports.Replaceable = Replaceable;
   exports.ResourceDescription = ResourceDescription;
-  exports.ModuleAnalyzer = ModuleAnalyzer;
-  exports.ViewEngine = ViewEngine;
-  exports.Controller = Controller;
-  exports.BehaviorPropertyObserver = BehaviorPropertyObserver;
-  exports.BindableProperty = BindableProperty;
-  exports.HtmlBehaviorResource = HtmlBehaviorResource;
-  exports.children = children;
-  exports.child = child;
+  exports.ResourceLoadContext = ResourceLoadContext;
+  exports.ResourceModule = ResourceModule;
+  exports.RouteLoader = RouteLoader;
+  exports.Router = Router;
+  exports.RouterConfiguration = RouterConfiguration;
+  exports.SVGAnalyzer = SVGAnalyzer;
+  exports.SanitizeHTMLValueConverter = SanitizeHTMLValueConverter;
+  exports.SelectValueObserver = SelectValueObserver;
+  exports.SelfBindingBehavior = SelfBindingBehavior;
+  exports.SetRepeatStrategy = SetRepeatStrategy;
+  exports.SetterObserver = SetterObserver;
+  exports.ShadowDOM = ShadowDOM;
+  exports.ShadowSlot = ShadowSlot;
+  exports.Show = Show;
+  exports.SignalBindingBehavior = SignalBindingBehavior;
+  exports.SingletonRegistration = SingletonRegistration;
+  exports.SlotCustomAttribute = SlotCustomAttribute;
+  exports.StaticViewStrategy = StaticViewStrategy;
+  exports.StrategyResolver = StrategyResolver;
+  exports.StyleObserver = StyleObserver;
   exports.SwapStrategies = SwapStrategies;
-  exports.CompositionEngine = CompositionEngine;
-  exports.ElementConfigResource = ElementConfigResource;
-  exports.resource = resource;
-  exports.behavior = behavior;
-  exports.customElement = customElement;
-  exports.customAttribute = customAttribute;
-  exports.templateController = templateController;
-  exports.bindable = bindable;
-  exports.dynamicOptions = dynamicOptions;
-  exports.useShadowDOM = useShadowDOM;
-  exports.processAttributes = processAttributes;
-  exports.processContent = processContent;
-  exports.containerless = containerless;
-  exports.useViewStrategy = useViewStrategy;
-  exports.useView = useView;
-  exports.inlineView = inlineView;
-  exports.noView = noView;
-  exports.view = view;
-  exports.elementConfig = elementConfig;
-  exports.viewResources = viewResources;
-  exports.TemplatingEngine = TemplatingEngine;
+  exports.TargetInstruction = TargetInstruction;
+  exports.TaskQueue = TaskQueue;
   exports.TemplateDependency = TemplateDependency;
   exports.TemplateRegistryEntry = TemplateRegistryEntry;
-  exports.Loader = Loader;
-  exports.TaskQueue = TaskQueue;
-  exports.relativeToFile = relativeToFile;
-  exports.join = join;
+  exports.TemplateRegistryViewStrategy = TemplateRegistryViewStrategy;
+  exports.TemplatingEngine = TemplatingEngine;
+  exports.ThrottleBindingBehavior = ThrottleBindingBehavior;
+  exports.ToViewBindingBehavior = ToViewBindingBehavior;
+  exports.TransientRegistration = TransientRegistration;
+  exports.TwoWayBindingBehavior = TwoWayBindingBehavior;
+  exports.Unary = Unary;
+  exports.UpdateTriggerBindingBehavior = UpdateTriggerBindingBehavior;
+  exports.ValueAttributeObserver = ValueAttributeObserver;
+  exports.ValueConverter = ValueConverter;
+  exports.ValueConverterResource = ValueConverterResource;
+  exports.View = View;
+  exports.ViewCompileInstruction = ViewCompileInstruction;
+  exports.ViewCompiler = ViewCompiler;
+  exports.ViewEngine = ViewEngine;
+  exports.ViewEngineHooksResource = ViewEngineHooksResource;
+  exports.ViewFactory = ViewFactory;
+  exports.ViewLocator = ViewLocator;
+  exports.ViewResources = ViewResources;
+  exports.ViewSlot = ViewSlot;
+  exports.With = With;
+  exports.XLinkAttributeObserver = XLinkAttributeObserver;
+  exports._emptyParameters = _emptyParameters;
+  exports._hyphenate = _hyphenate;
+  exports._isAllWhitespace = _isAllWhitespace;
+  exports.activationStrategy = activationStrategy;
+  exports.all = all;
+  exports.animationEvent = animationEvent;
+  exports.autoinject = autoinject;
+  exports.behavior = behavior;
+  exports.bindable = bindable;
+  exports.bindingBehavior = bindingBehavior;
+  exports.bindingMode = bindingMode;
   exports.buildQueryString = buildQueryString;
-  exports.parseQueryString = parseQueryString;
-  exports.AggregateError = AggregateError;
-  exports.FEATURE = FEATURE;
-  exports.PLATFORM = PLATFORM;
-  exports.DOM = DOM;
+  exports.calcSplices = calcSplices;
+  exports.camelCase = camelCase;
+  exports.child = child;
+  exports.children = children;
+  exports.cloneExpression = cloneExpression;
+  exports.computedFrom = computedFrom;
+  exports.connectBindingToSignal = connectBindingToSignal;
+  exports.connectable = connectable;
+  exports.containerless = containerless;
+  exports.createComputedObserver = createComputedObserver;
+  exports.createFullOverrideContext = createFullOverrideContext;
+  exports.createOverrideContext = createOverrideContext;
+  exports.createScopeForTest = createScopeForTest;
+  exports.customAttribute = customAttribute;
+  exports.customElement = customElement;
+  exports.dataAttributeAccessor = dataAttributeAccessor;
+  exports.declarePropertyDependencies = declarePropertyDependencies;
+  exports.decorators = decorators;
+  exports.delegationStrategy = delegationStrategy;
+  exports.deprecated = deprecated;
+  exports.disableConnectQueue = disableConnectQueue;
+  exports.dynamicOptions = dynamicOptions;
+  exports.elementConfig = elementConfig;
+  exports.elements = elements;
+  exports.enableConnectQueue = enableConnectQueue;
+  exports.enhance = enhance;
+  exports.enqueueBindingConnect = enqueueBindingConnect;
+  exports.factory = factory;
+  exports.getArrayObserver = getArrayObserver;
+  exports.getChangeRecords = getChangeRecords;
+  exports.getConnectQueueSize = getConnectQueueSize;
+  exports.getContextFor = getContextFor;
+  exports.getDecoratorDependencies = getDecoratorDependencies;
+  exports.getItemsSourceExpression = getItemsSourceExpression;
+  exports.getMapObserver = getMapObserver;
+  exports.getSetObserver = getSetObserver;
+  exports.hasDeclaredDependencies = hasDeclaredDependencies;
+  exports.includeEventsIn = includeEventsIn;
   exports.initializePAL = initializePAL;
+  exports.inject = inject;
+  exports.inlineView = inlineView;
+  exports.invokeAsFactory = invokeAsFactory;
+  exports.invoker = invoker;
+  exports.isNavigationCommand = isNavigationCommand;
+  exports.isOneTime = isOneTime;
+  exports.join = join;
+  exports.lazy = lazy;
+  exports.mergeSplice = mergeSplice;
+  exports.metadata = metadata;
+  exports.mixin = mixin;
+  exports.newInstance = newInstance;
+  exports.noView = noView;
+  exports.observable = observable;
+  exports.optional = optional;
+  exports.parent = parent;
+  exports.parseQueryString = parseQueryString;
+  exports.presentationAttributes = presentationAttributes;
+  exports.presentationElements = presentationElements;
+  exports.processAttributes = processAttributes;
+  exports.processContent = processContent;
+  exports.projectArraySplices = projectArraySplices;
+  exports.propertyAccessor = propertyAccessor;
+  exports.protocol = protocol;
+  exports.registration = registration;
+  exports.relativeToFile = relativeToFile;
   exports.reset = reset;
+  exports.resolver = resolver;
+  exports.resource = resource;
+  exports.setConnectQueueThreshold = setConnectQueueThreshold;
+  exports.signalBindings = signalBindings;
+  exports.singleton = singleton;
+  exports.sourceContext = sourceContext;
+  exports.start = start;
+  exports.subscriberCollection = subscriberCollection;
+  exports.targetContext = targetContext;
+  exports.templateController = templateController;
+  exports.transient = transient;
+  exports.unwrapExpression = unwrapExpression;
+  exports.updateOneTimeBinding = updateOneTimeBinding;
+  exports.updateOverrideContext = updateOverrideContext;
+  exports.useShadowDOM = useShadowDOM;
+  exports.useView = useView;
+  exports.useViewStrategy = useViewStrategy;
+  exports.validateBehaviorName = validateBehaviorName;
+  exports.valueConverter = valueConverter;
+  exports.view = view;
+  exports.viewEngineHooks = viewEngineHooks;
+  exports.viewResources = viewResources;
+  exports.viewStrategy = viewStrategy;
+  exports.viewsRequireLifecycle = viewsRequireLifecycle;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
