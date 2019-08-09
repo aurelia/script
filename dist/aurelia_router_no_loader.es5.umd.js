@@ -543,42 +543,6 @@
     Logger: Logger
   });
 
-  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-      var info = gen[key](arg);
-      var value = info.value;
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (info.done) {
-      resolve(value);
-    } else {
-      Promise.resolve(value).then(_next, _throw);
-    }
-  }
-
-  function _asyncToGenerator(fn) {
-    return function () {
-      var self = this,
-          args = arguments;
-      return new Promise(function (resolve, reject) {
-        var gen = fn.apply(self, args);
-
-        function _next(value) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-        }
-
-        function _throw(err) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-        }
-
-        _next(undefined);
-      });
-    };
-  }
-
   function _defineProperties(target, props) {
     for (var i = 0; i < props.length; i++) {
       var descriptor = props[i];
@@ -21713,8 +21677,14 @@
    */
 
 
-  function start(_x) {
-    return _start.apply(this, arguments);
+  function start(options) {
+    if (options === void 0) {
+      options = {};
+    }
+
+    return createAndStart(options).then(function (aurelia) {
+      return aurelia.setRoot(options.root || 'app.js', options.host || document.body);
+    });
   }
   /**
    * Bootstrap a new Aurelia instance and start an application by enhancing a DOM tree
@@ -21722,42 +21692,18 @@
    * @returns {View} the enhanced View by selected options
    */
 
-  function _start() {
-    _start = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee(options) {
-      var aurelia;
-      return regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (options === void 0) {
-                options = {};
-              }
+  function enhance(options) {
+    if (options === void 0) {
+      options = {};
+    }
 
-              _context.next = 3;
-              return createAndStart(options);
+    return createAndStart(options).then(function (aurelia) {
+      if (typeof options.root === 'function') {
+        options.root = aurelia.container.get(options.root);
+      }
 
-            case 3:
-              aurelia = _context.sent;
-              _context.next = 6;
-              return aurelia.setRoot(options.root || 'app.js', options.host || document.body);
-
-            case 6:
-              return _context.abrupt("return", aurelia);
-
-            case 7:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-    return _start.apply(this, arguments);
-  }
-
-  function enhance(_x2) {
-    return _enhance.apply(this, arguments);
+      return aurelia.enhance(options.root || {}, options.host || document.body);
+    });
   }
   /** @typed ConfigureFn
    * @param {FrameworkConfiguration} frameWorkConfig
@@ -21779,41 +21725,6 @@
    * @property {Array<string | {(fwCfg: FrameworkConfiguration) => any}  | [(fwCfg: FrameworkConfiguration, cfg: {}) => any, {}]>} [plugins]
    * @property {boolean} [debug] true to use development console logging
    */
-
-  function _enhance() {
-    _enhance = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee2(options) {
-      var aurelia;
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              if (options === void 0) {
-                options = {};
-              }
-
-              _context2.next = 3;
-              return createAndStart(options);
-
-            case 3:
-              aurelia = _context2.sent;
-
-              if (typeof options.root === 'function') {
-                options.root = aurelia.container.get(options.root);
-              }
-
-              return _context2.abrupt("return", aurelia.enhance(options.root || {}, options.host || document.body));
-
-            case 6:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2);
-    }));
-    return _enhance.apply(this, arguments);
-  }
 
   initialize(); // Using static convention to avoid having to fetch / load module dynamically
 

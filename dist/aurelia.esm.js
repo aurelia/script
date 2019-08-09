@@ -15333,10 +15333,9 @@ const createAndStart = (options = {}) => {
  * @param {QuickStartOptions} options
  * @returns {Aurelia} the running Aurelia instance
  */
-async function start(options = {}) {
-  const aurelia = await createAndStart(options);
-  await aurelia.setRoot(options.root || 'app.js', options.host || document.body);
-  return aurelia;
+function start(options = {}) {
+  return createAndStart(options)
+    .then(aurelia => aurelia.setRoot(options.root || 'app.js', options.host || document.body));
 }
 
 /**
@@ -15344,12 +15343,14 @@ async function start(options = {}) {
  * @param {QuickEnhanceOptions} options Configuration for enhancing a DOM tree
  * @returns {View} the enhanced View by selected options
  */
-async function enhance(options = {}) {
-  const aurelia = await createAndStart(options);
-  if (typeof options.root === 'function') {
-    options.root = aurelia.container.get(options.root);
-  }
-  return aurelia.enhance(options.root || {}, options.host || document.body);
+function enhance(options = {}) {
+  return createAndStart(options)
+    .then(aurelia => {
+      if (typeof options.root === 'function') {
+        options.root = aurelia.container.get(options.root);
+      }
+      return aurelia.enhance(options.root || {}, options.host || document.body);
+    });
 }
 
 /** @typed ConfigureFn

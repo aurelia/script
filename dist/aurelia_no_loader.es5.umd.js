@@ -4,6 +4,75 @@
   (global = global || self, factory(global.au = {}));
 }(this, function (exports) { 'use strict';
 
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _inheritsLoose(subClass, superClass) {
+    subClass.prototype = Object.create(superClass.prototype);
+    subClass.prototype.constructor = subClass;
+    subClass.__proto__ = superClass;
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  function isNativeReflectConstruct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+
+    try {
+      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _construct(Parent, args, Class) {
+    if (isNativeReflectConstruct()) {
+      _construct = Reflect.construct;
+    } else {
+      _construct = function _construct(Parent, args, Class) {
+        var a = [null];
+        a.push.apply(a, args);
+        var Constructor = Function.bind.apply(Parent, a);
+        var instance = new Constructor();
+        if (Class) _setPrototypeOf(instance, Class.prototype);
+        return instance;
+      };
+    }
+
+    return _construct.apply(null, arguments);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
   function AggregateError(message, innerError, skipIfAlreadyAggregate) {
     if (innerError) {
       if (innerError.innerError && skipIfAlreadyAggregate) {
@@ -542,111 +611,6 @@
     getLevel: getLevel,
     Logger: Logger
   });
-
-  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-      var info = gen[key](arg);
-      var value = info.value;
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (info.done) {
-      resolve(value);
-    } else {
-      Promise.resolve(value).then(_next, _throw);
-    }
-  }
-
-  function _asyncToGenerator(fn) {
-    return function () {
-      var self = this,
-          args = arguments;
-      return new Promise(function (resolve, reject) {
-        var gen = fn.apply(self, args);
-
-        function _next(value) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-        }
-
-        function _throw(err) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-        }
-
-        _next(undefined);
-      });
-    };
-  }
-
-  function _defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  function _createClass(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties(Constructor, staticProps);
-    return Constructor;
-  }
-
-  function _inheritsLoose(subClass, superClass) {
-    subClass.prototype = Object.create(superClass.prototype);
-    subClass.prototype.constructor = subClass;
-    subClass.__proto__ = superClass;
-  }
-
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-
-    return _setPrototypeOf(o, p);
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
-  }
-
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-
-    return self;
-  }
 
   var _extends = Object.assign || function (target) {
     for (var i = 1; i < arguments.length; i++) {
@@ -17300,8 +17264,14 @@
    */
 
 
-  function start(_x) {
-    return _start.apply(this, arguments);
+  function start(options) {
+    if (options === void 0) {
+      options = {};
+    }
+
+    return createAndStart(options).then(function (aurelia) {
+      return aurelia.setRoot(options.root || 'app.js', options.host || document.body);
+    });
   }
   /**
    * Bootstrap a new Aurelia instance and start an application by enhancing a DOM tree
@@ -17309,42 +17279,18 @@
    * @returns {View} the enhanced View by selected options
    */
 
-  function _start() {
-    _start = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee(options) {
-      var aurelia;
-      return regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (options === void 0) {
-                options = {};
-              }
+  function enhance(options) {
+    if (options === void 0) {
+      options = {};
+    }
 
-              _context.next = 3;
-              return createAndStart(options);
+    return createAndStart(options).then(function (aurelia) {
+      if (typeof options.root === 'function') {
+        options.root = aurelia.container.get(options.root);
+      }
 
-            case 3:
-              aurelia = _context.sent;
-              _context.next = 6;
-              return aurelia.setRoot(options.root || 'app.js', options.host || document.body);
-
-            case 6:
-              return _context.abrupt("return", aurelia);
-
-            case 7:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-    return _start.apply(this, arguments);
-  }
-
-  function enhance(_x2) {
-    return _enhance.apply(this, arguments);
+      return aurelia.enhance(options.root || {}, options.host || document.body);
+    });
   }
   /** @typed ConfigureFn
    * @param {FrameworkConfiguration} frameWorkConfig
@@ -17367,40 +17313,48 @@
    * @property {boolean} [debug] true to use development console logging
    */
 
-  function _enhance() {
-    _enhance = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee2(options) {
-      var aurelia;
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              if (options === void 0) {
-                options = {};
-              }
+  /**
+   * Bare implementation for a noop loader.
+   */
 
-              _context2.next = 3;
-              return createAndStart(options);
+  PLATFORM.Loader =
+  /*#__PURE__*/
+  function (_Loader) {
+    _inheritsLoose(NoopLoader, _Loader);
 
-            case 3:
-              aurelia = _context2.sent;
+    function NoopLoader() {
+      return _Loader.apply(this, arguments) || this;
+    }
 
-              if (typeof options.root === 'function') {
-                options.root = aurelia.container.get(options.root);
-              }
+    var _proto = NoopLoader.prototype;
 
-              return _context2.abrupt("return", aurelia.enhance(options.root || {}, options.host || document.body));
+    _proto.normalize = function normalize(name) {
+      return Promise.resolve(name);
+    }
+    /**
+    * Alters a module id so that it includes a plugin loader.
+    * @param url The url of the module to load.
+    * @param pluginName The plugin to apply to the module id.
+    * @return The plugin-based module id.
+    */
+    ;
 
-            case 6:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2);
-    }));
-    return _enhance.apply(this, arguments);
-  }
+    _proto.applyPluginToUrl = function applyPluginToUrl(url, pluginName) {
+      return pluginName + "!" + url;
+    }
+    /**
+    * Registers a plugin with the loader.
+    * @param pluginName The name of the plugin.
+    * @param implementation The plugin implementation.
+    */
+    ;
+
+    _proto.addPlugin = function addPlugin(pluginName, implementation) {
+      /* empty */
+    };
+
+    return NoopLoader;
+  }(Loader);
 
   initialize(); // Using static convention to avoid having to fetch / load module dynamically
 
