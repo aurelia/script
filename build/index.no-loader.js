@@ -1,11 +1,38 @@
 import 'aurelia-polyfills';
 import { initialize } from 'aurelia-pal-browser';
-import { LogManager, FrameworkConfiguration, Aurelia, View } from 'aurelia-framework';
+import { LogManager, FrameworkConfiguration, Aurelia, View, PLATFORM, Loader } from 'aurelia-framework';
 import { configure as configureBindingLanguage } from 'aurelia-templating-binding';
 import { configure as configureDefaultResources } from 'aurelia-templating-resources';
 import { configure as configureEventAggregator } from 'aurelia-event-aggregator';
 import { ConsoleAppender } from 'aurelia-logging-console';
 import { getLogger } from 'aurelia-logging';
+
+/**
+ * Bare implementation for a noop loader.
+ */
+PLATFORM.Loader = class NoopLoader extends Loader {
+
+  normalize(name) {
+    return Promise.resolve(name);
+  }
+  
+  /**
+  * Alters a module id so that it includes a plugin loader.
+  * @param url The url of the module to load.
+  * @param pluginName The plugin to apply to the module id.
+  * @return The plugin-based module id.
+  */
+  applyPluginToUrl(url, pluginName) {
+    return `${pluginName}!${url}`;
+  }
+
+  /**
+  * Registers a plugin with the loader.
+  * @param pluginName The name of the plugin.
+  * @param implementation The plugin implementation.
+  */
+  addPlugin(pluginName, implementation) {/* empty */}
+};
 
 initialize();
 
