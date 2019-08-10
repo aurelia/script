@@ -93,7 +93,7 @@ import {
   BindingEngine,
   CompositionEngine,
   ViewCompiler
-} from 'https://unpkg.com/aurelia-script@1.4.0/dist/aurelia.esm.min.js';
+} from 'https://unpkg.com/aurelia-script@1.5.2/dist/aurelia.esm.min.js';
 ```
 
 ## Online Playground with Single file script

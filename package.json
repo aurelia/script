@@ -1,6 +1,6 @@
 {
   "name": "aurelia-script",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Aurelia's concatenated script-tag-ready build.",
   "keywords": [
     "aurelia"
