@@ -97,15 +97,6 @@ export default [
 
     // external: externalLibs,
     plugins: [
-      replace({
-        FEATURE_NO_ES2015: true,
-        FEATURE_NO_ES2016: true,
-        // Need for Reflect metadata
-        FEATURE_NO_ESNEXT: undefined,
-        FEATURE_NO_IE: true,
-        FEATURE_NO_UNPARSER: true,
-        FEATURE_ROUTER: process.env.ROUTER === false ? undefined : true
-      }),
 
       nodeResolve({
         // jsnext: true,
@@ -138,16 +129,6 @@ export default [
 
     // external: externalLibs,
     plugins: [
-      replace({
-        FEATURE_NO_ES2015: true,
-        FEATURE_NO_ES2016: true,
-        // Need for Reflect metadata
-        FEATURE_NO_ESNEXT: undefined,
-        FEATURE_NO_IE: true,
-        FEATURE_NO_UNPARSER: true,
-        FEATURE_ROUTER: process.env.ROUTER === false ? undefined : true
-      }),
-
       nodeResolve({
         // jsnext: true,
         // main: true
