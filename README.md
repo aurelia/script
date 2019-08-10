@@ -13,7 +13,7 @@ This repo is the home for Aurelia's concatenated script-tag-ready build.
 In the good old day, you chuck in a script tag into your html and start writing app. Aurelia Script is a way to help you return to that, with Aurelia. Simply add:
 
 ```html
-  <script src='https://unpkg.com/aurelia-script@1.5.1'></script>
+  <script src='https://unpkg.com/aurelia-script@1.5.2'></script>
 ```
 
 into your main html and you are ready to go, like the following:
